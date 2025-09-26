@@ -1,0 +1,122 @@
+/* camera feeds */
+.camera-feeds {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 5px;
+  gap: 5px;
+}
+
+.camera {
+  width: 50%;
+  height: 400px;
+  position: relative;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #f9f9f9;
+}
+
+@media (max-width: 768px) {
+  .camera-feeds {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .camera {
+    width: 100%;
+  }
+}
+
+.camera img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.camera-id {
+  padding: 8px;
+  font-weight: bold;
+  font-size: 13px;
+  text-align: center;
+  border-top: 1px solid #eee;
+  background-color: #fafafa;
+}
+
+/* store info */
+.store-info {
+  padding: 20px;
+  background-color: #fff;
+  /* border-top: 2px solid #e91e63; */
+}
+
+.store-info p:first-child {
+  margin: 0;
+  font-size: 14px;
+  color: #ed3237;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.store-info p:nth-child(2) {
+  color: #000000;
+  font-size: 12px;
+  margin-bottom: 10px !important;
+}
+
+.activity-box {
+  display: flex;
+  justify-content: space-between;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  overflow: hidden;
+  padding: 15px;
+  font-size: 14px;
+  background-color: #f44336;
+  color: #ffffff;
+}
+
+.activity-box strong {
+  text-transform: uppercase;
+  font-size: 14px;
+}
+
+.activity-box span {
+  font-size: 12px;
+}
+
+/* monitoring info*/
+.monitoring {
+  padding: 20px;
+}
+
+.monitoring h4 {
+  font-size: 16px;
+  margin-bottom: 10px;
+  color: #333;
+  border-bottom: 2px solid #ed3237;
+  padding: 5px;
+}
+
+.monitoring table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.monitoring td {
+  padding: 8px;
+  vertical-align: top;
+  border-bottom: 1px solid #ddd;
+  font-size: 12px;
+}
+
+.monitoring td:first-child {
+  font-weight: bold;
+  color: #000000;
+  width: 150px;
+  opacity: 0.5;
+  font-size: 12px;
+}
+
+

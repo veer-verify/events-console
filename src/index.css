@@ -1,0 +1,25 @@
+@font-face {
+  font-family: 'Neometric Regular';
+  src: url('../public/fonts/neometric-2/Neometric-Regular.otf') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+
+body {
+  margin: 0;
+  font-family: 'Neometric Regular', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button {
+  font-family: 'Neometric Regular', sans-serif !important;
+}
+
+p {
+  margin: 0 !important;
+}
+
+/* code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+} */

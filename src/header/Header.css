@@ -1,0 +1,64 @@
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+  border-bottom: 1px solid #eee;
+  background-color: #fff;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  font-weight: bold;
+}
+
+.logo img {
+    width: 120px;
+}
+
+.page-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-left: 30px;
+}
+
+.page-title .level {
+  color: red;
+  font-weight: bold;
+  margin-left: 8px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+}
+
+.profile-icon {
+  width: 36px;
+  height: 36px;
+  border: 2px solid red;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: red;
+  font-size: 16px;
+  margin-right: 8px;
+  cursor: pointer;
+}
+
+.profile-info .username {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.profile-info .role {
+  font-size: 12px;
+  color: gray;
+}
+

@@ -1,0 +1,12 @@
+.tiles {
+    display: flex;
+    flex-direction: row;
+    /* gap: 5px; */
+}
+
+@media (max-width: 1280px) {
+    .tiles {
+        display: flex;
+        flex-direction: column;
+    }
+}

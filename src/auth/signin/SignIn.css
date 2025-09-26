@@ -1,0 +1,109 @@
+.app-container {
+    display: flex;
+    height: 100vh;
+}
+
+.left-panel {
+    flex-grow: 2;
+    background-image: url('../../../public/images/mask.png');
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.right-panel {
+    flex-grow: 1;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-y: auto;
+}
+
+.login-box {
+    width: 70%;
+    height: auto;
+}
+
+.login-box .logo {
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.login-box .logo img {
+    width: 200px;
+}
+
+.welcome {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #000000;
+    text-align: center;
+    opacity: 0.5;
+}
+
+.form-group {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    border: 1px solid #EEEEEE;
+    border-radius: 5px;
+    padding: 16px 12px;
+}
+
+.forgot {
+    color: red;
+    text-decoration: none;
+}
+
+.remember-me {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    justify-content: space-between;
+}
+
+input[type="checkbox"] {
+    display: none;
+}
+
+input[type="checkbox"] + span {
+    display: inline-block;
+    position: relative;
+    top: -1px;
+    width: 12px;
+    height: 12px;
+    margin: -1px 0px 0 0;
+    vertical-align: middle;
+    background: white left top no-repeat;
+    border: 1px solid red;
+    cursor: pointer;
+}
+
+input[type="checkbox"]:checked + span {
+    background: #D9534F -19px top no-repeat;
+}
+
+input[type="checkbox"] + span {
+    margin-right: 4px;
+}
+
+.login-btn {
+    width: 100%;
+    padding: 12px;
+    background: #ed3237;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+}
