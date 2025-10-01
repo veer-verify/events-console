@@ -2,15 +2,19 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 24px;
   border-bottom: 1px solid #eee;
   background-color: #fff;
-  font-family: 'Segoe UI', sans-serif;
+  position: sticky;
+  top: 0;
+  width: 100%;
+  z-index: 1;
+  height: 65px;
 }
 
 .header-left {
   display: flex;
   align-items: center;
+  padding: 0 24px;
 }
 
 .logo {
@@ -18,7 +22,7 @@
 }
 
 .logo img {
-    width: 120px;
+  width: 120px;
 }
 
 .page-title {
@@ -36,6 +40,7 @@
 .header-right {
   display: flex;
   align-items: center;
+  padding: 0 24px;
 }
 
 .profile-icon {
@@ -61,4 +66,3 @@
   font-size: 12px;
   color: gray;
 }
-

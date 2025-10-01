@@ -2,11 +2,11 @@ import axios from 'axios';
 import './SignIn.css';
 import React, { Fragment, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Encrypt } from '../../services/StorageService';
+import { Encrypt, set } from '../../services/StorageService';
 import PageLoader from '../../utilities/page-loader/PageLoader';
 
 const SignIn = () => {
-  const navigate = useNavigate('')
+  const navigate = useNavigate('');
 
   const [loader, setLoader] = useState(false);
   const [userName, setUserName] = useState("");
@@ -21,17 +21,17 @@ const SignIn = () => {
     setLoader(true);
     axios.post(url, requestBody).then((res) => {
       setLoader(false);
-      console.log(res);
+      set('user', res);
       navigate('/dashboard');
     }).catch((err) => {
-      console.log(err);
+      setLoader(false);
     });
   }
 
 
   return (
     <Fragment>
-      { loader && <PageLoader></PageLoader> }
+      { loader && <PageLoader /> }
 
       <div className="app-container">
         <div className="left-panel"></div>
@@ -55,11 +55,11 @@ const SignIn = () => {
             </div>
 
             <div className="remember-me">
-              <div>
+              {/* <div>
                 <input type="checkbox" id="remember" />
                 <span></span>
                 <label htmlFor="remember">Remember Password</label>
-              </div>
+              </div> */}
               <a href="/" className="forgot">Forgot Password?</a>
             </div>
 

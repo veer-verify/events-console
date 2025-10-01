@@ -1,23 +1,36 @@
 import './Tile.css';
+import React, { useState, useRef, useEffect } from 'react';
 import { Fragment } from "react/jsx-runtime";
 
-const Tile = () => {
+const Tile = ({ eventData, index, tags, handleEvent }) => {
+    // console.log(eventData)
+    const [event] = eventData.data;
+    const [showTags, setShowTags] = useState(false);
+
+
     return (
         <Fragment>
-            <div>
+            <div className='tile'>
                 <div className="camera-feeds">
                     <div className="camera">
                         <img src="images/camera.png" alt="Camera Feed 1" />
-                        <div className="camera-id">MLD049C3</div>
                     </div>
                     <div className="camera">
-                        <img src="images/camera.png" alt="Camera Feed 2" />
-                        <div className="camera-id">MLD049C4</div>
+                        <img src="images/camera.png" alt="Camera Feed 1" />
                     </div>
                 </div>
 
+                <div className="camera-id">
+                    <div>
+                        {tags.map((item, i) => <img src={item.path} alt='icon' width={20} key={i} onClick={() => handleEvent(index)} />)}
+                    </div>
+
+                    <p >{event.cameraId}</p>
+                    <p>{event.eventTime}</p>
+                </div>
+
                 <div className="store-info">
-                    <p>RELIANCE STORE - TADEPALLY (1234567)</p>
+                    <p>{event.siteName}</p>
                     <p>Tadepally, Guntur District, Andhra Pradesh, INDIA - 500503</p>
 
                     <div className="activity-box">
@@ -58,6 +71,8 @@ const Tile = () => {
                         </tbody>
                     </table>
                 </div>
+
+                {/* <TagList /> */}
             </div>
         </Fragment>
     )

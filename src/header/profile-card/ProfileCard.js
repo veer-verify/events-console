@@ -1,7 +1,15 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './ProfileCard.css';
+import { clear } from '../../services/StorageService';
 
 const ProfileCard = () => {
+
+    const navigate = useNavigate('');
+    const logout = () => {
+        clear();
+        navigate('/')
+    };
+
     return (
         <div className="profile-card">
             <img className="profile-pic" src='icons/user.svg' alt="User" />
@@ -16,9 +24,7 @@ const ProfileCard = () => {
 
             <div className="logout-section">
                 <span className="version">Version : V1.01</span>
-                <Link to='/'>
-                    <button className="logout-btn">Logout</button>
-                </Link>
+                <button className="logout-btn" onClick={logout}>Logout</button>
             </div>
         </div>
     )

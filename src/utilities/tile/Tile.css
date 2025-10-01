@@ -1,14 +1,30 @@
 /* camera feeds */
+.tile {
+  width: 50%;
+  height: calc(100vh - 70px);
+  margin: 0 2px;
+  border: 1px solid #0000001A;
+  border-radius: 5px;
+  box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;
+  background-color: #ffffff;
+}
+
+@media (max-width: 1280px) {
+  .tile {
+    width: 100%;
+  }
+}
+
 .camera-feeds {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  padding: 5px;
-  gap: 5px;
+  /* padding: 5px; */
+  /* gap: 5px; */
 }
 
 .camera {
-  width: 50%;
+  /* width: 50%; */
   height: 400px;
   position: relative;
   border: 1px solid #ccc;
@@ -35,18 +51,27 @@
 }
 
 .camera-id {
-  padding: 8px;
+  padding: 10px;
   font-weight: bold;
-  font-size: 13px;
+  font-size: 12px;
   text-align: center;
   border-top: 1px solid #eee;
   background-color: #fafafa;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* margin: 10px; */
+}
+
+.camera-id img {
+  margin: 0 5px;
+  cursor: pointer;
 }
 
 /* store info */
 .store-info {
-  padding: 20px;
-  background-color: #fff;
+  padding: 10px;
+  /* background-color: #fff; */
   /* border-top: 2px solid #e91e63; */
 }
 
@@ -82,12 +107,14 @@
 }
 
 .activity-box span {
-  font-size: 12px;
+  font-size: 10px;
+  opacity: 0.75;
 }
 
 /* monitoring info*/
 .monitoring {
-  padding: 20px;
+  padding: 10px;
+  /* background-color: #ffffff; */
 }
 
 .monitoring h4 {
@@ -118,5 +145,3 @@
   opacity: 0.5;
   font-size: 12px;
 }
-
-
