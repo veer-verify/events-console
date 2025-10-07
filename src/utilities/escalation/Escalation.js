@@ -6,6 +6,11 @@ export default function SuspiciousAlert() {
   const [alertType, setAlertType] = useState("ALERT");
   const [subType, setSubType] = useState("Potential Intruder Detected");
   const [selection, setSelection] = useState("Person");
+    const [selectedButton, setSelectedButton] = useState("approvals");
+
+  const selectButton = (button) => {
+    setSelectedButton(button);
+  };
 
   return (
     <div className="alert-container">
@@ -65,16 +70,43 @@ export default function SuspiciousAlert() {
 
       {/* Right Panel */}
       <div className="alert-preview">
-        <h2 className="section-title">PREVIEW</h2>
+
+        <div className="flex-group">
+            <h2 className="section-title">PREVIEW</h2>
+
+        <div className="button-group1">
+      <button
+        className={`toggle-button ${
+          selectedButton === "approvals" ? "active" : ""
+        }`}
+        onClick={() => selectButton("approvals")}
+      >
+        Mail
+      </button>
+
+      <button
+        className={`toggle-button ${
+          selectedButton === "rejects" ? "activerej" : ""
+        }`}
+        style={{ position: "relative", left: "-30px" }}
+        onClick={() => selectButton("rejects")}
+      >
+        Message
+      </button>
+
+        </div>
+        
+    </div>
+     
 
         <div className="preview-card">
           <div className="preview-header">
             <div className="alert-header">
-              <AlertTriangle size={18} />
+              <AlertTriangle size={24}  className="alert-icon-filled" />
               <span>
                 ALERT @ TID Systems - ({subType})
               </span>
-              <AlertTriangle size={18} />
+              <AlertTriangle size={24}  className="alert-icon-filled" />
             </div>
             <button className="mail-btn">
               <Mail size={16} /> Mail
@@ -94,8 +126,8 @@ export default function SuspiciousAlert() {
           />
 
           <div className="alert-details">
-            <p><strong>Location:</strong> CBRE - 3200 USA Parkway</p>
-            <p><strong>Date:</strong> September 23rd, 2025</p>
+            <p><strong>Location:</strong>CBRE - 3200 USA Parkway</p>
+            <p><strong>Date:</strong>September 23rd, 2025</p>
             <p><strong>Time:</strong> 12:35:40 PM</p>
           </div>
 

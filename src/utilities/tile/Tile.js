@@ -2,6 +2,7 @@ import './Tile.css';
 import React, { useState, useRef, useEffect } from 'react';
 import { Fragment } from "react/jsx-runtime";
 import TagList from '../tag-list/TagList';
+import SuspiciousAlert from '../escalation/Escalation';
 
 const Tile = ({ eventData, index, tags, handleEvent }) => {
     const [event] = eventData.data;
@@ -77,6 +78,7 @@ const Tile = ({ eventData, index, tags, handleEvent }) => {
                 </div>
 
                 {showTags && <TagList tagIndex={index} handleEvent={handleEvent} handleTags={handleTags} />}
+            
             </div>
               
         </Fragment>
