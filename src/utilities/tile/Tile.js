@@ -78,6 +78,7 @@ const Tile = ({ eventData, index, tags, handleEvent }) => {
 
                 {showTags && <TagList tagIndex={index} handleEvent={handleEvent} handleTags={handleTags} />}
             </div>
+              
         </Fragment>
     )
 }
