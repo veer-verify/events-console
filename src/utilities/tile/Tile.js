@@ -1,11 +1,15 @@
 import './Tile.css';
 import React, { useState, useRef, useEffect } from 'react';
 import { Fragment } from "react/jsx-runtime";
+import TagList from '../tag-list/TagList';
 
 const Tile = ({ eventData, index, tags, handleEvent }) => {
-    // console.log(eventData)
     const [event] = eventData.data;
     const [showTags, setShowTags] = useState(false);
+
+    const handleTags = () => {
+        setShowTags(!showTags);
+    }
 
 
     return (
@@ -22,7 +26,7 @@ const Tile = ({ eventData, index, tags, handleEvent }) => {
 
                 <div className="camera-id">
                     <div>
-                        {tags.map((item, i) => <img src={item.path} alt='icon' width={20} key={i} onClick={() => handleEvent(index)} />)}
+                        {tags.map((item, i) => <img src={item.path} alt='icon' width={20} key={i} onClick={() => handleTags()} />)}
                     </div>
 
                     <p >{event.cameraId}</p>
@@ -46,7 +50,7 @@ const Tile = ({ eventData, index, tags, handleEvent }) => {
                 </div>
 
                 <div className="monitoring">
-                    <h4>MONITORING</h4>
+                    <h4>MONITORING INFO</h4>
                     <table>
                         <tbody>
                             <tr>
@@ -72,7 +76,7 @@ const Tile = ({ eventData, index, tags, handleEvent }) => {
                     </table>
                 </div>
 
-                {/* <TagList /> */}
+                {showTags && <TagList tagIndex={index} handleEvent={handleEvent} handleTags={handleTags} />}
             </div>
         </Fragment>
     )

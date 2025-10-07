@@ -53,7 +53,6 @@ const Dashboard = () => {
       <Header></Header>
 
       <div className='tiles'>
-        {/* <p>Hello</p> */}
         {eventData.map((item, i) => <Tile eventData={item} tags={tags} index={i} handleEvent={handleEvent} key={i}></Tile> )}
       </div>
     </Fragment>

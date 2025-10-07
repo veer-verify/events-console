@@ -25,7 +25,7 @@ const Header = () => {
                     <img src='images/logo.svg' alt='loading' loading='lazy' />
                 </div>
                 <div className="page-title">
-                    CONSOLE LIVE EVENTS <span className="level">| LEVEL - 1</span>
+                    <span className='title'>EVENTS CONSOLE</span><span className='bar'> | </span><span className="level">LEVEL - 1</span>
                 </div>
             </div>
 
