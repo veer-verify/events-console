@@ -60,7 +60,7 @@ const SignIn = () => {
                 <span></span>
                 <label htmlFor="remember">Remember Password</label>
               </div> */}
-              <a href="/" className="forgot">Forgot Password?</a>
+              {/* <a href="/" className="forgot">Forgot Password?</a> */}
             </div>
 
             <button className="login-btn" onClick={handleSignIn}>LOG IN</button>

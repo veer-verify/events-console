@@ -1,5 +1,5 @@
 import './Tile.css';
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Fragment } from "react/jsx-runtime";
 import TagList from '../tag-list/TagList';
 
@@ -76,7 +76,7 @@ const Tile = ({ eventData, index, tags, handleEvent }) => {
                     </table>
                 </div>
 
-                {showTags && <TagList tagIndex={index} handleEvent={handleEvent} handleTags={handleTags} />}
+                {showTags && <TagList item={event} tagIndex={index} handleEvent={handleEvent} handleTags={handleTags} />}
             </div>
         </Fragment>
     )

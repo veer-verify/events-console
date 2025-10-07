@@ -1,7 +1,7 @@
 import './TagList.css';
 import { useState } from 'react';
 
-const TagList = ({ tagIndex, handleEvent, handleTags }) => {
+const TagList = ({ item, tagIndex, handleEvent, handleTags }) => {
   const tags = [
     "Animal / Spider Web",
     "Cleaning Screw / Staff",
@@ -25,7 +25,7 @@ const TagList = ({ tagIndex, handleEvent, handleTags }) => {
         <button
           key={index}
           className={`tag-button ${selected === tag ? "selected" : ""}`}
-          onClick={() => {setSelected(tag); handleEvent(tagIndex); handleTags()}}
+          onClick={() => {setSelected(tag); handleEvent(item, tagIndex); handleTags()}}
         >
           {tag}
         </button>

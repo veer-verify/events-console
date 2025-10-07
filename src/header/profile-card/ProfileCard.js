@@ -1,8 +1,9 @@
 import { Link, useNavigate } from 'react-router-dom';
 import './ProfileCard.css';
-import { clear } from '../../services/StorageService';
+import { clear, get } from '../../services/StorageService';
 
 const ProfileCard = () => {
+    const user = get('user')?.data;
 
     const navigate = useNavigate('');
     const logout = () => {
@@ -13,9 +14,9 @@ const ProfileCard = () => {
     return (
         <div className="profile-card">
             <img className="profile-pic" src='icons/user.svg' alt="User" />
-            <div className="profile-name">Full Name</div>
-            <div className="profile-role">Screener | Emp ID</div>
-            <div className="profile-email">nameSurname@email.com</div>
+            <div className="profile-name">{`${user.FirstName} ${user.LastName}`}</div>
+            <div className="profile-role">{`Screener | ${user.UserId}`}</div>
+            <div className="profile-email">{user.email}</div>
             <div className="profile-phone">+91 99999 99999</div>
 
             <div className="profile-link">

@@ -1,5 +1,5 @@
 import './Dashboard.css';
-import React, { Fragment, useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import Header from '../header/Header';
 import Tile from '../utilities/tile/Tile';
 import axios from 'axios';
@@ -31,12 +31,12 @@ const Dashboard = () => {
     setPoolEvent(true);
     axios.get(url, { params: params }).then((res) => {
       setPoolEvent(false);
-      setEventData((prev) => [...prev, res])
-    })
+      setEventData((prev) => [...prev, res]);
+    });
   };
 
-  const handleEvent = (index) => {
-    const filtered = eventData.filter((_, i) => index !== i)
+  const handleEvent = (item, index) => {
+    const filtered = eventData.filter((_, i) => index !== i);
     setEventData(filtered);
   };
 
