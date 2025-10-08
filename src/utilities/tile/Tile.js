@@ -42,18 +42,42 @@ const Tile = ({ eventData, index, handleEvent }) => {
         setShowTags(!showTags);
     }
 
+ const [imgindex, setIndex] = useState(0);
+  const [imgSrc, setImgSrc] = useState(event.image_list[0]);
+
+  useEffect(() => {
+    if (!event.image_list || event.image_list.length === 0) return;
+
+    let i = 0;
+    const interval = setInterval(() => {
+      // Loop through the array
+      i = (i + 1) % event.image_list.length;
+      setIndex(i);
+      setImgSrc(event.image_list[i]);
+    }, 1000); // change every 1 second
+
+    // Cleanup on component unmount
+    return () => clearInterval(interval);
+  }, [event.image_list]);
+
 
     return (
         <Fragment>
             <div className='tile'>
                 <div className="camera-feeds">
+                        <div className="camera">
+                            <img src={imgSrc} alt ={`Camera Feed ${imgindex+1}`}/>
+                        </div>
                     <div className="camera">
-                        <img src="images/camera.png" alt="Camera Feed 1" />
-                    </div>
-                    <div className="camera">
-                        <img src="images/camera.png" alt="Camera Feed 1" />
+                        <img src={imgSrc} alt ={`Camera Feed ${imgindex+1}`}/>
                     </div>
                 </div>
+                {/* <div className="camera">
+                    <img src="images/camera.png" alt="Camera Feed 1" />
+                </div>
+                <div className="camera">
+                    <img src="images/camera.png" alt="Camera Feed 1" />
+                </div> */}
 
                 <div className="camera-id">
                     <div>
