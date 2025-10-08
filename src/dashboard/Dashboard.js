@@ -17,7 +17,10 @@ const Dashboard = () => {
     setPoolEvent(true);
     axios.get(url, { params: params }).then((res) => {
       setPoolEvent(false);
-      setEventData((prev) => [...prev, res]);
+      setEventData((prev) =>{
+        const updated=[...prev, res];
+        return updated.slice(-2);
+      });
     });
   };
 
@@ -27,12 +30,12 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    if (eventData.length < 2) {
+    if (eventData.length <= 2) {
       if(!poolEvent) {
         getEvent('live-events');
       }
     }
-  });
+  },[eventData]);
 
   return (
     <Fragment>
