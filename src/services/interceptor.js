@@ -1,91 +1,98 @@
-import axios from 'axios';
-import { environment } from '../environment';
-import { get, set } from './StorageService';
+import axios from "axios";
+import { getAccessforRefreshToken } from "./metadataService";
+import { get, set } from "./StorageService";
 
-import {getAccessforRefreshToken} from './metadataService'
 
-// Axios instance (no baseURL, no timeout)
+
+// ✅ Axios instance
 const api = axios.create();
 
-// Flag and queue for refreshing token
+// Refresh control flags
 let isRefreshing = false;
 let failedQueue = [];
 
-// Helper to process queued requests
+// Helper to resolve/reject queued requests
 const processQueue = (error, token = null) => {
-    failedQueue.forEach(prom => {
-        if (error) {
-            prom.reject(error);
-        } else {
-            prom.resolve(token);
-        }
-    });
-    failedQueue = [];
+  failedQueue.forEach((prom) => {
+    if (error) prom.reject(error);
+    else prom.resolve(token);
+  });
+  failedQueue = [];
 };
 
-// Request interceptor: attach token
+// ✅ Request Interceptor — attach token to every request
 api.interceptors.request.use(
-    (config) => {
-        const token = get('AccessToken'); 
-        if (token && !config.url.startsWith('https://api.800.com')) {
-            config.headers['Authorization'] = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => Promise.reject(error)
+  (config) => {
+    const token = get("AccessToken");
+    if (token && !config.url.startsWith("https://api.800.com")) {
+      config.headers["Authorization"] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
 );
 
-// Response interceptor: handle 401
+// ✅ Response Interceptor — handle expired tokens
 api.interceptors.response.use(
-    (response) => response,
-    async (error) => {
-        const originalRequest = error.config;
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
 
-        if (error.response?.status === 401 && !originalRequest._retry) {
-            if (isRefreshing) {
-                // Queue request while refreshing
-                return new Promise((resolve, reject) => {
-                    failedQueue.push({ resolve, reject });
-                })
-                .then((token) => {
-                    originalRequest.headers['Authorization'] = `Bearer ${token}`;
-                    return api(originalRequest);
-                })
-                .catch(err => Promise.reject(err));
-            }
+    // If 401 error and we haven’t retried yet
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        // Queue requests until refresh is done
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            originalRequest.headers["Authorization"] = `Bearer ${token}`;
+            return api(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
+      }
 
-            originalRequest._retry = true;
-            isRefreshing = true;
+      originalRequest._retry = true;
+      isRefreshing = true;
 
-            try {
-                const currentUser = get('user'); 
-                if (!currentUser) throw new Error('No user data found');
+      try {
+        const currentUser = get("user");
+        if (!currentUser) throw new Error("No user data found");
 
-                // Refresh token API
-                const response = getAccessforRefreshToken();
-                console.log(response)
-                const newToken = response.access_token;
-                set('AccessToken', newToken);
+        // ✅ Await refresh token call
+        const response = await getAccessforRefreshToken();
 
-                processQueue(null, newToken);
-                isRefreshing = false;
+        console.log("Refresh Token API Response:", response.data);
 
-                originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
-                return api(originalRequest);
-            } catch (err) {
-                processQueue(err, null);
-                isRefreshing = false;
+        // Extract new token safely
+        const newToken = response?.data?.access_token || response?.access_token;
+        if (!newToken) throw new Error("No access token returned from refresh API");
 
-                // Optional: log out user
-                localStorage.clear();
-                // window.location.href = '/login';
+        // ✅ Save new access token
+        set("AccessToken", newToken);
 
-                return Promise.reject(err);
-            }
-        }
+        // ✅ Resume queued requests
+        processQueue(null, newToken);
+        isRefreshing = false;
 
-        return Promise.reject(error);
+        // ✅ Retry original request with new token
+        originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
+        return api(originalRequest);
+      } catch (err) {
+        console.error("Token refresh failed:", err);
+        processQueue(err, null);
+        isRefreshing = false;
+
+        // Optional logout if refresh fails
+        localStorage.clear();
+        window.location.href = "/login";
+
+        return Promise.reject(err);
+      }
     }
+
+    return Promise.reject(error);
+  }
 );
 
 export default api;

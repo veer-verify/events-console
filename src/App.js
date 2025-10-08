@@ -9,7 +9,7 @@ function App() {
   return (
     <Routes>
       <Route path='/' Component={SignIn}></Route>
-      <Route path='/dashboard' Component={Dashboard}></Route>
+      <Route path='/dashboard' Component={SuspiciousAlert}></Route>
     </Routes>
 
   );
