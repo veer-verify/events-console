@@ -4,8 +4,9 @@ import { Fragment } from "react/jsx-runtime";
 import TagList from '../tag-list/TagList';
 import SuspiciousAlert from '../escalation/Escalation';
 import axios from 'axios';
+import Escalation from '../escalation/Escalation';
 
-const Tile = ({ eventData, index, handleEvent }) => {
+const Tile = ({ eventData, eventIndex, index, handleEvent, escalation, handleTag }) => {
 
     const tags = [
         {
@@ -31,7 +32,7 @@ const Tile = ({ eventData, index, handleEvent }) => {
     ];
 
 
-    const [event] = eventData.data;
+    // const [event] = eventData.data;
     const [showTags, setShowTags] = useState(false);
     const [actionTags, setActionTags] = useState([]);
 
@@ -49,57 +50,57 @@ const Tile = ({ eventData, index, handleEvent }) => {
             setActionTags(res.data.actionTagCategories.filter((item) => item.categoryId === payload?.id).flatMap((item) => item.actionTagSubCategories));
             console.log(actionTags)
         })
-        setShowTags(!showTags);
     }
 
- const [imgindex, setIndex] = useState(0);
-  const [imgSrc, setImgSrc] = useState(event.image_list[0]);
+    const openTags = () => {
+        setShowTags(true);
+    }
 
-  useEffect(() => {
-    if (!event.image_list || event.image_list.length === 0) return;
+    const closeTags = () => {
+        setActionTags(false);
+    }
 
-    let i = 0;
-    const interval = setInterval(() => {
-      // Loop through the array
-      i = (i + 1) % event.image_list.length;
-      setIndex(i);
-      setImgSrc(event.image_list[i]);
-    }, 1000); // change every 1 second
+    const [imgindex, setIndex] = useState(0);
+    const [imgSrc, setImgSrc] = useState(eventData.image_list[0]);
 
-    // Cleanup on component unmount
-    return () => clearInterval(interval);
-  }, [event.image_list]);
+    useEffect(() => {
+        if (!eventData.image_list || eventData.image_list.length === 0) return;
+
+        let i = 0;
+        const interval = setInterval(() => {
+            i = (i + 1) % eventData.image_list.length;
+            setIndex(i);
+            setImgSrc(eventData.image_list[i]);
+        }, 1000);
+
+        // Cleanup on component unmount
+        return () => clearInterval(interval);
+    }, [eventData.image_list]);
 
 
     return (
         <Fragment>
             <div className='tile'>
                 <div className="camera-feeds">
-                        <div className="camera">
-                            <img src={imgSrc} alt ={`Camera Feed ${imgindex+1}`}/>
-                        </div>
                     <div className="camera">
-                        <img src={imgSrc} alt ={`Camera Feed ${imgindex+1}`}/>
+                        <img src={imgSrc} alt={`Camera Feed ${imgindex + 1}`} />
+                    </div>
+                    <div className="camera">
+                        <img src={imgSrc} alt={`Camera Feed ${imgindex + 1}`} />
                     </div>
                 </div>
-                {/* <div className="camera">
-                    <img src="images/camera.png" alt="Camera Feed 1" />
-                </div>
-                <div className="camera">
-                    <img src="images/camera.png" alt="Camera Feed 1" />
-                </div> */}
 
                 <div className="camera-id">
                     <div>
-                        {tags.map((item, i) => <img src={item?.path} alt='icon' width={20} key={i} onClick={() => item?.call(item)} />)}
+                        {tags.map((item, i) => <img src={item?.path} alt='icon' width={20} key={i} onClick={() => { openTags(); item?.call(item); handleTag(item.id) }} />)}
                     </div>
 
-                    <p >{event.cameraId}</p>
-                    <p>{event.eventTime}</p>
+                    <p >{eventData.cameraId}</p>
+                    <p>{eventData.eventTime}</p>
                 </div>
 
                 <div className="store-info">
-                    <p>{event.siteName}</p>
+                    <p>{eventData.siteName}</p>
                     <p>Tadepally, Guntur District, Andhra Pradesh, INDIA - 500503</p>
 
                     <div className="activity-box">
@@ -141,7 +142,8 @@ const Tile = ({ eventData, index, handleEvent }) => {
                     </table>
                 </div>
 
-                {showTags && <TagList actionTags={actionTags} item={event} tagIndex={index} handleEvent={handleEvent} handleTags={handleTags} />}
+                {(showTags && actionTags) && <TagList actionTags={actionTags} item={eventData} tagIndex={index} handleEvent={handleEvent} closeTags={closeTags} />}
+                {(escalation && eventIndex === index) && <Escalation />}
             </div>
 
         </Fragment>

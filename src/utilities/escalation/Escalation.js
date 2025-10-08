@@ -1,17 +1,17 @@
 import React, { useState } from "react";
-import "./escalation.css";
+import "./Escalation.css";
 
-export default function SuspiciousAlert() {
+export default function Escalation() {
   const [alertType, setAlertType] = useState("ALERT");
   const [subType, setSubType] = useState("Potential Intruder Detected");
   const [selection, setSelection] = useState("Person");
-    const [selectedButton, setSelectedButton] = useState("approvals");
+  const [selectedButton, setSelectedButton] = useState("approvals");
 
   const selectButton = (button) => {
     setSelectedButton(button);
   };
 
-    function getTypes() {
+  function getTypes() {
     this.metadaSer.getMetadata().subscribe((res) => {
       res.forEach((item) => {
         if (item.typeName === 'Action_Tag') {
@@ -34,7 +34,7 @@ export default function SuspiciousAlert() {
     <div className="alert-container">
       {/* Left Panel */}
       <div className="alert-input">
-        <h2 className="section-title">SUSPICIOUS INPUT</h2>
+        <p className="section-title">SUSPICIOUS INPUT</p>
 
         <div className="radio-group">
           <label>
@@ -90,43 +90,35 @@ export default function SuspiciousAlert() {
       <div className="alert-preview">
 
         <div className="flex-group">
-            <h2 className="section-title">PREVIEW</h2>
+          <p className="section-title">PREVIEW</p>
 
-        <div className="button-group1">
-      <button
-        className={`toggle-button ${
-          selectedButton === "approvals" ? "active" : ""
-        }`}
-        onClick={() => selectButton("approvals")}
-      >
-        Mail
-      </button>
+          {/* <div className="button-group1">
+            <button
+              className={`toggle-button ${selectedButton === "approvals" ? "active" : ""
+                }`}
+              onClick={() => selectButton("approvals")}
+            >
+              Mail
+            </button>
 
-      <button
-        className={`toggle-button ${
-          selectedButton === "rejects" ? "activerej" : ""
-        }`}
-        style={{ position: "relative", left: "-30px" }}
-        onClick={() => selectButton("rejects")}
-      >
-        Message
-      </button>
+            <button
+              className={`toggle-button ${selectedButton === "rejects" ? "activerej" : ""
+                }`}
+              style={{ position: "relative", left: "-30px" }}
+              onClick={() => selectButton("rejects")}
+            >
+              Message
+            </button>
+
+          </div> */}
 
         </div>
-        
-    </div>
-     
+
 
         <div className="preview-card">
-          <div className="preview-header">
             <div className="alert-header">
-              <span>
                 ALERT @ TID Systems - ({subType})
-              </span>
             </div>
-            <button className="mail-btn">
-            </button>
-          </div>
 
           <p className="alert-message">
             Irregular activity was detected at one of your businesses. Please review

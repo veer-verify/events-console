@@ -10,6 +10,10 @@ const Dashboard = () => {
 
   const [eventData, setEventData] = useState([]);
   const [poolEvent, setPoolEvent] = useState(false);
+  const [tag, setTag] = useState(null);
+  const [escalation, setEscalation] = useState(false);
+  const [eventIndex, setEventIndex] = useState(null);
+
   const getEvent = (type) => {
     const url = `${events_url}/queueManagement/getVms_EventsQueueData_1_0/`;
     const params = new URLSearchParams();
@@ -22,9 +26,18 @@ const Dashboard = () => {
     });
   };
 
+  const handleTag = (id) => {
+    setTag(id)
+  }
+
   const handleEvent = (item, index) => {
-    const filtered = eventData.filter((_, i) => index !== i);
-    setEventData(filtered);
+    setEventIndex(index);
+    if(tag === 1) {
+      const filtered = eventData.filter((_, i) => index !== i);
+      setEventData(filtered);
+    } else {
+      setEscalation(true);
+    }
   };
 
   useEffect(() => {
@@ -34,14 +47,23 @@ const Dashboard = () => {
       }
       
     }
-  },[eventData.length < 2]);
+  }, [eventData.length < 2]);
 
   return (
     <Fragment>
       <Header></Header>
 
       <div className='tiles'>
-        {eventData.map((item, i) => <Tile eventData={item} index={i} handleEvent={handleEvent} key={i}></Tile> )}
+        {eventData.map((item, i) =>
+          <Tile
+            key={i}
+            eventData={item.data[0]}
+            index={i}
+            handleEvent={handleEvent}
+            escalation={escalation}
+            handleTag={handleTag}
+            eventIndex={eventIndex}
+            /> )}
       </div>
     </Fragment>
   )

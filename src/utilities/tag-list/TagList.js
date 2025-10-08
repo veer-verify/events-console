@@ -1,7 +1,7 @@
 import './TagList.css';
 import { useState } from 'react';
 
-const TagList = ({ actionTags, item, tagIndex, handleEvent, handleTags }) => {
+const TagList = ({ actionTags, item, tagIndex, handleEvent, closeTags }) => {
   // const tags = [
   //   "Animal / Spider Web",
   //   "Cleaning Screw / Staff",
@@ -25,7 +25,7 @@ const TagList = ({ actionTags, item, tagIndex, handleEvent, handleTags }) => {
         <button
           className='tag-button'
           key={index}
-          onClick={() => {handleEvent(item, tagIndex); handleTags()}}
+          onClick={() => {handleEvent(item, tagIndex); closeTags()}}
         >
           {tag.subCategoryName}
         </button>
