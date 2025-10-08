@@ -12,6 +12,25 @@ export default function SuspiciousAlert() {
     setSelectedButton(button);
   };
 
+    function getTypes() {
+    this.metadaSer.getMetadata().subscribe((res) => {
+      res.forEach((item) => {
+        if (item.typeName === 'Action_Tag') {
+          this.actionTags = item.metadata;
+        }
+        if (item.typeName === 'GuardAlertType') {
+          this.alertTypes = item.metadata;
+        }
+        if (item.typeName === 'GuardSubTypeId') {
+          this.alertSubTypes = item.metadata;
+        }
+        if (item.typeName === 'GuardDetailInfoFields') {
+          this.alertFields = item.metadata;
+        }
+      });
+    });
+  }
+
   return (
     <div className="alert-container">
       {/* Left Panel */}

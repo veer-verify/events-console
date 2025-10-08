@@ -4,6 +4,8 @@ import React, { Fragment, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Encrypt, set } from '../../services/StorageService';
 import PageLoader from '../../utilities/page-loader/PageLoader';
+import { environment } from '../../environment';
+import {getMetadata} from '../../services/metadataService'
 
 const SignIn = () => {
   const navigate = useNavigate('');
@@ -14,14 +16,17 @@ const SignIn = () => {
   const [callingSystemDetail, setCallingSystemDetail] = useState("vms");
 
 
-  const handleSignIn = () => {
-    const url = 'https://usstaging.ivisecurity.com/userDetails/user_login_1_0';
+  const handleSignIn =async () => {
+    const url = `${environment.login_url}/user_login_1_0`;
     const encryptedPassword = Encrypt(password);
     const requestBody = { userName, ...{ password: encryptedPassword }, callingSystemDetail };
     setLoader(true);
+    const metadata = await getMetadata();
     axios.post(url, requestBody).then((res) => {
       setLoader(false);
       set('user', res);
+      set('AccessToken',res.data.AccessToken);
+      set('RefreshToken',res.data.RefreshToken);
       navigate('/dashboard');
     }).catch((err) => {
       setLoader(false);
