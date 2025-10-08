@@ -2,6 +2,8 @@ import axios from 'axios';
 import { environment } from '../environment';
 import { get, set } from './StorageService';
 
+import {getAccessforRefreshToken} from './metadataService'
+
 // Axios instance (no baseURL, no timeout)
 const api = axios.create();
 
@@ -60,12 +62,9 @@ api.interceptors.response.use(
                 if (!currentUser) throw new Error('No user data found');
 
                 // Refresh token API
-                const response = await axios.post(
-                    `${environment.login_url}/getAccessforRefreshToken`, 
-                    currentUser
-                );
-
-                const newToken = response.data.access_token;
+                const response = getAccessforRefreshToken();
+                console.log(response)
+                const newToken = response.access_token;
                 set('AccessToken', newToken);
 
                 processQueue(null, newToken);
@@ -79,7 +78,7 @@ api.interceptors.response.use(
 
                 // Optional: log out user
                 localStorage.clear();
-                window.location.href = '/login';
+                // window.location.href = '/login';
 
                 return Promise.reject(err);
             }

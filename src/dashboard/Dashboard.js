@@ -5,6 +5,7 @@ import Tile from '../utilities/tile/Tile';
 import axios from 'axios';
 import { events_url } from '../services/StorageService';
 
+
 const Dashboard = () => {
 
   const [eventData, setEventData] = useState([]);
@@ -17,10 +18,7 @@ const Dashboard = () => {
     setPoolEvent(true);
     axios.get(url, { params: params }).then((res) => {
       setPoolEvent(false);
-      setEventData((prev) =>{
-        const updated=[...prev, res];
-        return updated.slice(-2);
-      });
+      setEventData((prev) => [...prev, res]);
     });
   };
 
@@ -30,12 +28,13 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    if (eventData.length <= 2) {
+    if (eventData.length < 2) {
       if(!poolEvent) {
         getEvent('live-events');
       }
+      
     }
-  },[eventData]);
+  },[eventData.length < 2]);
 
   return (
     <Fragment>
