@@ -7,24 +7,33 @@ import axios from 'axios';
 
 const Tile = ({ eventData, index, handleEvent }) => {
 
-      const tags = [
-    {
-      path: 'icons/false.png'
-    },
-    {
-      path: 'icons/suspicious.png'
-    },
-    {
-      path: 'icons/live.png'
-    },
-    {
-      path: 'icons/siren.png'
-    },
-  ];
+    const tags = [
+        {
+            id: 1,
+            path: 'icons/false.png',
+            call: (data) => handleTags(data)
+        },
+        {
+            id: 2,
+            path: 'icons/suspicious.png',
+            call: (data) => handleTags(data)
+        },
+        {
+            path: 'icons/live.png',
+            call: (data) => console.log('called!')
 
-    
+        },
+        {
+            path: 'icons/siren.png',
+            call: (data) => console.log('called!')
+
+        },
+    ];
+
+
     const [event] = eventData.data;
     const [showTags, setShowTags] = useState(false);
+    const [actionTags, setActionTags] = useState([]);
 
     const handleTags = (payload) => {
         const url = 'https://usstaging.ivisecurity.com/events_data/getActionTagCategories_1_0';
@@ -36,8 +45,9 @@ const Tile = ({ eventData, index, handleEvent }) => {
             params.append('userLevel', payload.userLevel)
         }
 
-        axios.get(url, {params: params}).then((res) => {
-            console.log(res);
+        axios.get(url, { params: params }).then((res) => {
+            setActionTags(res.data.actionTagCategories.filter((item) => item.categoryId === payload?.id).flatMap((item) => item.actionTagSubCategories));
+            console.log(actionTags)
         })
         setShowTags(!showTags);
     }
@@ -81,7 +91,7 @@ const Tile = ({ eventData, index, handleEvent }) => {
 
                 <div className="camera-id">
                     <div>
-                        {tags.map((item, i) => <img src={item.path} alt='icon' width={20} key={i} onClick={() => handleTags()} />)}
+                        {tags.map((item, i) => <img src={item?.path} alt='icon' width={20} key={i} onClick={() => item?.call(item)} />)}
                     </div>
 
                     <p >{event.cameraId}</p>
@@ -131,7 +141,7 @@ const Tile = ({ eventData, index, handleEvent }) => {
                     </table>
                 </div>
 
-                {showTags && <TagList item={event} tagIndex={index} handleEvent={handleEvent} handleTags={handleTags} />}
+                {showTags && <TagList actionTags={actionTags} item={event} tagIndex={index} handleEvent={handleEvent} handleTags={handleTags} />}
             </div>
 
         </Fragment>
