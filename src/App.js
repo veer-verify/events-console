@@ -7,11 +7,10 @@ import SuspiciousAlert from './utilities/escalation/Escalation';
 
 function App() {
   return (
-    // <Routes>
-    //   <Route path='/' Component={SignIn}></Route>
-    //   <Route path='/dashboard' Component={Dashboard}></Route>
-    // </Routes>
-    <SuspiciousAlert/>
+    <Routes>
+      <Route path='/' Component={SignIn}></Route>
+      <Route path='/dashboard' Component={Dashboard}></Route>
+    </Routes>
 
   );
 }

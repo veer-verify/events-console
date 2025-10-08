@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { Mail, AlertTriangle } from "lucide-react";
 import "./escalation.css";
 
 export default function SuspiciousAlert() {
@@ -102,14 +101,11 @@ export default function SuspiciousAlert() {
         <div className="preview-card">
           <div className="preview-header">
             <div className="alert-header">
-              <AlertTriangle size={24}  className="alert-icon-filled" />
               <span>
                 ALERT @ TID Systems - ({subType})
               </span>
-              <AlertTriangle size={24}  className="alert-icon-filled" />
             </div>
             <button className="mail-btn">
-              <Mail size={16} /> Mail
             </button>
           </div>
 

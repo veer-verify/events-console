@@ -3,12 +3,42 @@ import { useState, useRef, useEffect } from 'react';
 import { Fragment } from "react/jsx-runtime";
 import TagList from '../tag-list/TagList';
 import SuspiciousAlert from '../escalation/Escalation';
+import axios from 'axios';
 
-const Tile = ({ eventData, index, tags, handleEvent }) => {
+const Tile = ({ eventData, index, handleEvent }) => {
+
+      const tags = [
+    {
+      path: 'icons/false.png'
+    },
+    {
+      path: 'icons/suspicious.png'
+    },
+    {
+      path: 'icons/live.png'
+    },
+    {
+      path: 'icons/siren.png'
+    },
+  ];
+
+    
     const [event] = eventData.data;
     const [showTags, setShowTags] = useState(false);
 
-    const handleTags = () => {
+    const handleTags = (payload) => {
+        const url = 'https://usstaging.ivisecurity.com/events_data/getActionTagCategories_1_0';
+        const params = new URLSearchParams();
+        if (payload?.actionTagId) {
+            params.append('actionTagId', payload.actionTagId)
+        }
+        if (payload?.userLevel) {
+            params.append('userLevel', payload.userLevel)
+        }
+
+        axios.get(url, {params: params}).then((res) => {
+            console.log(res);
+        })
         setShowTags(!showTags);
     }
 
@@ -79,7 +109,7 @@ const Tile = ({ eventData, index, tags, handleEvent }) => {
 
                 {showTags && <TagList item={event} tagIndex={index} handleEvent={handleEvent} handleTags={handleTags} />}
             </div>
-              
+
         </Fragment>
     )
 }
