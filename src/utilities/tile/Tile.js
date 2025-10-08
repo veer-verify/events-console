@@ -3,27 +3,81 @@ import { useState, useRef, useEffect } from 'react';
 import { Fragment } from "react/jsx-runtime";
 import TagList from '../tag-list/TagList';
 import SuspiciousAlert from '../escalation/Escalation';
+import axios from 'axios';
 
-const Tile = ({ eventData, index, tags, handleEvent }) => {
+const Tile = ({ eventData, index, handleEvent }) => {
+
+      const tags = [
+    {
+      path: 'icons/false.png'
+    },
+    {
+      path: 'icons/suspicious.png'
+    },
+    {
+      path: 'icons/live.png'
+    },
+    {
+      path: 'icons/siren.png'
+    },
+  ];
+
+    
     const [event] = eventData.data;
     const [showTags, setShowTags] = useState(false);
 
-    const handleTags = () => {
+    const handleTags = (payload) => {
+        const url = 'https://usstaging.ivisecurity.com/events_data/getActionTagCategories_1_0';
+        const params = new URLSearchParams();
+        if (payload?.actionTagId) {
+            params.append('actionTagId', payload.actionTagId)
+        }
+        if (payload?.userLevel) {
+            params.append('userLevel', payload.userLevel)
+        }
+
+        axios.get(url, {params: params}).then((res) => {
+            console.log(res);
+        })
         setShowTags(!showTags);
     }
+
+ const [imgindex, setIndex] = useState(0);
+  const [imgSrc, setImgSrc] = useState(event.image_list[0]);
+
+  useEffect(() => {
+    if (!event.image_list || event.image_list.length === 0) return;
+
+    let i = 0;
+    const interval = setInterval(() => {
+      // Loop through the array
+      i = (i + 1) % event.image_list.length;
+      setIndex(i);
+      setImgSrc(event.image_list[i]);
+    }, 1000); // change every 1 second
+
+    // Cleanup on component unmount
+    return () => clearInterval(interval);
+  }, [event.image_list]);
 
 
     return (
         <Fragment>
             <div className='tile'>
                 <div className="camera-feeds">
+                        <div className="camera">
+                            <img src={imgSrc} alt ={`Camera Feed ${imgindex+1}`}/>
+                        </div>
                     <div className="camera">
-                        <img src="images/camera.png" alt="Camera Feed 1" />
-                    </div>
-                    <div className="camera">
-                        <img src="images/camera.png" alt="Camera Feed 1" />
+                        <img src={imgSrc} alt ={`Camera Feed ${imgindex+1}`}/>
                     </div>
                 </div>
+                {/* <div className="camera">
+                    <img src="images/camera.png" alt="Camera Feed 1" />
+                </div>
+                <div className="camera">
+                    <img src="images/camera.png" alt="Camera Feed 1" />
+                </div> */}
 
                 <div className="camera-id">
                     <div>
@@ -79,7 +133,7 @@ const Tile = ({ eventData, index, tags, handleEvent }) => {
 
                 {showTags && <TagList item={event} tagIndex={index} handleEvent={handleEvent} handleTags={handleTags} />}
             </div>
-              
+
         </Fragment>
     )
 }

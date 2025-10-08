@@ -11,7 +11,6 @@ function App() {
       <Route path='/' Component={SignIn}></Route>
       <Route path='/dashboard' Component={Dashboard}></Route>
     </Routes>
-    // <SuspiciousAlert/>
 
   );
 }
