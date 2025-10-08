@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { Encrypt, set } from '../../services/StorageService';
 import PageLoader from '../../utilities/page-loader/PageLoader';
 import { environment } from '../../environment';
-import {getMetadata} from '../../services/metadataService';
+
 
 const SignIn = () => {
   const navigate = useNavigate('');
@@ -28,7 +28,7 @@ const SignIn = () => {
       set('AccessToken',res.data.AccessToken);
       set('RefreshToken',res.data.RefreshToken);
       navigate('/dashboard');
-       getMetadata();
+       
     }).catch((err) => {
       setLoader(false);
     });
