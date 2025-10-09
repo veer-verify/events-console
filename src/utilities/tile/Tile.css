@@ -7,6 +7,7 @@
   border-radius: 5px;
   box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;
   background-color: #ffffff;
+  position: relative;
 }
 
 @media (max-width: 1280px) {
@@ -24,11 +25,11 @@
 }
 
 .camera {
-  /* width: 50%; */
+  width: 50%;
   height: 350px;
   position: relative;
   border: 1px solid #ccc;
-  border-radius: 8px;
+  border-radius: 4px;
   overflow: hidden;
   background-color: #f9f9f9;
 }
@@ -70,7 +71,8 @@
 
 /* store info */
 .store-info {
-  padding: 10px;
+  padding: 0 10px;
+  margin-bottom: 10px;
   /* background-color: #fff; */
   /* border-top: 2px solid #e91e63; */
 }
@@ -113,16 +115,18 @@
 
 /* monitoring info*/
 .monitoring {
-  padding: 10px;
+  padding: 0 10px;
   /* background-color: #ffffff; */
 }
 
-.monitoring h4 {
-  font-size: 16px;
+.monitoring-title {
+  font-size: 14px;
   margin-bottom: 10px;
   color: #333;
   border-bottom: 2px solid #ed3237;
   padding: 5px;
+  font-weight: 700;
+  /* opacity: 0.7; */
 }
 
 .monitoring table {
@@ -134,7 +138,7 @@
 .monitoring td {
   padding: 8px;
   vertical-align: top;
-  border-bottom: 1px solid #ddd;
+  /* border-bottom: 1px solid #ddd; */
   font-size: 12px;
 }
 
@@ -144,4 +148,39 @@
   width: 150px;
   opacity: 0.5;
   font-size: 12px;
+}
+
+/* Tag List */
+.tag-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2px;
+  padding: 6px;
+  max-width: 800px;
+  margin: auto;
+  position: absolute;
+  z-index: 1;
+  top: 24px;
+  background-color: #fde8e8;
+}
+
+.tag-button {
+  padding: 8px;
+  border: 1px solid #cce3d4;
+  border-radius: 6px;
+  background-color: #f9f9f9;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 12px;
+  text-align: center;
+}
+
+.tag-button:hover {
+  background-color: #e6f2ea;
+}
+
+.tag-button.selected {
+  background-color: #45b981;
+  color: white;
+  border-color: #45b981;
 }

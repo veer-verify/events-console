@@ -10,6 +10,12 @@
     background-size: cover;
 }
 
+@media (max-width: 768px) {
+    .left-panel {
+        display: none;
+    }
+}
+
 .right-panel {
     flex-grow: 1;
     background: white;
@@ -70,7 +76,8 @@
     display: flex;
     align-items: center;
     margin-bottom: 20px;
-    justify-content: end;
+    /* justify-content: end; */
+    /* cursor: pointer; */
 }
 
 input[type="checkbox"] {

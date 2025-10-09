@@ -1,31 +1,17 @@
+import { get } from '../../services/StorageService';
 import './TagList.css';
-import { useState } from 'react';
 
-const TagList = ({ actionTags, item, tagIndex, handleEvent, closeTags }) => {
-  // const tags = [
-  //   "Animal / Spider Web",
-  //   "Cleaning Screw / Staff",
-  //   "Clouds / Shadow [Day Time]",
-  //   "Dust Particles",
-  //   "Flapping / Hanging Obj",
-  //   "No Time Activity Seen",
-  //   "Offsite Lights",
-  //   "Person Out of Bound",
-  //   "Plants / Tree",
-  //   "Rain / Snow (Bad Weather)",
-  //   "Residents",
-  //   "Vechicle Out of Bound",
-  // ];
-
-  // const [selected, setSelected] = useState("Plants / Tree");
+const TagList = ({ actionTags, handleEvent, closeTags, index, currentEvent }) => {
+  const type = get('id');
 
   return (
     <div className="tag-grid">
-      {actionTags.map((tag, index) => (
+      {actionTags.map((tag, i) => (
         <button
           className='tag-button'
-          key={index}
-          onClick={() => {handleEvent(item, tagIndex); closeTags()}}
+          style={{border: type === 1 ? '1px solid #53BF8B' : '1px solid #ED3237'}}
+          key={i}
+          onClick={() => {handleEvent(currentEvent, index); closeTags()}}
         >
           {tag.subCategoryName}
         </button>

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getAccessforRefreshToken } from "./metadataService";
+import { getAccessforRefreshToken } from "./ApiService";
 import { get, set } from "./StorageService";
 
 
@@ -85,7 +85,7 @@ api.interceptors.response.use(
 
         // Optional logout if refresh fails
         localStorage.clear();
-        window.location.href = "/login";
+        window.location.href = "/";
 
         return Promise.reject(err);
       }

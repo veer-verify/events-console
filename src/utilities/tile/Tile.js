@@ -2,22 +2,28 @@ import './Tile.css';
 import { useState, useRef, useEffect } from 'react';
 import { Fragment } from "react/jsx-runtime";
 import TagList from '../tag-list/TagList';
-import SuspiciousAlert from '../escalation/Escalation';
 import axios from 'axios';
 import Escalation from '../escalation/Escalation';
+import { set } from '../../services/StorageService';
 
-const Tile = ({ eventData, eventIndex, index, handleEvent, escalation, handleTag }) => {
+const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeEscalation }) => {
 
     const tags = [
         {
             id: 1,
             path: 'icons/false.png',
-            call: (data) => handleTags(data)
+            call: (data) => {
+                set('id', 1);
+                handleTags(data);
+            }
         },
         {
             id: 2,
             path: 'icons/suspicious.png',
-            call: (data) => handleTags(data)
+            call: (data) => {
+                set('id', 2);
+                handleTags(data);
+            }
         },
         {
             path: 'icons/live.png',
@@ -31,8 +37,6 @@ const Tile = ({ eventData, eventIndex, index, handleEvent, escalation, handleTag
         },
     ];
 
-
-    // const [event] = eventData.data;
     const [showTags, setShowTags] = useState(false);
     const [actionTags, setActionTags] = useState([]);
 
@@ -48,34 +52,33 @@ const Tile = ({ eventData, eventIndex, index, handleEvent, escalation, handleTag
 
         axios.get(url, { params: params }).then((res) => {
             setActionTags(res.data.actionTagCategories.filter((item) => item.categoryId === payload?.id).flatMap((item) => item.actionTagSubCategories));
-            console.log(actionTags)
+            setShowTags(true);
         })
     }
 
-    const openTags = () => {
-        setShowTags(true);
-    }
+    // const openTags = () => {
+    //     setShowTags(true);
+    // }
 
     const closeTags = () => {
-        setActionTags(false);
+        setShowTags(false);
     }
 
     const [imgindex, setIndex] = useState(0);
-    const [imgSrc, setImgSrc] = useState(eventData.image_list[0]);
+    const [imgSrc, setImgSrc] = useState(currentEvent.image_list[0]);
 
     useEffect(() => {
-        if (!eventData.image_list || eventData.image_list.length === 0) return;
+        if (!currentEvent.image_list || currentEvent.image_list.length === 0) return;
 
         let i = 0;
         const interval = setInterval(() => {
-            i = (i + 1) % eventData.image_list.length;
+            i = (i + 1) % currentEvent.image_list.length;
             setIndex(i);
-            setImgSrc(eventData.image_list[i]);
+            setImgSrc(currentEvent.image_list[i]);
         }, 1000);
 
-        // Cleanup on component unmount
         return () => clearInterval(interval);
-    }, [eventData.image_list]);
+    }, [currentEvent.image_list]);
 
 
     return (
@@ -91,16 +94,17 @@ const Tile = ({ eventData, eventIndex, index, handleEvent, escalation, handleTag
                 </div>
 
                 <div className="camera-id">
-                    <div>
-                        {tags.map((item, i) => <img src={item?.path} alt='icon' width={20} key={i} onClick={() => { openTags(); item?.call(item); handleTag(item.id) }} />)}
+                    <div style={{position: 'relative'}}>
+                        {tags.map((item, i) => <img src={item?.path} alt='icon' width={20} key={i} onClick={() => { item?.call(item) }} />)}
+                        {showTags && <TagList actionTags={actionTags} handleEvent={handleEvent} closeTags={closeTags} index={index} currentEvent={currentEvent} />}
                     </div>
 
-                    <p >{eventData.cameraId}</p>
-                    <p>{eventData.eventTime}</p>
+                    <p >{currentEvent.cameraId}</p>
+                    <p>{currentEvent.eventTime}</p>
                 </div>
 
                 <div className="store-info">
-                    <p>{eventData.siteName}</p>
+                    <p>{currentEvent.siteName}</p>
                     <p>Tadepally, Guntur District, Andhra Pradesh, INDIA - 500503</p>
 
                     <div className="activity-box">
@@ -116,7 +120,7 @@ const Tile = ({ eventData, eventIndex, index, handleEvent, escalation, handleTag
                 </div>
 
                 <div className="monitoring">
-                    <h4>MONITORING INFO</h4>
+                    <p className='monitoring-title'>MONITORING INFO</p>
                     <table>
                         <tbody>
                             <tr>
@@ -142,10 +146,8 @@ const Tile = ({ eventData, eventIndex, index, handleEvent, escalation, handleTag
                     </table>
                 </div>
 
-                {(showTags && actionTags) && <TagList actionTags={actionTags} item={eventData} tagIndex={index} handleEvent={handleEvent} closeTags={closeTags} />}
-                {(escalation && eventIndex === index) && <Escalation />}
+                {(escalation && eventIndex === index) && <Escalation closeEscalation={closeEscalation} />}
             </div>
-
         </Fragment>
     )
 }

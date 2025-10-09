@@ -3,11 +3,10 @@ import './ProfileCard.css';
 import { clear, get } from '../../services/StorageService';
 
 const ProfileCard = () => {
-    const user = get('user')?.data;
+    const user = get('user');
 
     const navigate = useNavigate('');
     const logout = () => {
-        clear();
         navigate('/')
     };
 

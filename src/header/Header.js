@@ -5,7 +5,7 @@ import { get } from '../services/StorageService';
 
 
 const Header = () => {
-    const user = get('user')?.data;
+    const user = get('user');
 
     const [showProfile, setShowProfile] = useState(false);
     const profileRef = useRef();
