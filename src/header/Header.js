@@ -28,7 +28,7 @@ const Header = () => {
                     <img src='images/logo.svg' alt='loading' loading='lazy' />
                 </div>
                 <div className="page-title">
-                    <span className='title'>EVENTS CONSOLE</span><span className='bar'> | </span><span className="level">LEVEL - {user.userLevel ?? 1}</span>
+                    <span className='title'>EVENTS CONSOLE</span><span className='bar'> | </span><span className="level">LEVEL - {user?.userLevel ?? 1}</span>
                 </div>
             </div>
 
@@ -37,7 +37,7 @@ const Header = () => {
                     <img src='icons/user.svg' alt='User' />
                 </div>
                 <div className="profile-info" ref={profileRef}>
-                    <div className="username">{user.UserName}</div>
+                    <div className="username">{user?.UserName}</div>
                     <div className="role">Screener</div>
                 </div>
             </div>

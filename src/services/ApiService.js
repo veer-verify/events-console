@@ -29,7 +29,7 @@ export const getAccessforRefreshToken = async () => {
   }
 };
 
-export const write2VmsDispatchQueue = (payload) => {
+export const write2VmsDispatchQueue = async (payload) => {
   const url = `${environment.events_url}/write2Vms_DispatchQueue_1_0/`;
   let obj = {
     cameraId: payload?.cameraId,
@@ -51,7 +51,7 @@ export const write2VmsDispatchQueue = (payload) => {
   return this.api.post(url, obj).then((res) => res).catch((err) => err);
 }
 
-export const getVmsEventsQueueData = () => {
+export const getVmsEventsQueueData = async () => {
   const url = `${environment.events_url}/getVms_EventsQueueData_1_0/`;
   const user = get('user');
   const params = new URLSearchParams();
@@ -59,7 +59,7 @@ export const getVmsEventsQueueData = () => {
   return api.get(url, { params: params }).then((res) => res).catch((err) => err);
 }
 
-export const updateEventFullDetails = (payload) => {
+export const updateEventFullDetails = async (payload) => {
   const url = `${environment.event_process_url}/updateEventFullDetails_1_0/`;
   const user = get('user');
   const currentTime = moment().tz(payload?.timezone)?.format('YYYY-MM-DD hh:mm:ss:SSS');
@@ -91,22 +91,35 @@ export const updateEventFullDetails = (payload) => {
   return api.post(url, obj).then((res) => res).catch((err) => err);
 }
 
-export const getEmailDataForVMSEvents = (payload) => {
+export const getEmailDataForVMSEvents = async (payload) => {
   const url = `${environment.guard_monitoring_url}/getEmailDataForVMSEvents_1_0`;
+  const weekday = [
+    'Sunday',
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+  ];
+  const currentTime = moment().format('YYYY-MM-DD HH:mm:ss');
+  const day = new Date(currentTime).getDay();
+  const hour = new Date(currentTime).getHours();
+
   const params = new URLSearchParams();
   params.append('siteId', payload?.siteId);
-  params.append('camerasList', payload?.camerasList);
-  params.append('alertTypeId', payload?.alertTypeId);
-  params.append('subTypeId', payload?.subTypeId);
-  params.append('day', payload?.day);
-  params.append('hour', payload?.hour);
-  params.append('currentTime', payload?.currentTime);
+  params.append('camerasList', payload?.cameraId);
+  params.append('alertTypeId', payload?.selectedAlertType);
+  params.append('subTypeId', payload?.selectedSubType);
+  params.append('day', weekday[day]);
+  params.append('hour', hour);
+  params.append('currentTime', currentTime);
   // params.append('timer', 120);
-  params.append('imageName', payload?.imageName);
-  return api.get(url, { params: params }).then((res) => res).catch((err) => err);
+  params.append('imageName', payload?.image_list.toString());
+  return api.get(url, { params: params }).then((res) => res).catch((err) => alert(err));
 }
 
-export const eventsGenericEmail = (payload) => {
+export const eventsGenericEmail = async (payload) => {
   const url = `${environment.guard_monitoring_url}/eventsGenericEmail_1_0`;
   const user = get('user');
   const params = new URLSearchParams();

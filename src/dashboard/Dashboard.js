@@ -3,7 +3,7 @@ import { Fragment, useEffect, useState } from 'react'
 import Header from '../header/Header';
 import Tile from '../utilities/tile/Tile';
 import axios from 'axios';
-import { events_url, get } from '../services/StorageService';
+import { get } from '../services/StorageService';
 import { environment } from '../environment';
 import { updateEventFullDetails } from '../services/ApiService';
 

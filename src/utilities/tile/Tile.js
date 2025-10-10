@@ -4,7 +4,8 @@ import { Fragment } from "react/jsx-runtime";
 import TagList from '../tag-list/TagList';
 import axios from 'axios';
 import Escalation from '../escalation/Escalation';
-import { set } from '../../services/StorageService';
+import { get, set } from '../../services/StorageService';
+import Stream from '../stream/Stream';
 
 const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeEscalation }) => {
 
@@ -42,14 +43,16 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
 
     const handleTags = (payload) => {
         const url = 'https://usstaging.ivisecurity.com/events_data/getActionTagCategories_1_0';
+        const user = get('user');
         const params = new URLSearchParams();
         if (payload?.actionTagId) {
             params.append('actionTagId', payload.actionTagId)
         }
-        if (payload?.userLevel) {
-            params.append('userLevel', payload.userLevel)
+        if (user) {
+            params.append('userLevel', user.userLevel)
         }
 
+        setShowTags(false);
         axios.get(url, { params: params }).then((res) => {
             setActionTags(res.data.actionTagCategories.filter((item) => item.categoryId === payload?.id).flatMap((item) => item.actionTagSubCategories));
             setShowTags(true);
@@ -89,7 +92,7 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
                         <img src={imgSrc} alt={`Camera Feed ${imgindex + 1}`} />
                     </div>
                     <div className="camera">
-                        <img src={imgSrc} alt={`Camera Feed ${imgindex + 1}`} />
+                        <Stream videoData={`${currentEvent.httpUrl}/`} />
                     </div>
                 </div>
 
@@ -146,7 +149,7 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
                     </table>
                 </div>
 
-                {(escalation && eventIndex === index) && <Escalation closeEscalation={closeEscalation} />}
+                {(escalation && eventIndex === index) && <Escalation closeEscalation={closeEscalation} currentEvent={currentEvent} />}
             </div>
         </Fragment>
     )

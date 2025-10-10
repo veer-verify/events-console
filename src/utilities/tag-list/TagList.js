@@ -8,9 +8,9 @@ const TagList = ({ actionTags, handleEvent, closeTags, index, currentEvent }) =>
     <div className="tag-grid">
       {actionTags.map((tag, i) => (
         <button
+          key={i}
           className='tag-button'
           style={{border: type === 1 ? '1px solid #53BF8B' : '1px solid #ED3237'}}
-          key={i}
           onClick={() => {handleEvent(currentEvent, index); closeTags()}}
         >
           {tag.subCategoryName}
