@@ -1,23 +1,22 @@
-import "./Escalation.css";
+import "./escalation.css";
 import { useState, useEffect } from "react";
 import { getMetadata } from "../../services/ApiService";
 import { useAuth } from "../../dashboard/Dashboard";
 
-const Escalation = ({closeEscalation}) => {
+const Escalation = ({closeEscalation,currentEvent}) => {
   // const data = useAuth();
   // console.log(data)
   
   const [alertTypeList, setAlertTypeList] = useState([]);
   const [subTypeList, setSubTypeList] = useState([]);
-
   const [selectedAlertType, setSelectedAlertType] = useState("");
   const [selectedSubType, setSelectedSubType] = useState("");
 
   // other UI states
   const [selection, setSelection] = useState("person");
-  const [selectedButton, setSelectedButton] = useState("approvals");
+//   const [selectedButton, setSelectedButton] = useState("mail");
 
-  const selectButton = (button) => setSelectedButton(button);
+//   const selectButton = (button) => setSelectedButton(button);
 
   useEffect(() => {
     const fetchMetadata = async () => {
@@ -36,6 +35,8 @@ const Escalation = ({closeEscalation}) => {
         console.error("Error fetching metadata:", err);
       }
     };
+
+    console.log(currentEvent)
 
     fetchMetadata();
   }, []);
@@ -114,18 +115,18 @@ const Escalation = ({closeEscalation}) => {
 
           {/* <div className="button-group1">
             <button
-              className={`toggle-button ${selectedButton === "approvals" ? "active" : ""
+              className={`toggle-button ${selectedButton === "mail" ? "active" : ""
                 }`}
-              onClick={() => selectButton("approvals")}
+              onClick={() => selectButton("mail")}
             >
               Mail
             </button>
 
             <button
-              className={`toggle-button ${selectedButton === "rejects" ? "activerej" : ""
+              className={`toggle-button ${selectedButton === "message" ? "activerej" : ""
                 }`}
               style={{ position: "relative", left: "-30px" }}
-              onClick={() => selectButton("rejects")}
+              onClick={() => selectButton("message")}
             >
               Message
             </button>

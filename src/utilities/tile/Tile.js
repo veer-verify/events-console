@@ -146,7 +146,7 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
                     </table>
                 </div>
 
-                {(escalation && eventIndex === index) && <Escalation closeEscalation={closeEscalation} />}
+                {(escalation && eventIndex === index) && <Escalation closeEscalation={closeEscalation} currentEvent={currentEvent}/>}
             </div>
         </Fragment>
     )
