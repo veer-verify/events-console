@@ -9,15 +9,14 @@ const Escalation = ({ closeEscalation, currentEvent }) => {
 
   const [alertTypeList, setAlertTypeList] = useState([]);
   const [subTypeList, setSubTypeList] = useState([]);
-
   const [selectedAlertType, setSelectedAlertType] = useState("");
   const [selectedSubType, setSelectedSubType] = useState("");
 
   // other UI states
   const [selection, setSelection] = useState("person");
-  const [selectedButton, setSelectedButton] = useState("approvals");
+//   const [selectedButton, setSelectedButton] = useState("mail");
 
-  const selectButton = (button) => setSelectedButton(button);
+//   const selectButton = (button) => setSelectedButton(button);
 
   const fetchMetadata = async () => {
     const meta = await getMetadata();
@@ -123,18 +122,18 @@ const Escalation = ({ closeEscalation, currentEvent }) => {
 
               {/* <div className="button-group1">
             <button
-              className={`toggle-button ${selectedButton === "approvals" ? "active" : ""
+              className={`toggle-button ${selectedButton === "mail" ? "active" : ""
                 }`}
-              onClick={() => selectButton("approvals")}
+              onClick={() => selectButton("mail")}
             >
               Mail
             </button>
 
             <button
-              className={`toggle-button ${selectedButton === "rejects" ? "activerej" : ""
+              className={`toggle-button ${selectedButton === "message" ? "activerej" : ""
                 }`}
               style={{ position: "relative", left: "-30px" }}
-              onClick={() => selectButton("rejects")}
+              onClick={() => selectButton("message")}
             >
               Message
             </button>

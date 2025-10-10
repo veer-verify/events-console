@@ -1,13 +1,8 @@
 .alert-container {
-  /* display: grid;
-  grid-template-columns: 1fr 2fr; */
-  /* padding: 10px; */
-
   display: flex;
-  /* width: 50%; */
   position: absolute;
   z-index: 1;
-  top: 46%;
+  top: 44%;
   background: #fff;
 }
 
@@ -19,7 +14,6 @@
 }
 
 .alert-input {
-  /* background: #fff; */
   padding: 10px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.05);
 }
@@ -123,12 +117,7 @@
   overflow-y: auto; */
 }
 
-.preview-card {
-  /* border: 1px solid #ddd; */
-  /* background: #fdfdfd; */
-  /* padding: 10px; */
-  /* border-radius: 12px; */
-}
+
 
 .alert-header {
   color: #ED3237;
@@ -168,7 +157,7 @@
 
 .alert-image {
   width: 50%;
-  height: 100px;
+  height: 49%;
   object-fit: cover;
   border-radius: 10px;
   border: 1px solid #ddd;
