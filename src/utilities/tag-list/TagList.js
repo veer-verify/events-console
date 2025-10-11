@@ -1,4 +1,4 @@
-import { get } from '../../services/StorageService';
+import { get, set } from '../../services/StorageService';
 import './TagList.css';
 
 const TagList = ({ actionTags, handleEvent, closeTags, index, currentEvent }) => {
@@ -11,7 +11,7 @@ const TagList = ({ actionTags, handleEvent, closeTags, index, currentEvent }) =>
           key={i}
           className='tag-button'
           style={{border: type === 1 ? '1px solid #53BF8B' : '1px solid #ED3237'}}
-          onClick={() => {handleEvent(currentEvent, index); closeTags()}}
+          onClick={() => { set('eventTag', tag.subCategoryName); handleEvent(currentEvent, index); closeTags() }}
         >
           {tag.subCategoryName}
         </button>

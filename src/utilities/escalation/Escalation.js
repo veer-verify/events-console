@@ -1,42 +1,49 @@
 import "./Escalation.css";
 import { useState, useEffect, Fragment } from "react";
-import { getEmailDataForVMSEvents, getMetadata } from "../../services/ApiService";
+import { getAlertCategoriesForSiteId, getEmailDataForVMSEvents, getMetadata, updateEventFullDetails, write2VmsDispatchQueue } from "../../services/ApiService";
 import { useAuth } from "../../dashboard/Dashboard";
+import { get } from "../../services/StorageService";
 
 const Escalation = ({ closeEscalation, currentEvent }) => {
   // const data = useAuth();
   // console.log(data)
 
-  const [alertTypeList, setAlertTypeList] = useState([]);
-  const [subTypeList, setSubTypeList] = useState([]);
+  const [alerts, setAlerts] = useState([]);
   const [selectedAlertType, setSelectedAlertType] = useState("");
   const [selectedSubType, setSelectedSubType] = useState("");
 
-  // other UI states
   const [selection, setSelection] = useState("person");
 //   const [selectedButton, setSelectedButton] = useState("mail");
-
 //   const selectButton = (button) => setSelectedButton(button);
 
   const fetchMetadata = async () => {
-    const meta = await getMetadata();
-    meta.forEach((item) => {
-      if (item.typeName === "GuardAlertType") {
-        setAlertTypeList(item.metadata.filter((m) => m.active === "Y"));
-      }
-      if (item.typeName === "GuardSubTypeId") {
-        setSubTypeList(item.metadata.filter((m) => m.active === "Y"));
-      }
-    });
+    const response = await getAlertCategoriesForSiteId(currentEvent);
+    console.log(response);
+    setAlerts(response);
+    // meta.forEach((item) => {
+    //   if (item.typeName === "GuardAlertType") {
+    //     setAlertTypeList(item.metadata.filter((m) => m.active === "Y"));
+    //   }
+    //   if (item.typeName === "GuardSubTypeId") {
+    //     setSubTypeList(item.metadata.filter((m) => m.active === "Y"));
+    //   }
+    // });
   };
 
   const [emaildata, setEmailData] = useState('');
   const fetchEmailData = async () => {
-    const detail = await getEmailDataForVMSEvents({ ...currentEvent, selectedAlertType, selectedSubType });
-    console.log(detail);
-    if(detail?.data?.statusCode === 200) {
-      setEmailData(detail.data.emailDetails);
+    const response = await getEmailDataForVMSEvents({ ...currentEvent, selectedAlertType, selectedSubType });
+    setEmailData(response);
+  }
+
+  const escalate = () => {
+    const type = get('id');
+    if(type === 1) {
+      write2VmsDispatchQueue(currentEvent);
+    } else {
+      updateEventFullDetails(currentEvent);
     }
+    closeEscalation();
   }
 
   useEffect(() => {
@@ -45,6 +52,7 @@ const Escalation = ({ closeEscalation, currentEvent }) => {
 
   return (
     <div className="alert-container">
+
       {/* Left Panel */}
       <div className="alert-input">
         <p className="section-title">SUSPICIOUS INPUT</p>
@@ -79,9 +87,9 @@ const Escalation = ({ closeEscalation, currentEvent }) => {
             onChange={(e) => { setSelectedAlertType(e.target.value) }}
           >
             <option value="" disabled>Select Alert Type</option>
-            {alertTypeList?.map((item) => (
-              <option key={item.id} value={item.keyId}>
-                {item.value}
+            {alerts?.map((item) => (
+              <option key={item.guardAlertTypeId} value={item.guardAlertTypeId}>
+                {item.guardAlertType}
               </option>
             ))}
           </select>
@@ -92,21 +100,23 @@ const Escalation = ({ closeEscalation, currentEvent }) => {
           <label>Alert Sub Type</label>
           <select
             value={selectedSubType}
-            onChange={(e) => { setSelectedSubType(e.target.value); fetchEmailData() }}
+            onChange={(e) => { setSelectedSubType(e.target.value); }}
           >
             <option value="" disabled>Select Alert Sub Type</option>
-            {subTypeList?.map((item) => (
-              <option key={item.id} value={item.keyId}>
-                {item.value}
+            {alerts[selectedAlertType]?.subAlerts?.map((item) => (
+              <option key={item.guardSubAlertTypeId} value={item.guardSubAlertTypeId}>
+                {item.guardSubAlertType}
               </option>
             ))}
           </select>
         </div>
 
+        <button onClick={fetchEmailData}>submit</button>
+
         {/* Action Buttons */}
         <div className="button-group">
-          <button className="btn-secondary" onClick={() => closeEscalation()}>COMPLETED</button>
-          <button className="btn-primary" onClick={() => closeEscalation()}>ESCALATED</button>
+          <button className="btn-secondary" onClick={escalate}>COMPLETED</button>
+          <button className="btn-primary" onClick={escalate}>ESCALATED</button>
         </div>
       </div>
 
@@ -115,29 +125,30 @@ const Escalation = ({ closeEscalation, currentEvent }) => {
       <div className="alert-preview">
 
         {
-          emaildata &&
+          emaildata ?
           <Fragment>
             <div className="flex-group">
               <p className="section-title">PREVIEW</p>
 
-              {/* <div className="button-group1">
-            <button
-              className={`toggle-button ${selectedButton === "mail" ? "active" : ""
-                }`}
-              onClick={() => selectButton("mail")}
-            >
-              Mail
-            </button>
+            {/* <div className="button-group1">
+              <button
+                className={`toggle-button ${selectedButton === "mail" ? "active" : ""
+                  }`}
+                onClick={() => selectButton("mail")}
+              >
+                Mail
+              </button>
 
-            <button
-              className={`toggle-button ${selectedButton === "message" ? "activerej" : ""
-                }`}
-              style={{ position: "relative", left: "-30px" }}
-              onClick={() => selectButton("message")}
-            >
-              Message
-            </button>
-          </div> */}
+              <button
+                className={`toggle-button ${selectedButton === "message" ? "activerej" : ""
+                  }`}
+                style={{ position: "relative", left: "-30px" }}
+                onClick={() => selectButton("message")}
+              >
+                Message
+              </button>
+            </div> */}
+
             </div>
 
             <div className="preview-card">
@@ -177,7 +188,8 @@ const Escalation = ({ closeEscalation, currentEvent }) => {
             <p className="alert-note">
               {emaildata?.emailFooter}
             </p>
-          </Fragment>
+          </Fragment> :
+          <p>Loading...</p>
         }
       </div>
     </div>

@@ -5,7 +5,7 @@ import Tile from '../utilities/tile/Tile';
 import axios from 'axios';
 import { get } from '../services/StorageService';
 import { environment } from '../environment';
-import { updateEventFullDetails } from '../services/ApiService';
+import { updateEventFullDetails, write2VmsDispatchQueue } from '../services/ApiService';
 
 
 const Dashboard = () => {
@@ -33,12 +33,15 @@ const Dashboard = () => {
 
   const handleEvent = async (item, index) => {
     const tag = get('id');
+    const eventTag = get('eventTag'); 
     setEventIndex(index);
     if(tag === 1) {
       const filtered = eventData.filter((_, i) => index !== i);
       setEventData(filtered);
-      const res = await updateEventFullDetails(item);
-      console.log(res);
+      const response = await write2VmsDispatchQueue(
+        {...item, queue_name: '2nd-level', actionTag: 'false activity', eventTag: eventTag}
+      );
+      console.log(response);
     } else {
       setEscalation(true);
     }

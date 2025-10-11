@@ -3,15 +3,6 @@ import { environment } from '../environment';
 import { get, set } from './StorageService';
 import moment from 'moment-timezone';
 
-export const getMetadata = async () => {
-  try {
-    const response = await api.get(`${environment.common_url}/getValuesListByType_1_0`);
-    return response.data;
-  } catch (err) {
-    console.error(err);
-  }
-};
-
 export const getAccessforRefreshToken = async () => {
   try {
     const url = `${environment.login_url}/getAccessforRefreshToken`;
@@ -29,26 +20,45 @@ export const getAccessforRefreshToken = async () => {
   }
 };
 
+export const getMetadata = async () => {
+  try {
+    const response = await api.get(`${environment.common_url}/getValuesListByType_1_0`);
+    return response.data;
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+export const getAlertCategoriesForSiteId = async (payload) => {
+  const url = `${environment.alert_categories_url}/getAlertCategoriesForSiteId_1_0/`;
+  const params = new URLSearchParams();
+  params.append('siteId', payload?.siteId);
+  return api.get(url, { params: params }).then((res) => res.data).catch((err) => alert(err));
+}
+
 export const write2VmsDispatchQueue = async (payload) => {
-  const url = `${environment.events_url}/write2Vms_DispatchQueue_1_0/`;
+  const url = `${environment.events_url}/write2Vms_EventsQueue_1_0/`;
+  const user = get('user');
+  const currentTime = moment().tz(payload?.timezone)?.format('YYYY-MM-DD hh:mm:ss:SSS');
   let obj = {
-    cameraId: payload?.cameraId,
-    color: payload?.color,
-    id: payload?.id,
-    timestamp: payload?.time,
-    queue_name: payload?.queue_name,
-    timezone: payload?.timezone,
-    httpUrl: payload?.httpUrl,
     siteId: payload?.siteId,
     siteName: payload?.siteName,
-    userName: payload?.userName,
-    actionTag: payload?.actionTag ?? '',
-    actionTime: moment().tz(payload?.timezone)?.format('YYYY-MM-DD hh:mm:ss:SSS'),
-    eventTag: '',
-    userLevelAlarmInfo: payload?.userLevelAlarmInfo,
-    userLevels: 0
+    cameraId: payload?.cameraId,
+    objectName: 'person',
+    eventTag: payload?.eventTag,
+    eventTime: currentTime,
+    actionTag: payload?.actionTag,
+    actionTime: currentTime,
+    userLevels: 0,
+    httpUrl: payload?.httpUrl,
+    imageUrl: payload?.image_list.toString(),
+    queue_name: payload?.queue_name,
+    landingTime: '',
+    timezone: payload?.timezone,
+    userLevelAlarmInfo: [],
+    userName: user.UserName,
   }
-  return this.api.post(url, obj).then((res) => res).catch((err) => err);
+  return api.post(url, obj).then((res) => res).catch((err) => alert(err));
 }
 
 export const getVmsEventsQueueData = async () => {
@@ -88,7 +98,7 @@ export const updateEventFullDetails = async (payload) => {
     timezone: payload?.timezone,
     userLevelAlarmInfo: payload?.userLevelAlarmInfo
   };
-  return api.post(url, obj).then((res) => res).catch((err) => err);
+  return api.post(url, obj).then((res) => res).catch((err) => alert(err));
 }
 
 export const getEmailDataForVMSEvents = async (payload) => {
@@ -116,7 +126,16 @@ export const getEmailDataForVMSEvents = async (payload) => {
   params.append('currentTime', currentTime);
   // params.append('timer', 120);
   params.append('imageName', payload?.image_list.toString());
-  return api.get(url, { params: params }).then((res) => res).catch((err) => alert(err));
+  return api.get(url, { params: params }).then((res) => {
+    if(res.data.statusCode === 200) {
+      return res.data.emailDetails;
+    } else {
+      return [];
+    }
+  }).catch((err) => {
+    alert(err)
+    return [];
+  });
 }
 
 export const eventsGenericEmail = async (payload) => {
@@ -150,5 +169,5 @@ export const eventsGenericEmail = async (payload) => {
   for (var i = 0; i < payload?.screenshots.length; i++) {
     formData.append("files", payload?.screenshots[i].substring(payload?.screenshots[i].lastIndexOf('/') + 1));
   }
-  return api.post(url, formData, { params: params }).then((res) => res).catch((err) => err);
+  return api.post(url, formData, { params: params }).then((res) => res).catch((err) => alert(err));
 }

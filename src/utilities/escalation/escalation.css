@@ -2,8 +2,9 @@
   display: flex;
   position: absolute;
   z-index: 1;
-  top: 44%;
+  top: 46%;
   background: #fff;
+  width: 100%;
 }
 
 .section-title {
@@ -15,7 +16,8 @@
 
 .alert-input {
   padding: 10px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      width: 50%;
+  /* box-shadow: 0 4px 10px rgba(0,0,0,0.05); */
 }
 
 .radio-group {
@@ -112,7 +114,8 @@
 .alert-preview {
   /* background: #ED32370D; */
   padding: 10px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      width: 50%;
+  /* box-shadow: 0 4px 10px rgba(0,0,0,0.05); */
   /* height: 45vh;
   overflow-y: auto; */
 }
