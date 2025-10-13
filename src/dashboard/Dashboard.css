@@ -1,4 +1,5 @@
 .tiles {
+    position: relative;
     background-color: #EEEEEE;
     display: flex;
     flex-direction: row;

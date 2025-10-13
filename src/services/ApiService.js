@@ -30,7 +30,7 @@ export const getMetadata = async () => {
 };
 
 export const getAlertCategoriesForSiteId = async (payload) => {
-  const url = `${environment.alert_categories_url}/getAlertCategoriesForSiteId_1_0/`;
+  const url = `${environment.guard_monitoring_url}/getAlertCategoriesForSiteId_1_0/`;
   const params = new URLSearchParams();
   params.append('siteId', payload?.siteId);
   return api.get(url, { params: params }).then((res) => res.data).catch((err) => alert(err));
@@ -39,14 +39,14 @@ export const getAlertCategoriesForSiteId = async (payload) => {
 export const write2VmsDispatchQueue = async (payload) => {
   const url = `${environment.events_url}/write2Vms_EventsQueue_1_0/`;
   const user = get('user');
-  const currentTime = moment().tz(payload?.timezone)?.format('YYYY-MM-DD hh:mm:ss:SSS');
+  const currentTime = moment().tz(payload?.timezone)?.format('YYYY-MM-DD hh:mm:ss');
   let obj = {
     siteId: payload?.siteId,
     siteName: payload?.siteName,
     cameraId: payload?.cameraId,
     objectName: 'person',
     eventTag: payload?.eventTag,
-    eventTime: currentTime,
+    eventTime: payload?.eventTime,
     actionTag: payload?.actionTag,
     actionTime: currentTime,
     userLevels: 0,
@@ -80,8 +80,8 @@ export const updateEventFullDetails = async (payload) => {
     objectName: payload?.objectName,
     cameraId: payload?.cameraId,
     eventTag: 'events-console',
-    actionTag: payload?.actionTag,
-    subActionTag: payload?.subActionTag,
+    actionTag: payload?.selectedAlertType,
+    subActionTag: payload?.selectedSubType,
     userLevels: user.userLevel,
     falseActivityTime: actionType === 1 ? payload?.actionTagTime : '',
     suspiciousTime: actionType === 2 ? payload?.actionTagTime : '',
@@ -96,7 +96,7 @@ export const updateEventFullDetails = async (payload) => {
     remarks: '',
     eventType: '',
     timezone: payload?.timezone,
-    userLevelAlarmInfo: payload?.userLevelAlarmInfo
+    userLevelAlarmInfo: []
   };
   return api.post(url, obj).then((res) => res).catch((err) => alert(err));
 }

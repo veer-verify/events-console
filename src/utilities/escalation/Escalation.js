@@ -6,9 +6,9 @@ import { get } from "../../services/StorageService";
 
 const Escalation = ({ closeEscalation, currentEvent }) => {
   // const data = useAuth();
-  // console.log(data)
 
   const [alerts, setAlerts] = useState([]);
+  const [subAlerts, setSubAlerts] = useState([]);
   const [selectedAlertType, setSelectedAlertType] = useState("");
   const [selectedSubType, setSelectedSubType] = useState("");
 
@@ -18,21 +18,14 @@ const Escalation = ({ closeEscalation, currentEvent }) => {
 
   const fetchMetadata = async () => {
     const response = await getAlertCategoriesForSiteId(currentEvent);
-    console.log(response);
     setAlerts(response);
-    // meta.forEach((item) => {
-    //   if (item.typeName === "GuardAlertType") {
-    //     setAlertTypeList(item.metadata.filter((m) => m.active === "Y"));
-    //   }
-    //   if (item.typeName === "GuardSubTypeId") {
-    //     setSubTypeList(item.metadata.filter((m) => m.active === "Y"));
-    //   }
-    // });
   };
 
   const [emaildata, setEmailData] = useState('');
-  const fetchEmailData = async () => {
-    const response = await getEmailDataForVMSEvents({ ...currentEvent, selectedAlertType, selectedSubType });
+  
+  const fetchEmailData = async (val) => {
+    setSelectedSubType(val)
+    const response = await getEmailDataForVMSEvents({ ...currentEvent, selectedAlertType, ...{selectedSubType: val} });
     setEmailData(response);
   }
 
@@ -41,10 +34,17 @@ const Escalation = ({ closeEscalation, currentEvent }) => {
     if(type === 1) {
       write2VmsDispatchQueue(currentEvent);
     } else {
-      updateEventFullDetails(currentEvent);
+      updateEventFullDetails({...currentEvent, selectedAlertType, selectedSubType});
     }
     closeEscalation();
   }
+
+  const getSubAlerts = (val) => {
+    setSelectedSubType("");
+    setSelectedAlertType(val)
+    const x  = alerts.filter((item) => item.guardAlertTypeId === parseInt(val)).flatMap((el) => el.subAlerts);
+    setSubAlerts(x);
+  };
 
   useEffect(() => {
     fetchMetadata();
@@ -84,7 +84,7 @@ const Escalation = ({ closeEscalation, currentEvent }) => {
           <label>Alert Type</label>
           <select
             value={selectedAlertType}
-            onChange={(e) => { setSelectedAlertType(e.target.value) }}
+            onChange={(e) => getSubAlerts(e.target.value)}
           >
             <option value="" disabled>Select Alert Type</option>
             {alerts?.map((item) => (
@@ -100,10 +100,10 @@ const Escalation = ({ closeEscalation, currentEvent }) => {
           <label>Alert Sub Type</label>
           <select
             value={selectedSubType}
-            onChange={(e) => { setSelectedSubType(e.target.value); }}
+            onChange={(e) =>  fetchEmailData(e.target.value)}
           >
             <option value="" disabled>Select Alert Sub Type</option>
-            {alerts[selectedAlertType]?.subAlerts?.map((item) => (
+            {subAlerts?.map((item) => (
               <option key={item.guardSubAlertTypeId} value={item.guardSubAlertTypeId}>
                 {item.guardSubAlertType}
               </option>
@@ -111,13 +111,14 @@ const Escalation = ({ closeEscalation, currentEvent }) => {
           </select>
         </div>
 
-        <button onClick={fetchEmailData}>submit</button>
-
         {/* Action Buttons */}
+        {emaildata && 
+
         <div className="button-group">
           <button className="btn-secondary" onClick={escalate}>COMPLETED</button>
           <button className="btn-primary" onClick={escalate}>ESCALATED</button>
         </div>
+        }
       </div>
 
 

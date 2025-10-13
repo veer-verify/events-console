@@ -23,6 +23,7 @@ const Dashboard = () => {
     setPoolEvent(true);
     axios.get(url, { params: params }).then((res) => {
       setPoolEvent(false);
+      setEventIndex(null);
       setEventData((prev) => [...prev, ...res.data]);
     });
   };
@@ -33,13 +34,13 @@ const Dashboard = () => {
 
   const handleEvent = async (item, index) => {
     const tag = get('id');
-    const eventTag = get('eventTag'); 
+    const eventTag = get('eventTag');
     setEventIndex(index);
-    if(tag === 1) {
+    if (tag === 1) {
       const filtered = eventData.filter((_, i) => index !== i);
       setEventData(filtered);
       const response = await write2VmsDispatchQueue(
-        {...item, queue_name: '2nd-level', actionTag: 'false activity', eventTag: eventTag}
+        { ...item, queue_name: '2nd-level', actionTag: 'false activity', eventTag: eventTag }
       );
       console.log(response);
     } else {
@@ -49,8 +50,8 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (!poolEvent && eventData.length < 2) {
-        getEvent('live-events');
-      }
+      getEvent('live-events');
+    }
   }, [eventData.length < 2]);
 
   return (
@@ -67,7 +68,7 @@ const Dashboard = () => {
             handleEvent={handleEvent}
             escalation={escalation}
             closeEscalation={closeEscalation}
-            />)}
+          />)}
       </div>
     </Fragment>
   )

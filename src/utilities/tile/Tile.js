@@ -68,20 +68,20 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
     }
 
     const [imgindex, setIndex] = useState(0);
-    const [imgSrc, setImgSrc] = useState(currentEvent.image_list[0]);
+    const [imgSrc, setImgSrc] = useState(currentEvent?.image_list[0]);
 
     useEffect(() => {
-        if (!currentEvent.image_list || currentEvent.image_list.length === 0) return;
+        if (!currentEvent?.image_list || currentEvent?.image_list.length === 0) return;
 
         let i = 0;
         const interval = setInterval(() => {
-            i = (i + 1) % currentEvent.image_list.length;
+            i = (i + 1) % currentEvent?.image_list.length;
             setIndex(i);
-            setImgSrc(currentEvent.image_list[i]);
+            setImgSrc(currentEvent?.image_list[i]);
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [currentEvent.image_list]);
+    }, [currentEvent?.image_list]);
 
 
     return (
@@ -92,7 +92,7 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
                         <img src={imgSrc} alt={`Camera Feed ${imgindex + 1}`} />
                     </div>
                     <div className="camera">
-                        <Stream videoData={`${currentEvent.httpUrl}/`} />
+                        <Stream videoData={`${currentEvent?.httpUrl}/`} />
                     </div>
                 </div>
 
@@ -102,12 +102,12 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
                         {showTags && <TagList actionTags={actionTags} handleEvent={handleEvent} closeTags={closeTags} index={index} currentEvent={currentEvent} />}
                     </div>
 
-                    <p >{currentEvent.cameraId}</p>
-                    <p>{currentEvent.eventTime}</p>
+                    <p >{currentEvent?.cameraId}</p>
+                    <p>{currentEvent?.eventTime}</p>
                 </div>
 
                 <div className="store-info">
-                    <p>{currentEvent.siteName}</p>
+                    <p>{currentEvent?.siteName}</p>
                     <p>Tadepally, Guntur District, Andhra Pradesh, INDIA - 500503</p>
 
                     <div className="activity-box">
