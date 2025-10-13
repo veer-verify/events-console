@@ -2,8 +2,8 @@
 .tile {
   width: 50%;
   height: calc(100vh - 70px);
-  margin: 0 2px;
-  border: 1px solid #0000001A;
+  /* margin: 0 2px;
+  border: 1px solid #0000001A; */
   border-radius: 5px;
   box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;
   background-color: #ffffff;
@@ -184,3 +184,59 @@
   color: white;
   border-color: #45b981;
 }
+
+
+/* escalation info */
+.contacts-container {
+  padding: 10px;
+}
+
+.cards-wrapper {
+  display: flex;
+  gap: 2px;
+  flex-wrap: wrap;
+}
+
+.contact-card {
+  padding: 4px;
+  border-radius: 8px;
+  min-width: 200px;
+  flex: 1;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-header strong {
+  font-size: 12px;
+}
+
+.icons span {
+  margin-left: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.card-body p {
+  margin: 4px 0;
+  color: #9b9999;
+  font-size: 10px;
+}
+
+.law-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+}
+
+.law-card p {
+    margin: 4px 0;
+  color: #333;
+  font-size: 12px;
+}
+

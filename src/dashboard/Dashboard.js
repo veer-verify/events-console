@@ -18,7 +18,7 @@ const Dashboard = () => {
   const getEvent = (type) => {
     const url = `${environment.events_url}/getVms_EventsQueueData_1_0/`;
     const params = new URLSearchParams();
-    params.append('queue_name', type);
+    params.append('queue_name', 'pi5-testing');
 
     setPoolEvent(true);
     axios.get(url, { params: params }).then((res) => {

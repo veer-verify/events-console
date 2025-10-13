@@ -10,8 +10,8 @@ export const environment = {
     download_url: `${dev}/common`,
     guard_monitoring_url: `${dev}/guard_monitoring`,
     escalation_url: `${dev}/monitoring`,
-    eventImageUrl: `${dev}/dotimages/`,
+    event_image_url: `${dev}/dotimages/`,
     event_process_url: `${dev}/events_data`,
     events_url: `${event}/queueManagement`,
-    alert_categories_url: `${local}`
+    monitoring_info_url: `${local}`
 };

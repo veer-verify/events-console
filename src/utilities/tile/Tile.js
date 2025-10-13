@@ -6,6 +6,7 @@ import axios from 'axios';
 import Escalation from '../escalation/Escalation';
 import { get, set } from '../../services/StorageService';
 import Stream from '../stream/Stream';
+import { getMonitoringInfo } from '../../services/ApiService';
 
 const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeEscalation }) => {
 
@@ -59,12 +60,15 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
         })
     }
 
-    // const openTags = () => {
-    //     setShowTags(true);
-    // }
-
     const closeTags = () => {
         setShowTags(false);
+    }
+
+    const [monitoringData, setMonitoringData] = useState(null);
+
+    const getData = async () => {
+        const data = await getMonitoringInfo(currentEvent);
+        setMonitoringData(data);
     }
 
     const [imgindex, setIndex] = useState(0);
@@ -79,6 +83,8 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
             setIndex(i);
             setImgSrc(currentEvent?.image_list[i]);
         }, 1000);
+
+        getData();
 
         return () => clearInterval(interval);
     }, [currentEvent?.image_list]);
@@ -97,7 +103,7 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
                 </div>
 
                 <div className="camera-id">
-                    <div style={{position: 'relative'}}>
+                    <div style={{ position: 'relative' }}>
                         {tags.map((item, i) => <img src={item?.path} alt='icon' width={20} key={i} onClick={() => { item?.call(item) }} />)}
                         {showTags && <TagList actionTags={actionTags} handleEvent={handleEvent} closeTags={closeTags} index={index} currentEvent={currentEvent} />}
                     </div>
@@ -149,6 +155,8 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
                     </table>
                 </div>
 
+                {(monitoringData && monitoringData.escalation.length !== 0) && <MonitoringInfo monitoringData={monitoringData} />}
+                {(monitoringData && monitoringData.lawEnforcement.length !== 0 ) && <LawInfo monitoringData={monitoringData} />}
                 {(escalation && eventIndex === index) && <Escalation closeEscalation={closeEscalation} currentEvent={currentEvent} />}
             </div>
         </Fragment>
@@ -156,3 +164,52 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
 }
 
 export default Tile;
+
+
+export const MonitoringInfo = ({ monitoringData }) => {
+    return (
+        <div className="contacts-container">
+            <p className='monitoring-title'>ESCALATION CONTACT</p>
+            <div className="cards-wrapper">
+                {monitoringData.escalation?.map((item, index) => (
+                    <div className="contact-card" key={index}>
+                        <div className="card-header">
+                            <strong>{item.name}</strong>
+                            <div className="icons">
+                                <span title="Call">📞</span>
+                                <span title="Message">🗨️</span>
+                                <span title="Email">📧</span>
+                            </div>
+                        </div>
+                        <div className="card-body">
+                            <p>{item.emailId}</p>
+                            <p>{item.contactNo}</p>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    )
+}
+
+export const LawInfo = ({ monitoringData }) => {
+    return (
+        <div className="contacts-container">
+            <p className='monitoring-title'>CONTACT LAW ENFORCEMENT IN THE EVENT OF AN EMERGENCY?</p>
+            <div className="cards-wrapper">
+                {monitoringData.lawEnforcement?.map((item, index) => (
+                    <div className="contact-card" key={index}>
+
+                        <div className="law-card">
+                            <p>📞</p>
+                            <div>
+                                <p>{item.zoneName}</p>
+                                <p>{item.contact}</p>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    )
+}

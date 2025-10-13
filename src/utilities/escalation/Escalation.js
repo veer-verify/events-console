@@ -1,6 +1,6 @@
 import "./Escalation.css";
 import { useState, useEffect, Fragment } from "react";
-import { getAlertCategoriesForSiteId, getEmailDataForVMSEvents, getMetadata, updateEventFullDetails, write2VmsDispatchQueue } from "../../services/ApiService";
+import { getAlertCategoriesForSiteId, getEmailDataForVMSEvents, updateEventFullDetails, write2VmsDispatchQueue } from "../../services/ApiService";
 import { useAuth } from "../../dashboard/Dashboard";
 import { get } from "../../services/StorageService";
 
@@ -13,8 +13,8 @@ const Escalation = ({ closeEscalation, currentEvent }) => {
   const [selectedSubType, setSelectedSubType] = useState("");
 
   const [selection, setSelection] = useState("person");
-//   const [selectedButton, setSelectedButton] = useState("mail");
-//   const selectButton = (button) => setSelectedButton(button);
+  //  const [selectedButton, setSelectedButton] = useState("mail");
+  //  const selectButton = (button) => setSelectedButton(button);
 
   const fetchMetadata = async () => {
     const response = await getAlertCategoriesForSiteId(currentEvent);
@@ -113,7 +113,6 @@ const Escalation = ({ closeEscalation, currentEvent }) => {
 
         {/* Action Buttons */}
         {emaildata && 
-
         <div className="button-group">
           <button className="btn-secondary" onClick={escalate}>COMPLETED</button>
           <button className="btn-primary" onClick={escalate}>ESCALATED</button>
@@ -124,7 +123,6 @@ const Escalation = ({ closeEscalation, currentEvent }) => {
 
       {/* Right Panel */}
       <div className="alert-preview">
-
         {
           emaildata ?
           <Fragment>

@@ -33,7 +33,7 @@ export const getAlertCategoriesForSiteId = async (payload) => {
   const url = `${environment.guard_monitoring_url}/getAlertCategoriesForSiteId_1_0/`;
   const params = new URLSearchParams();
   params.append('siteId', payload?.siteId);
-  return api.get(url, { params: params }).then((res) => res.data).catch((err) => alert(err));
+  return api.get(url, { params: params }).then((res) => res.data).catch((err) => console.log(err));
 }
 
 export const write2VmsDispatchQueue = async (payload) => {
@@ -58,7 +58,7 @@ export const write2VmsDispatchQueue = async (payload) => {
     userLevelAlarmInfo: [],
     userName: user.UserName,
   }
-  return api.post(url, obj).then((res) => res).catch((err) => alert(err));
+  return api.post(url, obj).then((res) => res).catch((err) => console.log(err));
 }
 
 export const getVmsEventsQueueData = async () => {
@@ -66,7 +66,7 @@ export const getVmsEventsQueueData = async () => {
   const user = get('user');
   const params = new URLSearchParams();
   params.append('queue_name', user.queueName);
-  return api.get(url, { params: params }).then((res) => res).catch((err) => err);
+  return api.get(url, { params: params }).then((res) => res).catch((err) => console.log(err));
 }
 
 export const updateEventFullDetails = async (payload) => {
@@ -98,7 +98,7 @@ export const updateEventFullDetails = async (payload) => {
     timezone: payload?.timezone,
     userLevelAlarmInfo: []
   };
-  return api.post(url, obj).then((res) => res).catch((err) => alert(err));
+  return api.post(url, obj).then((res) => res).catch((err) => console.log(err));
 }
 
 export const getEmailDataForVMSEvents = async (payload) => {
@@ -127,13 +127,13 @@ export const getEmailDataForVMSEvents = async (payload) => {
   // params.append('timer', 120);
   params.append('imageName', payload?.image_list.toString());
   return api.get(url, { params: params }).then((res) => {
-    if(res.data.statusCode === 200) {
+    if (res.data.statusCode === 200) {
       return res.data.emailDetails;
     } else {
       return [];
     }
   }).catch((err) => {
-    alert(err)
+    console.log(err)
     return [];
   });
 }
@@ -169,5 +169,14 @@ export const eventsGenericEmail = async (payload) => {
   for (var i = 0; i < payload?.screenshots.length; i++) {
     formData.append("files", payload?.screenshots[i].substring(payload?.screenshots[i].lastIndexOf('/') + 1));
   }
-  return api.post(url, formData, { params: params }).then((res) => res).catch((err) => alert(err));
+  return api.post(url, formData, { params: params }).then((res) => res).catch((err) => console.log(err));
+}
+
+export const getMonitoringInfo = async (payload) => {
+  const url = `${environment.monitoring_info_url}/getMonitoringInfo_1_0`;
+  const user = get('user');
+  const params = new URLSearchParams();
+  params.append('siteId', payload?.siteId);
+  params.append('level', user?.userLevel);
+  return api.get(url, { params: params }).then((res) => res.data).catch((err) => console.log(err));
 }
