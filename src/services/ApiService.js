@@ -29,6 +29,19 @@ export const getMetadata = async () => {
   }
 };
 
+export const getActionTagCategories = async (payload) => {
+  const url = `${environment.event_process_url}/getActionTagCategories_1_0`;
+  const user = get('user');
+  const params = new URLSearchParams();
+  if (payload?.actionTagId) {
+    params.append('actionTagId', payload.actionTagId)
+  }
+  if (user) {
+    params.append('userLevel', user.userLevel)
+  }
+  return api.get(url, { params: params }).then((res) => res.data).catch((err) => console.log(err));
+}
+
 export const getAlertCategoriesForSiteId = async (payload) => {
   const url = `${environment.guard_monitoring_url}/getAlertCategoriesForSiteId_1_0/`;
   const params = new URLSearchParams();
@@ -65,8 +78,8 @@ export const getVmsEventsQueueData = async () => {
   const url = `${environment.events_url}/getVms_EventsQueueData_1_0/`;
   const user = get('user');
   const params = new URLSearchParams();
-  params.append('queue_name', user.queueName);
-  return api.get(url, { params: params }).then((res) => res).catch((err) => console.log(err));
+  params.append('queue_name', 'live-events');
+  return api.get(url, { params: params }).then((res) => res.data).catch((err) => console.log(err));
 }
 
 export const updateEventFullDetails = async (payload) => {

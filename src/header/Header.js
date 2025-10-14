@@ -8,18 +8,20 @@ const Header = () => {
     const user = get('user');
 
     const [showProfile, setShowProfile] = useState(false);
-    const profileRef = useRef();
+    const profileRef = useRef(null);
 
-    const handleClickOutside = (event) => {
-        if (profileRef.current && !profileRef.current.contains(event.target)) {
-            setShowProfile(false);
-        }
-    }
 
     useEffect(() => {
-        // document.addEventListener("mousedown", handleClickOutside);
-        // return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [profileRef]);
+        const handleClickOutside = (event) => {
+            if (showProfile && profileRef.current && !profileRef.current.contains(event.target)) {
+                setShowProfile(false);
+            }
+        }
+        if (showProfile) {
+            window.addEventListener("mousedown", handleClickOutside);
+        }
+        return () => window.removeEventListener("mousedown", handleClickOutside);
+    }, [showProfile]);
 
     return (
         <div className="header-container">
@@ -36,13 +38,16 @@ const Header = () => {
                 <div className="profile-icon" onClick={() => setShowProfile(!showProfile)}>
                     <img src='icons/user.svg' alt='User' />
                 </div>
-                <div className="profile-info" ref={profileRef}>
+                <div className="profile-info" >
                     <div className="username">{user?.UserName}</div>
                     <div className="role">Screener</div>
                 </div>
+
+                <div ref={profileRef}>
+                    {showProfile && <ProfileCard />}
+                </div>
             </div>
 
-            {showProfile && <ProfileCard />}
         </div>
     )
 };

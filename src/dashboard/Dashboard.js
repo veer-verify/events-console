@@ -5,7 +5,8 @@ import Tile from '../utilities/tile/Tile';
 import axios from 'axios';
 import { get } from '../services/StorageService';
 import { environment } from '../environment';
-import { updateEventFullDetails, write2VmsDispatchQueue } from '../services/ApiService';
+import { getVmsEventsQueueData, updateEventFullDetails, write2VmsDispatchQueue } from '../services/ApiService';
+import api from '../services/interceptor';
 
 
 const Dashboard = () => {
@@ -24,7 +25,10 @@ const Dashboard = () => {
     axios.get(url, { params: params }).then((res) => {
       setPoolEvent(false);
       setEventIndex(null);
-      setEventData((prev) => [...prev, ...res.data]);
+
+      setEventData((prev) => {
+        return [...prev, ...res.data]
+      });
     });
   };
 
@@ -35,24 +39,43 @@ const Dashboard = () => {
   const handleEvent = async (item, index) => {
     const tag = get('id');
     const eventTag = get('eventTag');
-    setEventIndex(index);
     if (tag === 1) {
+      write2VmsDispatchQueue({ ...item, queue_name: '2nd-level', actionTag: 'false activity', eventTag: eventTag });
+      
+      eventData[index] = {
+        "siteName": "Test",
+        "siteId": "0",
+        "cameraId": "0000",
+        "objectName": "person",
+        "eventTag": "",
+        "eventTime": "",
+        "httpUrl": "",
+        "imageUrl": "",
+        "images_for_event": 0,
+        "timezone": "",
+        "image_list": []
+      };
+      setEventData(eventData);
+      setEventIndex(index);
+      const eventResponse = await getVmsEventsQueueData();
+      setEventIndex(null);
       const filtered = eventData.filter((_, i) => index !== i);
-      setEventData(filtered);
-      const response = await write2VmsDispatchQueue(
-        { ...item, queue_name: '2nd-level', actionTag: 'false activity', eventTag: eventTag }
-      );
-      console.log(response);
+      if (index === 0) {
+        setEventData([...eventResponse, ...filtered]);
+      } else {
+        setEventData([...filtered, ...eventResponse]);
+      }
     } else {
       setEscalation(true);
     }
   };
 
   useEffect(() => {
-    if (!poolEvent && eventData.length < 2) {
-      getEvent('live-events');
-    }
-  }, [eventData.length < 2]);
+    // if (!poolEvent && eventData.length < 2) {
+    //   getEvent('live-events');
+    // }
+    getEvent('live-events');
+  }, []);
 
   return (
     <Fragment>

@@ -2,11 +2,10 @@ import './Tile.css';
 import { useState, useRef, useEffect } from 'react';
 import { Fragment } from "react/jsx-runtime";
 import TagList from '../tag-list/TagList';
-import axios from 'axios';
 import Escalation from '../escalation/Escalation';
 import { get, set } from '../../services/StorageService';
 import Stream from '../stream/Stream';
-import { getMonitoringInfo } from '../../services/ApiService';
+import { getActionTagCategories, getMonitoringInfo } from '../../services/ApiService';
 
 const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeEscalation }) => {
 
@@ -14,17 +13,25 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
         {
             id: 1,
             path: 'icons/false.png',
-            call: (data) => {
+            call: async (data) => {
                 set('id', 1);
-                handleTags(data);
+
+                setShowTags(false);
+                const tagsResponse = await getActionTagCategories(data);
+                setActionTags(tagsResponse.actionTagCategories.filter((item) => item.categoryId === data?.id).flatMap((item) => item.actionTagSubCategories));
+                setShowTags(true);
             }
         },
         {
             id: 2,
             path: 'icons/suspicious.png',
-            call: (data) => {
+            call: async (data) => {
                 set('id', 2);
-                handleTags(data);
+
+                setShowTags(false);
+                const tagsResponse = await getActionTagCategories(data);
+                setActionTags(tagsResponse.actionTagCategories.filter((item) => item.categoryId === data?.id).flatMap((item) => item.actionTagSubCategories));
+                setShowTags(true);
             }
         },
         {
@@ -41,30 +48,12 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
 
     const [showTags, setShowTags] = useState(false);
     const [actionTags, setActionTags] = useState([]);
-
-    const handleTags = (payload) => {
-        const url = 'https://usstaging.ivisecurity.com/events_data/getActionTagCategories_1_0';
-        const user = get('user');
-        const params = new URLSearchParams();
-        if (payload?.actionTagId) {
-            params.append('actionTagId', payload.actionTagId)
-        }
-        if (user) {
-            params.append('userLevel', user.userLevel)
-        }
-
-        setShowTags(false);
-        axios.get(url, { params: params }).then((res) => {
-            setActionTags(res.data.actionTagCategories.filter((item) => item.categoryId === payload?.id).flatMap((item) => item.actionTagSubCategories));
-            setShowTags(true);
-        })
-    }
+    const [monitoringData, setMonitoringData] = useState(null);
+    const dialogRef = useRef(null);
 
     const closeTags = () => {
         setShowTags(false);
     }
-
-    const [monitoringData, setMonitoringData] = useState(null);
 
     const getData = async () => {
         const data = await getMonitoringInfo(currentEvent);
@@ -75,6 +64,15 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
     const [imgSrc, setImgSrc] = useState(currentEvent?.image_list[0]);
 
     useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (showTags && dialogRef.current && !dialogRef.current.contains(event.target)) {
+                closeTags();
+            }
+        };
+        if (showTags) {
+            window.addEventListener('mousedown', handleClickOutside);
+        }
+
         if (!currentEvent?.image_list || currentEvent?.image_list.length === 0) return;
 
         let i = 0;
@@ -84,10 +82,13 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
             setImgSrc(currentEvent?.image_list[i]);
         }, 1000);
 
-        getData();
 
-        return () => clearInterval(interval);
-    }, [currentEvent?.image_list]);
+        // getData();
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [currentEvent?.image_list, showTags]);
 
 
     return (
@@ -95,15 +96,15 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
             <div className='tile'>
                 <div className="camera-feeds">
                     <div className="camera">
-                        <img src={imgSrc} alt={`Camera Feed ${imgindex + 1}`} />
+                        {imgSrc ? <img src={imgSrc} alt={`Camera Feed ${imgindex + 1}`} /> : <img src='public/images/camera.png' alt='' />}
                     </div>
                     <div className="camera">
-                        <Stream videoData={`${currentEvent?.httpUrl}/`} />
+                        {/* <Stream videoData={`${currentEvent?.httpUrl}/`} /> */}
                     </div>
                 </div>
 
                 <div className="camera-id">
-                    <div style={{ position: 'relative' }}>
+                    <div style={{ position: 'relative' }} ref={dialogRef}>
                         {tags.map((item, i) => <img src={item?.path} alt='icon' width={20} key={i} onClick={() => { item?.call(item) }} />)}
                         {showTags && <TagList actionTags={actionTags} handleEvent={handleEvent} closeTags={closeTags} index={index} currentEvent={currentEvent} />}
                     </div>
@@ -155,8 +156,8 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
                     </table>
                 </div>
 
-                {(monitoringData && monitoringData.escalation.length !== 0) && <MonitoringInfo monitoringData={monitoringData} />}
-                {(monitoringData && monitoringData.lawEnforcement.length !== 0 ) && <LawInfo monitoringData={monitoringData} />}
+                {/* {(monitoringData && monitoringData.escalation.length !== 0) && <MonitoringInfo monitoringData={monitoringData} />}
+                {(monitoringData && monitoringData.lawEnforcement.length !== 0 ) && <LawInfo monitoringData={monitoringData} />} */}
                 {(escalation && eventIndex === index) && <Escalation closeEscalation={closeEscalation} currentEvent={currentEvent} />}
             </div>
         </Fragment>
