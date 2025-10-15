@@ -50,6 +50,7 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
     const [actionTags, setActionTags] = useState([]);
     const [monitoringData, setMonitoringData] = useState(null);
     const dialogRef = useRef(null);
+    let monitoring_hours;
 
     const closeTags = () => {
         setShowTags(false);
@@ -58,6 +59,8 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
     const getData = async () => {
         const data = await getMonitoringInfo(currentEvent);
         setMonitoringData(data);
+        console.log('Current Event', currentEvent)
+        console.log('Monitoring Info', data);
     }
 
     const [imgindex, setIndex] = useState(0);
@@ -77,11 +80,12 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
 
         let i = 0;
         const interval = setInterval(() => {
-            i = (i + 1) % currentEvent?.image_list.length;
+            // i = (i + 1);
             setIndex(i);
             setImgSrc(currentEvent?.image_list[i]);
+            if (i == 5) i = 0;
+            i += 1;
         }, 1000);
-
 
         // getData();
         return () => {
@@ -89,6 +93,54 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
             window.removeEventListener('mousedown', handleClickOutside);
         };
     }, [currentEvent, showTags]);
+
+    useEffect(() => {
+        async function info_monitoring() {
+            await getData();
+        }
+        info_monitoring();
+    }, [currentEvent])
+
+
+
+
+    function timeFormat() {
+        const monitoring_hours = monitoringData?.cameras[0]?.monitoringHoursDetails;
+        if (!monitoring_hours) return null;
+
+        const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
+        const sortedDays = Object.keys(monitoring_hours).sort(
+            (a, b) => weekdays.indexOf(a) - weekdays.indexOf(b)
+        );
+
+        const allHours = {};
+        sortedDays.forEach(day => {
+            const formatted = monitoring_hours[day]
+                .split(',')
+                .map(r => {
+                    const [start, end] = r.split('-').map(Number);
+                    return `${String(start).padStart(2, '0')}:00 ${start < 12 ? 'AM' : 'PM'} - ${String(end).padStart(2, '0')}:00 ${end < 12 ? 'AM' : 'PM'}`;
+                })
+                .join(' & ');
+            allHours[day] = formatted;
+        });
+
+        const grouped = {};
+        sortedDays.forEach(day => {
+            const hours = allHours[day];
+            if (!grouped[hours]) grouped[hours] = [];
+            grouped[hours].push(day);
+        });
+
+        return Object.entries(grouped).map(([hours, days], index) => {
+            const dayStr = days.length > 1
+                ? `${days[0][0].toUpperCase()}${days[0].slice(1)}–${days[days.length - 1][0].toUpperCase()}${days[days.length - 1].slice(1)}`
+                : `${days[0][0].toUpperCase()}${days[0].slice(1)}`;
+
+            return <span key={index}>{dayStr}: {hours}<br /></span>;
+        });
+    }
 
 
     return (
@@ -140,13 +192,12 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
                             <tr>
                                 <td><strong>Monitoring</strong></td>
                                 <td>
-                                    Mon-Sat: 00:00 AM - 06:00 AM & 21:00 PM - 23:59 PM<br />
-                                    Sun: 00:00 AM - 23:59 PM
+                                    {timeFormat()}
                                 </td>
                             </tr>
                             <tr>
                                 <td><strong>Camera</strong></td>
-                                <td>MLD049 - C3</td>
+                                <td>{monitoringData?.cameras[0]?.cameraName}</td>
                             </tr>
                             <tr>
                                 <td><strong>Requirements</strong></td>
