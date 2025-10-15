@@ -6,6 +6,7 @@ import Escalation from '../escalation/Escalation';
 import { get, set } from '../../services/StorageService';
 import Stream from '../stream/Stream';
 import { getActionTagCategories, getMonitoringInfo } from '../../services/ApiService';
+import Live from '../live/Live';
 
 const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeEscalation }) => {
 
@@ -36,7 +37,7 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
         },
         {
             path: 'icons/live.png',
-            call: (data) => console.log('called!')
+            call: (data) => openLiveDialog()
 
         },
         {
@@ -48,8 +49,17 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
 
     const [showTags, setShowTags] = useState(false);
     const [actionTags, setActionTags] = useState([]);
+    const [live, setLive] = useState(false);
     const [monitoringData, setMonitoringData] = useState(null);
     const dialogRef = useRef(null);
+
+    const openLiveDialog = () => {
+        setLive(true);
+    }
+
+    const closeLiveDialog = () => {
+        setLive(false);
+    }
 
     const closeTags = () => {
         setShowTags(false);
@@ -156,9 +166,10 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
                     </table>
                 </div>
 
-                {/* {(monitoringData && monitoringData.escalation.length !== 0) && <MonitoringInfo monitoringData={monitoringData} />}
-                {(monitoringData && monitoringData.lawEnforcement.length !== 0 ) && <LawInfo monitoringData={monitoringData} />} */}
-                {(escalation && eventIndex === index) && <Escalation closeEscalation={closeEscalation} currentEvent={currentEvent} />}
+                { /* {(monitoringData && monitoringData.escalation.length !== 0) && <MonitoringInfo monitoringData={monitoringData} /> }
+                { (monitoringData && monitoringData.lawEnforcement.length !== 0 ) && <LawInfo monitoringData={monitoringData} />} */ }
+                { (escalation && eventIndex === index) && <Escalation closeEscalation={closeEscalation} currentEvent={currentEvent} /> }
+                { live && <Live currentEvent={currentEvent} /> }
             </div>
         </Fragment>
     )

@@ -6,7 +6,7 @@ import axios from 'axios';
 import { get } from '../services/StorageService';
 import { environment } from '../environment';
 import { getVmsEventsQueueData, updateEventFullDetails, write2VmsDispatchQueue } from '../services/ApiService';
-import api from '../services/interceptor';
+import api from '../interceptor';
 
 
 const Dashboard = () => {

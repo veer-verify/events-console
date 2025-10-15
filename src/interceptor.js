@@ -1,6 +1,6 @@
 import axios from "axios";
-import { getAccessforRefreshToken } from "./ApiService";
-import { get, set } from "./StorageService";
+import { getAccessforRefreshToken } from "./services/ApiService";
+import { get, set } from "./services/StorageService";
 
 
 

@@ -1,9 +1,9 @@
 /* camera feeds */
 .tile {
   width: 50%;
-  height: calc(100vh - 70px);
-  /* margin: 0 2px;
-  border: 1px solid #0000001A; */
+  /* height: calc(100vh - 70px); */
+  margin: 0 2px;
+  border: 1px solid #0000001A;
   border-radius: 5px;
   box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;
   background-color: #ffffff;
@@ -30,7 +30,13 @@
   border: 1px solid #ccc;
   border-radius: 4px;
   overflow: hidden;
-  background-color: #f9f9f9;
+  background-color: #000000;
+}
+
+@media (max-width: 1280px) {
+  .camera {
+    height: 300px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -72,7 +78,6 @@
 .store-info {
   padding: 0 10px;
   margin-bottom: 10px;
-  /* background-color: #fff; */
   /* border-top: 2px solid #e91e63; */
 }
 
@@ -115,7 +120,6 @@
 /* monitoring info*/
 .monitoring {
   padding: 0 10px;
-  /* background-color: #ffffff; */
 }
 
 .monitoring-title {

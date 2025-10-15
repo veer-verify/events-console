@@ -228,7 +228,7 @@ const Stream = ({ videoData }) => {
   return (
     <div style={{ position: 'relative', height: '350px' }}>
       {showLoader && <div className="loader"></div>}
-      <video ref={videoRef} autoPlay playsInline muted controls={false} width="100%" height="100%" style={{backgroundColor: '#000000', objectFit: 'fill'}} />
+      <video ref={videoRef} autoPlay playsInline muted controls={false} width="100%" height="100%" style={{objectFit: 'fill'}} />
     </div>
   );
 };

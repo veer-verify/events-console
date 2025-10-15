@@ -1,4 +1,4 @@
-import api from './interceptor';
+import api from '../interceptor';
 import { environment } from '../environment';
 import { get, set } from './StorageService';
 import moment from 'moment-timezone';
@@ -192,4 +192,11 @@ export const getMonitoringInfo = async (payload) => {
   params.append('siteId', payload?.siteId);
   params.append('level', user?.userLevel);
   return api.get(url, { params: params }).then((res) => res.data).catch((err) => console.log(err));
+}
+
+export const getLiveInfoForSiteAndCamera = async (payload) => {
+  const url = `${environment.site_url}/getLiveInfoForSiteAndCamera_1_0`;
+    const params = new URLSearchParams();
+    params.append('siteId', payload?.siteId);
+    return api.get(url, { params: params }).then((res) => res.data).catch((err) => console.log(err));
 }
