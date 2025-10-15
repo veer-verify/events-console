@@ -190,6 +190,7 @@ export const getMonitoringInfo = async (payload) => {
   const user = get('user');
   const params = new URLSearchParams();
   params.append('siteId', payload?.siteId);
+    params.append('cameraId', payload?.cameraId);
   params.append('level', user?.userLevel);
   return api.get(url, { params: params }).then((res) => res.data).catch((err) => console.log(err));
 }

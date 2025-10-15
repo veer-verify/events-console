@@ -1,6 +1,6 @@
 const dev = "https://usstaging.ivisecurity.com";
 const event = "https://stagingmq.ivisecurity.com";
-const local = "http://192.168.0.126:3009"
+const local = "http://192.168.0.175:3009"
 
 
 export const environment = {
