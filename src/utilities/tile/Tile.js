@@ -88,7 +88,7 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
             clearInterval(interval);
             window.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [currentEvent?.image_list, showTags]);
+    }, [currentEvent, showTags]);
 
 
     return (
@@ -99,7 +99,7 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
                         {imgSrc ? <img src={imgSrc} alt={`Camera Feed ${imgindex + 1}`} /> : <img src='public/images/camera.png' alt='' />}
                     </div>
                     <div className="camera">
-                        {/* <Stream videoData={`${currentEvent?.httpUrl}/`} /> */}
+                        {currentEvent.httpUrl && <Stream videoData={`${currentEvent?.httpUrl}/`} />}
                     </div>
                 </div>
 
