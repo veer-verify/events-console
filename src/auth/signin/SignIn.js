@@ -34,6 +34,7 @@ const SignIn = () => {
   }
 
   useEffect(() => {
+
     clear();
   }, [])
 

@@ -14,7 +14,7 @@ const Dashboard = () => {
   const [eventData, setEventData] = useState([]);
   const [poolEvent, setPoolEvent] = useState(false);
   const [escalation, setEscalation] = useState(false);
-  const [eventIndex, setEventIndex] = useState(null);
+  // const [eventIndex, setEventIndex] = useState(null);
 
   const getEvent = (type) => {
     const url = `${environment.events_url}/getVms_EventsQueueData_1_0/`;
@@ -24,7 +24,7 @@ const Dashboard = () => {
     setPoolEvent(true);
     axios.get(url, { params: params }).then((res) => {
       setPoolEvent(false);
-      setEventIndex(null);
+      // setEventIndex(null);
 
       setEventData((prev) => {
         return [...prev, ...res.data]
@@ -36,8 +36,9 @@ const Dashboard = () => {
     setEscalation(false);
   }
 
-  const handleEvent = async (item, index) => {
+  const handleEvent = async (item) => {
     const tag = get('id');
+    const index = get('index');
     const eventTag = get('eventTag');
     if (tag === 1) {
       write2VmsDispatchQueue({ ...item, queue_name: '2nd-level', actionTag: 'false activity', eventTag: eventTag });
@@ -56,26 +57,22 @@ const Dashboard = () => {
         "image_list": []
       };
       setEventData(eventData);
-      setEventIndex(index);
       const eventResponse = await getVmsEventsQueueData();
-      setEventIndex(null);
       const filtered = eventData.filter((_, i) => index !== i);
       if (index === 0) {
         setEventData([...eventResponse, ...filtered]);
       } else {
         setEventData([...filtered, ...eventResponse]);
       }
-    } else {
+    } else if(tag === 2) {
       setEscalation(true);
     }
   };
 
   useEffect(() => {
-    // if (!poolEvent && eventData.length < 2) {
-    //   getEvent('live-events');
-    // }
     getEvent('live-events');
-  }, []);
+
+  }, [eventData.length]);
 
   return (
     <Fragment>
@@ -86,7 +83,6 @@ const Dashboard = () => {
           <Tile
             key={i}
             index={i}
-            eventIndex={eventIndex}
             currentEvent={item}
             handleEvent={handleEvent}
             escalation={escalation}

@@ -8,7 +8,8 @@ import Stream from '../stream/Stream';
 import { getActionTagCategories, getMonitoringInfo } from '../../services/ApiService';
 import Live from '../live/Live';
 
-const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeEscalation }) => {
+const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation }) => {
+    const eventIndex = get('index');
 
     const tags = [
         {
@@ -16,6 +17,7 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
             path: 'icons/false.png',
             call: async (data) => {
                 set('id', 1);
+                set('index', index);
 
                 setShowTags(false);
                 const tagsResponse = await getActionTagCategories(data);
@@ -28,6 +30,7 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
             path: 'icons/suspicious.png',
             call: async (data) => {
                 set('id', 2);
+                set('index', index);
 
                 setShowTags(false);
                 const tagsResponse = await getActionTagCategories(data);
@@ -37,14 +40,14 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
         },
         {
             path: 'icons/live.png',
-            call: (data) => openLiveDialog()
+            call: () => openLiveDialog()
 
         },
         {
             path: 'icons/siren.png',
-            call: (data) => console.log('called!')
+            call: () => console.log('called!')
 
-        },
+        }
     ];
 
     const [showTags, setShowTags] = useState(false);
@@ -52,7 +55,6 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
     const [live, setLive] = useState(false);
     const [monitoringData, setMonitoringData] = useState(null);
     const dialogRef = useRef(null);
-    let monitoring_hours;
 
     const openLiveDialog = () => {
         setLive(true);
@@ -64,13 +66,6 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
 
     const closeTags = () => {
         setShowTags(false);
-    }
-
-    const getData = async () => {
-        const data = await getMonitoringInfo(currentEvent);
-        setMonitoringData(data);
-        console.log('Current Event', currentEvent)
-        console.log('Monitoring Info', data);
     }
 
     const [imgindex, setIndex] = useState(0);
@@ -90,26 +85,30 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
 
         let i = 0;
         const interval = setInterval(() => {
-            // i = (i + 1);
             setIndex(i);
             setImgSrc(currentEvent?.image_list[i]);
-            if (i == 5) i = 0;
+            if (i === 4) i = 0;
             i += 1;
         }, 1000);
 
-        // getData();
+        const getData = async () => {
+            const data = await getMonitoringInfo(currentEvent);
+            console.log(data)
+            setMonitoringData(data);
+        }
+        getData();
+        // async function info_monitoring() {
+        //     await getData();
+        // }
+        // info_monitoring();
         return () => {
             clearInterval(interval);
             window.removeEventListener('mousedown', handleClickOutside);
         };
     }, [currentEvent, showTags]);
 
-    useEffect(() => {
-        async function info_monitoring() {
-            await getData();
-        }
-        info_monitoring();
-    }, [currentEvent])
+    // useEffect(() => {
+    // }, [currentEvent])
 
 
 
@@ -217,10 +216,10 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
                     </table>
                 </div>
 
-                { /* {(monitoringData && monitoringData.escalation.length !== 0) && <MonitoringInfo monitoringData={monitoringData} /> }
-                { (monitoringData && monitoringData.lawEnforcement.length !== 0 ) && <LawInfo monitoringData={monitoringData} />} */ }
-                { (escalation && eventIndex === index) && <Escalation closeEscalation={closeEscalation} currentEvent={currentEvent} /> }
-                { live && <Live currentEvent={currentEvent} /> }
+                {(monitoringData && monitoringData.escalation.length !== 0) && <MonitoringInfo monitoringData={monitoringData} />}
+                {(monitoringData && monitoringData.lawEnforcement.length !== 0) && <LawInfo monitoringData={monitoringData} />}
+                {(escalation && eventIndex === index) && <Escalation closeEscalation={closeEscalation} currentEvent={currentEvent} />}
+                {live && <Live currentEvent={currentEvent} />}
             </div>
         </Fragment>
     )
