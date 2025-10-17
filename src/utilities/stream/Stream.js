@@ -225,7 +225,6 @@ const Stream = ({ videoData }) => {
     return () => {
       setHitStream(false);
       peerConnectionRef.current?.close();
-      console.log(hitStream)
     };
   }, [encoded, hitStream, videoData]);
 

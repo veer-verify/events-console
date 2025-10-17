@@ -71,14 +71,14 @@ export const write2VmsDispatchQueue = async (payload) => {
     userLevelAlarmInfo: [],
     userName: user.UserName,
   }
-  return api.post(url, obj).then((res) => res).catch((err) => console.log(err));
+  return api.post(url, obj).then((res) => res.data).catch((err) => console.log(err));
 }
 
-export const getVmsEventsQueueData = async () => {
+export const getVmsEventsQueueData = async (name) => {
   const url = `${environment.events_url}/getVms_EventsQueueData_1_0/`;
   const user = get('user');
   const params = new URLSearchParams();
-  params.append('queue_name', 'live-events');
+  params.append('queue_name', name);
   return api.get(url, { params: params }).then((res) => res.data).catch((err) => console.log(err));
 }
 

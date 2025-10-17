@@ -1,7 +1,6 @@
 import './Tile.css';
 import { useState, useRef, useEffect } from 'react';
 import { Fragment } from "react/jsx-runtime";
-import TagList from '../tag-list/TagList';
 import Escalation from '../escalation/Escalation';
 import { get, set } from '../../services/StorageService';
 import Stream from '../stream/Stream';
@@ -10,6 +9,9 @@ import Live from '../live/Live';
 
 const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation }) => {
     const eventIndex = get('index');
+    const type = get('id');
+    const actionTagsResponse = get('actionTags');
+    // const [currentTag, setCurrentTag] = useState(null);
 
     const tags = [
         {
@@ -20,8 +22,8 @@ const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation })
                 set('index', index);
 
                 setShowTags(false);
-                const tagsResponse = await getActionTagCategories(data);
-                setActionTags(tagsResponse.actionTagCategories.filter((item) => item.categoryId === data?.id).flatMap((item) => item.actionTagSubCategories));
+                // const tagsResponse = await getActionTagCategories(data);
+                setActionTags(actionTagsResponse.actionTagCategories.filter((item) => item.categoryId === data?.id).flatMap((item) => item.actionTagSubCategories));
                 setShowTags(true);
             }
         },
@@ -33,8 +35,8 @@ const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation })
                 set('index', index);
 
                 setShowTags(false);
-                const tagsResponse = await getActionTagCategories(data);
-                setActionTags(tagsResponse.actionTagCategories.filter((item) => item.categoryId === data?.id).flatMap((item) => item.actionTagSubCategories));
+                // const tagsResponse = await getActionTagCategories(data);
+                setActionTags(actionTagsResponse.actionTagCategories.filter((item) => item.categoryId === data?.id).flatMap((item) => item.actionTagSubCategories));
                 setShowTags(true);
             }
         },
@@ -71,49 +73,7 @@ const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation })
     const [imgindex, setIndex] = useState(0);
     const [imgSrc, setImgSrc] = useState(currentEvent?.image_list[0]);
 
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (showTags && dialogRef.current && !dialogRef.current.contains(event.target)) {
-                closeTags();
-            }
-        };
-        if (showTags) {
-            window.addEventListener('mousedown', handleClickOutside);
-        }
-
-        if (!currentEvent?.image_list || currentEvent?.image_list.length === 0) return;
-
-        let i = 0;
-        const interval = setInterval(() => {
-            setIndex(i);
-            setImgSrc(currentEvent?.image_list[i]);
-            if (i === 4) i = 0;
-            i += 1;
-        }, 1000);
-
-        const getData = async () => {
-            const data = await getMonitoringInfo(currentEvent);
-            console.log(data)
-            setMonitoringData(data);
-        }
-        getData();
-        // async function info_monitoring() {
-        //     await getData();
-        // }
-        // info_monitoring();
-        return () => {
-            clearInterval(interval);
-            window.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [currentEvent, showTags]);
-
-    // useEffect(() => {
-    // }, [currentEvent])
-
-
-
-
-    function timeFormat() {
+    const timeFormat = () => {
         const monitoring_hours = monitoringData?.cameras[0]?.monitoringHoursDetails;
         if (!monitoring_hours) return null;
 
@@ -151,6 +111,42 @@ const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation })
         });
     }
 
+    const tagsResponse = useRef(null);
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (showTags && dialogRef.current && !dialogRef.current.contains(event.target)) {
+                closeTags();
+            }
+        };
+        if (showTags) {
+            window.addEventListener('mousedown', handleClickOutside);
+        }
+
+        if (!currentEvent?.image_list || currentEvent?.image_list.length === 0) return;
+
+        let i = 0;
+        const interval = setInterval(() => {
+            setIndex(i);
+            setImgSrc(currentEvent?.image_list[i]);
+            if (i === 4) i = 0;
+            i += 1;
+        }, 1000);
+
+        const getData = async () => {
+            const data = await getMonitoringInfo(currentEvent);
+            console.log(data)
+            setMonitoringData(data);
+        }
+        // getData();
+
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [currentEvent, showTags]);
+
+    // useEffect(() => {
+    // }, []);
 
     return (
         <Fragment>
@@ -167,7 +163,21 @@ const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation })
                 <div className="camera-id">
                     <div style={{ position: 'relative' }} ref={dialogRef}>
                         {tags.map((item, i) => <img src={item?.path} alt='icon' width={20} key={i} onClick={() => { item?.call(item) }} />)}
-                        {showTags && <TagList actionTags={actionTags} handleEvent={handleEvent} closeTags={closeTags} index={index} currentEvent={currentEvent} />}
+                        {showTags &&
+                            <div className="tag-grid">
+                                {actionTags.map((tag, i) => (
+                                    <button
+                                        key={i}
+                                        className='tag-button'
+                                        style={{ border: type === 1 ? '1px solid #53BF8B' : '1px solid #ED3237' }}
+                                        onClick={() => { set('eventTag', tag.subCategoryName); handleEvent(currentEvent, index); closeTags() }}
+                                    >
+                                        {tag.subCategoryName}
+                                    </button>
+                                ))}
+                            </div>
+
+                        }
                     </div>
 
                     <p >{currentEvent?.cameraId}</p>
