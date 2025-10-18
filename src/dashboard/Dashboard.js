@@ -1,12 +1,27 @@
 import './Dashboard.css';
-import { Fragment, useEffect, useState } from 'react'
+import { createContext, Fragment, useContext, useEffect, useState } from 'react'
 import Header from '../header/Header';
 import Tile from '../utilities/tile/Tile';
-import { get, set } from '../services/StorageService';
+import { getStorage, setStorage } from '../services/StorageService';
 import { getActionTagCategories, getVmsEventsQueueData, updateEventFullDetails, write2VmsDispatchQueue } from '../services/ApiService';
 
 
 const Dashboard = () => {
+  const dummy = {
+    "siteName": "Test",
+    "siteId": "0",
+    "cameraId": "0000",
+    "objectName": "person",
+    "eventTag": "",
+    "eventTime": "",
+    "httpUrl": "",
+    "imageUrl": "",
+    "images_for_event": 0,
+    "timezone": "",
+    "image_list": []
+  };
+
+  const EventContext = createContext();
   const [eventData, setEventData] = useState([]);
   const [poolEvent, setPoolEvent] = useState(false);
   const [escalation, setEscalation] = useState(false);
@@ -16,34 +31,23 @@ const Dashboard = () => {
   }
 
   const handleEvent = async (item) => {
-    const selectedAction = get('id');
-    const index = get('index');
-    const eventTag = get('eventTag');
+    const selectedAction = getStorage('id');
+    const index = getStorage('index');
+    const eventTag = getStorage('eventTag');
 
     if (selectedAction === 1) {
-      // eventData[index] = {
-      //   "siteName": "Test",
-      //   "siteId": "0",
-      //   "cameraId": "0000",
-      //   "objectName": "person",
-      //   "eventTag": "",
-      //   "eventTime": "",
-      //   "httpUrl": "",
-      //   "imageUrl": "",
-      //   "images_for_event": 0,
-      //   "timezone": "",
-      //   "image_list": []
-      // };
-      // setEventData(eventData);
-
       write2VmsDispatchQueue({ ...item, queue_name: '2nd-level', actionTag: 'false activity', eventTag: eventTag });
+
+      // setEventData([...filtered, eventData[index] = dummy]);
+
       const eventResponse = await getVmsEventsQueueData('live-events');
       const filtered = eventData.filter((_, i) => index !== i);
-      if (index === 0) {
-        setEventData([...eventResponse, ...filtered]);
-      } else {
-        setEventData([...filtered, ...eventResponse]);
-      }
+      setEventData([...filtered, ...eventResponse]);
+      // if (index === 0) {
+      //   setEventData([...eventResponse, ...filtered]);
+      // } else {
+      //   setEventData([...filtered, ...eventResponse]);
+      // }
     } else if (selectedAction === 2) {
       setEscalation(true);
     }
@@ -56,13 +60,12 @@ const Dashboard = () => {
         return [...prev, ...response];
       });
     };
-
-    getEvent('live-events');
-
     const getTags = async () => {
       const tagsResponse = await getActionTagCategories();
-      set('actionTags', tagsResponse);
+      setStorage('actionTags', tagsResponse);
     };
+
+    getEvent('live-events');
     getTags();
   }, []);
 
@@ -72,17 +75,23 @@ const Dashboard = () => {
 
       <div className='tiles'>
         {eventData.map((item, i) =>
-          <Tile
-            key={i}
-            index={i}
-            currentEvent={item}
-            escalation={escalation}
-            handleEvent={handleEvent}
-            closeEscalation={closeEscalation}
-          />)}
+          <EventContext.Provider value={item}>
+            <Tile
+              key={i}
+              index={i}
+              currentEvent={item}
+              escalation={escalation}
+              handleEvent={handleEvent}
+              closeEscalation={closeEscalation}
+            />
+
+          </EventContext.Provider>
+        )}
       </div>
     </Fragment>
   )
 }
 
 export default Dashboard;
+
+// export const eventCtx = () => useContext(EventContext);

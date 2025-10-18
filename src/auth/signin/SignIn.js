@@ -2,7 +2,7 @@ import axios from 'axios';
 import './SignIn.css';
 import { Fragment, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { clear, Encrypt, set } from '../../services/StorageService';
+import { clearStorage, Encrypt, setStorage } from '../../services/StorageService';
 import PageLoader from '../../utilities/page-loader/PageLoader';
 import { environment } from '../../environment';
 
@@ -23,9 +23,9 @@ const SignIn = () => {
     axios.post(url, requestBody).then((res) => {
       setLoader(false);
       if (!res.data.queueName) return alert('Queue is not assigned!');
-      set('user', res.data);
-      set('AccessToken', res.data.AccessToken);
-      set('RefreshToken', res.data.RefreshToken);
+      setStorage('user', res.data);
+      setStorage('AccessToken', res.data.AccessToken);
+      setStorage('RefreshToken', res.data.RefreshToken);
       navigate('/dashboard');
 
     }).catch((err) => {
@@ -34,8 +34,7 @@ const SignIn = () => {
   }
 
   useEffect(() => {
-
-    clear();
+    clearStorage();
   }, [])
 
 

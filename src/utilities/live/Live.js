@@ -1,9 +1,9 @@
 import './Live.css';
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { getLiveInfoForSiteAndCamera } from "../../services/ApiService";
 import Stream from "../stream/Stream";
 
-const Live = ({ currentEvent }) => {
+const Live = ({ currentEvent, closeLiveDialog }) => {
 
     const [cameras, setCameras] = useState([]);
 
@@ -19,9 +19,12 @@ const Live = ({ currentEvent }) => {
     }, [currentEvent]);
 
     return (
-        <div className="cam-container">
-            {cameras.map((item) => <Stream videoData={`${item.httpUrl}/`} />)}
-        </div>
+        <Fragment>
+            <div className="cam-container">
+            <button onClick={() => closeLiveDialog()}>close</button>
+                {cameras.map((item) => <Stream videoData={`${item.httpUrl}/`} />)}
+            </div>
+        </Fragment>
     )
 }
 

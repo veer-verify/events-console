@@ -2,27 +2,25 @@ import './Tile.css';
 import { useState, useRef, useEffect } from 'react';
 import { Fragment } from "react/jsx-runtime";
 import Escalation from '../escalation/Escalation';
-import { get, set } from '../../services/StorageService';
+import { getStorage, setStorage } from '../../services/StorageService';
 import Stream from '../stream/Stream';
 import { getActionTagCategories, getMonitoringInfo } from '../../services/ApiService';
 import Live from '../live/Live';
 
 const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation }) => {
-    const eventIndex = get('index');
-    const type = get('id');
-    const actionTagsResponse = get('actionTags');
-    // const [currentTag, setCurrentTag] = useState(null);
+    const eventIndex = getStorage('index');
+    const type = getStorage('id');
+    const actionTagsResponse = getStorage('actionTags');
 
     const tags = [
         {
             id: 1,
             path: 'icons/false.png',
             call: async (data) => {
-                set('id', 1);
-                set('index', index);
+                setStorage('id', 1);
+                setStorage('index', index);
 
                 setShowTags(false);
-                // const tagsResponse = await getActionTagCategories(data);
                 setActionTags(actionTagsResponse.actionTagCategories.filter((item) => item.categoryId === data?.id).flatMap((item) => item.actionTagSubCategories));
                 setShowTags(true);
             }
@@ -31,11 +29,10 @@ const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation })
             id: 2,
             path: 'icons/suspicious.png',
             call: async (data) => {
-                set('id', 2);
-                set('index', index);
+                setStorage('id', 2);
+                setStorage('index', index);
 
                 setShowTags(false);
-                // const tagsResponse = await getActionTagCategories(data);
                 setActionTags(actionTagsResponse.actionTagCategories.filter((item) => item.categoryId === data?.id).flatMap((item) => item.actionTagSubCategories));
                 setShowTags(true);
             }
@@ -111,7 +108,6 @@ const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation })
         });
     }
 
-    const tagsResponse = useRef(null);
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (showTags && dialogRef.current && !dialogRef.current.contains(event.target)) {
@@ -170,7 +166,7 @@ const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation })
                                         key={i}
                                         className='tag-button'
                                         style={{ border: type === 1 ? '1px solid #53BF8B' : '1px solid #ED3237' }}
-                                        onClick={() => { set('eventTag', tag.subCategoryName); handleEvent(currentEvent, index); closeTags() }}
+                                        onClick={() => { setStorage('eventTag', tag.subCategoryName); handleEvent(currentEvent); closeTags() }}
                                     >
                                         {tag.subCategoryName}
                                     </button>
@@ -228,8 +224,8 @@ const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation })
 
                 {(monitoringData && monitoringData.escalation.length !== 0) && <MonitoringInfo monitoringData={monitoringData} />}
                 {(monitoringData && monitoringData.lawEnforcement.length !== 0) && <LawInfo monitoringData={monitoringData} />}
-                {(escalation && eventIndex === index) && <Escalation closeEscalation={closeEscalation} currentEvent={currentEvent} />}
-                {live && <Live currentEvent={currentEvent} />}
+                {(escalation && eventIndex === index) && <Escalation closeEscalation={closeEscalation} currentEvent={currentEvent} handleEvent={handleEvent} />}
+                {live && <Live currentEvent={currentEvent} closeLiveDialog={closeLiveDialog} />}
             </div>
         </Fragment>
     )

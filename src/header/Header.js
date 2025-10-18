@@ -1,11 +1,11 @@
 import './Header.css';
 import React, { useState, useRef, useEffect } from 'react';
 import ProfileCard from './profile-card/ProfileCard';
-import { get } from '../services/StorageService';
+import { getStorage } from '../services/StorageService';
 
 
 const Header = () => {
-    const user = get('user');
+    const user = getStorage('user');
 
     const [showProfile, setShowProfile] = useState(false);
     const profileRef = useRef(null);

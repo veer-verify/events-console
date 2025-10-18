@@ -2,7 +2,7 @@
 .tile {
   width: 50%;
   /* height: calc(100vh - 70px); */
-  margin: 0 2px;
+  /* margin: 0 2px; */
   border: 1px solid #0000001A;
   border-radius: 5px;
   box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;
