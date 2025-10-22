@@ -40,15 +40,15 @@ const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation })
         {
             path: 'icons/live.png',
             call: () => openLiveDialog()
-
+            
         },
         {
             path: 'icons/siren.png',
             call: () => console.log('called!')
-
+            
         }
     ];
-
+    
     const [showTags, setShowTags] = useState(false);
     const [actionTags, setActionTags] = useState([]);
     const [live, setLive] = useState(false);
@@ -58,56 +58,56 @@ const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation })
     const openLiveDialog = () => {
         setLive(true);
     }
-
+    
     const closeLiveDialog = () => {
         setLive(false);
     }
-
+    
     const closeTags = () => {
         setShowTags(false);
     }
-
+    
     const [imgindex, setIndex] = useState(0);
     const [imgSrc, setImgSrc] = useState(currentEvent?.image_list[0]);
-
+    
     const timeFormat = () => {
         const monitoring_hours = monitoringData?.cameras[0]?.monitoringHoursDetails;
         if (!monitoring_hours) return null;
-
+        
         const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-
+        
         const sortedDays = Object.keys(monitoring_hours).sort(
             (a, b) => weekdays.indexOf(a) - weekdays.indexOf(b)
         );
-
+        
         const allHours = {};
         sortedDays.forEach(day => {
             const formatted = monitoring_hours[day]
-                .split(',')
-                .map(r => {
-                    const [start, end] = r.split('-').map(Number);
-                    return `${String(start).padStart(2, '0')}:00 ${start < 12 ? 'AM' : 'PM'} - ${String(end).padStart(2, '0')}:00 ${end < 12 ? 'AM' : 'PM'}`;
-                })
-                .join(' & ');
+            .split(',')
+            .map(r => {
+                const [start, end] = r.split('-').map(Number);
+                return `${String(start).padStart(2, '0')}:00 ${start < 12 ? 'AM' : 'PM'} - ${String(end).padStart(2, '0')}:00 ${end < 12 ? 'AM' : 'PM'}`;
+            })
+            .join(' & ');
             allHours[day] = formatted;
         });
-
+        
         const grouped = {};
         sortedDays.forEach(day => {
             const hours = allHours[day];
             if (!grouped[hours]) grouped[hours] = [];
             grouped[hours].push(day);
         });
-
+        
         return Object.entries(grouped).map(([hours, days], index) => {
             const dayStr = days.length > 1
-                ? `${days[0][0].toUpperCase()}${days[0].slice(1)}–${days[days.length - 1][0].toUpperCase()}${days[days.length - 1].slice(1)}`
-                : `${days[0][0].toUpperCase()}${days[0].slice(1)}`;
-
+            ? `${days[0][0].toUpperCase()}${days[0].slice(1)}–${days[days.length - 1][0].toUpperCase()}${days[days.length - 1].slice(1)}`
+            : `${days[0][0].toUpperCase()}${days[0].slice(1)}`;
+            
             return <span key={index}>{dayStr}: {hours}<br /></span>;
         });
     }
-
+    
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (showTags && dialogRef.current && !dialogRef.current.contains(event.target)) {
@@ -130,16 +130,15 @@ const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation })
 
         const getData = async () => {
             const data = await getMonitoringInfo(currentEvent);
-            console.log(data)
             setMonitoringData(data);
         }
-        // getData();
+        if(!monitoringData) getData();
 
         return () => {
             clearInterval(interval);
             window.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [currentEvent, showTags]);
+    }, [currentEvent, showTags, monitoringData]);
 
     // useEffect(() => {
     // }, []);
@@ -149,7 +148,7 @@ const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation })
             <div className='tile'>
                 <div className="camera-feeds">
                     <div className="camera">
-                        {imgSrc ? <img src={imgSrc} alt={`Camera Feed ${imgindex + 1}`} /> : <img src='public/images/camera.png' alt='' />}
+                        {imgSrc && <img src={imgSrc} alt={`Camera Feed ${imgindex + 1}`} />}
                     </div>
                     <div className="camera">
                         {currentEvent.httpUrl && <Stream videoData={`${currentEvent?.httpUrl}/`} />}
@@ -172,7 +171,6 @@ const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation })
                                     </button>
                                 ))}
                             </div>
-
                         }
                     </div>
 

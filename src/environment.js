@@ -13,5 +13,5 @@ export const environment = {
     event_image_url: `${dev}/dotimages/`,
     event_process_url: `${dev}/events_data`,
     events_url: `${event}/queueManagement`,
-    monitoring_info_url: `${local}`
+    // monitoring_info_url: `${dev}`
 };

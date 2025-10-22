@@ -226,7 +226,7 @@ const Stream = ({ videoData }) => {
       setHitStream(false);
       peerConnectionRef.current?.close();
     };
-  }, [encoded, hitStream, videoData]);
+  }, []);
 
   return (
     <div style={{ position: 'relative', height: '350px' }}>

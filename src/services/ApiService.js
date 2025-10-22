@@ -75,7 +75,7 @@ export const getVmsEventsQueueData = async (name) => {
   const url = `${environment.events_url}/getVms_EventsQueueData_1_0/`;
   const user = getStorage('user');
   const params = new URLSearchParams();
-  params.append('queue_name', name);
+  params.append('queue_name', user?.queueName);
   return api.get(url, { params: params }).then((res) => res.data).catch((err) => console.log(err));
 }
 
@@ -183,7 +183,7 @@ export const eventsGenericEmail = async (payload) => {
 }
 
 export const getMonitoringInfo = async (payload) => {
-  const url = `${environment.monitoring_info_url}/getMonitoringInfo_1_0`;
+  const url = `${environment.guard_monitoring_url}/getMonitoringInfo_1_0`;
   const user = getStorage('user');
   const params = new URLSearchParams();
   params.append('siteId', payload?.siteId);

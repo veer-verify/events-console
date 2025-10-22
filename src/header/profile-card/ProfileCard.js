@@ -7,7 +7,8 @@ const ProfileCard = () => {
 
     const navigate = useNavigate('');
     const logout = () => {
-        navigate('/')
+        navigate('/');
+        window.location.reload();
     };
 
     return (

@@ -7,10 +7,10 @@ import { getActionTagCategories, getVmsEventsQueueData, updateEventFullDetails, 
 
 
 const Dashboard = () => {
-  const dummy = {
-    "siteName": "Test",
+  const dummy = [{
+    "siteName": "Loading...",
     "siteId": "0",
-    "cameraId": "0000",
+    "cameraId": "Loading...",
     "objectName": "person",
     "eventTag": "",
     "eventTime": "",
@@ -19,7 +19,7 @@ const Dashboard = () => {
     "images_for_event": 0,
     "timezone": "",
     "image_list": []
-  };
+  }];
 
   const EventContext = createContext();
   const [eventData, setEventData] = useState([]);
@@ -38,16 +38,17 @@ const Dashboard = () => {
     if (selectedAction === 1) {
       write2VmsDispatchQueue({ ...item, queue_name: '2nd-level', actionTag: 'false activity', eventTag: eventTag });
 
-      // setEventData([...filtered, eventData[index] = dummy]);
-
-      const eventResponse = await getVmsEventsQueueData('live-events');
       const filtered = eventData.filter((_, i) => index !== i);
-      setEventData([...filtered, ...eventResponse]);
-      // if (index === 0) {
-      //   setEventData([...eventResponse, ...filtered]);
-      // } else {
-      //   setEventData([...filtered, ...eventResponse]);
-      // }
+      // setEventData(filtered);
+      if (index === 0) {
+        setEventData([...dummy, ...filtered]);
+        const eventResponse = await getVmsEventsQueueData('live-events');
+        setEventData([...eventResponse, ...filtered]);
+      } else {
+        setEventData([...filtered, ...dummy]);
+        const eventResponse = await getVmsEventsQueueData('live-events');
+        setEventData([...filtered, ...eventResponse]);
+      }
     } else if (selectedAction === 2) {
       setEscalation(true);
     }
@@ -65,9 +66,12 @@ const Dashboard = () => {
       setStorage('actionTags', tagsResponse);
     };
 
-    getEvent('live-events');
+    // getEvent('live-events');
+    if (eventData.length < 2) {
+      getEvent('live-events');
+    }
     getTags();
-  }, []);
+  }, [eventData.length]);
 
   return (
     <Fragment>
@@ -93,5 +97,3 @@ const Dashboard = () => {
 }
 
 export default Dashboard;
-
-// export const eventCtx = () => useContext(EventContext);
