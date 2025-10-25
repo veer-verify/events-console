@@ -3,8 +3,8 @@
     /* background-color: #EEEEEE; */
     display: flex;
     flex-direction: row;
-    margin: 7px;
-    gap: 10px;
+    margin: 4px;
+    gap: 8px;
     height: calc(100vh - 82px);
     /* display: grid;
     grid-template-columns: repeat(2, 1fr); */

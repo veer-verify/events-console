@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-const Stream = ({ videoData }) => {
+const Stream = ({ streamUrl }) => {
 
   const videoRef = useRef(null);
   const peerConnectionRef = useRef(null);
@@ -11,9 +11,7 @@ const Stream = ({ videoData }) => {
 
   const [showLoader, setShowLoader] = useState(false);
   const [hitStream, setHitStream] = useState(true);
-
   const encoded = btoa('admin:verifai123789');
-
 
 
   useEffect(() => {
@@ -21,7 +19,7 @@ const Stream = ({ videoData }) => {
       if (!hitStream) return;
 
       setShowLoader(true);
-      fetch(`${videoData}whep`, {
+      fetch(`${streamUrl}whep`, {
         method: 'OPTIONS',
         headers: {
           Authorization: `Basic ${encoded}`
@@ -98,7 +96,7 @@ const Stream = ({ videoData }) => {
       if (!hitStream) return;
 
       setShowLoader(true);
-      fetch(`${videoData}whep`, {
+      fetch(`${streamUrl}whep`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/sdp',
@@ -109,7 +107,7 @@ const Stream = ({ videoData }) => {
         .then(res => {
           setShowLoader(false);
           if (res.status !== 201) throw new Error(`Unexpected status ${res.status}`);
-          sessionUrlRef.current = new URL(res.headers.get('location'), videoData).toString();
+          sessionUrlRef.current = new URL(res.headers.get('location'), streamUrl).toString();
           return res.text();
         })
         .then(sdp => {
@@ -226,7 +224,7 @@ const Stream = ({ videoData }) => {
       setHitStream(false);
       peerConnectionRef.current?.close();
     };
-  }, []);
+  }, [encoded, hitStream, streamUrl]);
 
   return (
     <div style={{ position: 'relative', height: '350px' }}>

@@ -136,16 +136,7 @@ export const getEmailDataForVMSEvents = async (payload) => {
   params.append('currentTime', currentTime);
   // params.append('timer', 120);
   params.append('imageName', payload?.image_list.toString());
-  return api.get(url, { params: params }).then((res) => {
-    if (res.data.statusCode === 200) {
-      return res.data.emailDetails;
-    } else {
-      return [];
-    }
-  }).catch((err) => {
-    console.log(err)
-    return [];
-  });
+  return api.get(url, { params: params }).then((res) => res.data.statusCode === 200 ? res.data.emailDetails : []).catch((err) => console.log(err));
 }
 
 export const eventsGenericEmail = async (payload) => {
@@ -187,9 +178,9 @@ export const getMonitoringInfo = async (payload) => {
   const user = getStorage('user');
   const params = new URLSearchParams();
   params.append('siteId', payload?.siteId);
-    params.append('cameraId', payload?.cameraId);
+  params.append('cameraId', payload?.cameraId);
   params.append('level', user?.userLevel);
-  return api.get(url, { params: params }).then((res) => res.data).catch((err) => console.log(err));
+  return api.get(url, { params: params }).then((res) =>  res.data.statusCode === 200 ? res.data : []).catch((err) => console.log(err));
 }
 
 export const getLiveInfoForSiteAndCamera = async (payload) => {

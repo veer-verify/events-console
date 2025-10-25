@@ -11,3 +11,5 @@ export const Decrypt = (data) => AES.decrypt(data, key).toString(enc.Utf8);
 export const setStorage = (key, data) =>localStorage.setItem(key, JSON.stringify(data));
 export const getStorage = (key) => JSON.parse(localStorage.getItem(key));
 export const clearStorage = () => localStorage.clear();
+
+export const getUser = () => getStorage('user');

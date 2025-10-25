@@ -1,12 +1,13 @@
 /* camera feeds */
 .tile {
   width: 50%;
-  height: calc(100vh - 82px);
+  height: calc(100vh - 75px);
   /* margin: 0 2px;
   border: 1px solid #0000001A; */
   border-radius: 5px;
   box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;
   background-color: #ffffff;
+  position: relative;
 }
 
 @media (max-width: 1080px) {
@@ -78,15 +79,14 @@
 
 /* store info */
 .store-info {
-  margin-top: 10px !important;
+  margin: 10px 0 !important;
   padding: 0 10px;
-  margin-bottom: 10px;
   /* border-top: 2px solid #e91e63; */
 }
 
 .store-info p:first-child {
-  margin: 0;
-  font-size: 14px;
+  margin-bottom: 4px !important;
+  font-size: 12px;
   color: #ed3237;
   text-transform: uppercase;
   font-weight: 700;
@@ -94,7 +94,7 @@
 
 .store-info p:nth-child(2) {
   color: #000000;
-  font-size: 12px;
+  font-size: 10px;
   margin-bottom: 10px !important;
 }
 
@@ -112,28 +112,38 @@
 
 .activity-box strong {
   text-transform: uppercase;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .activity-box span {
-  font-family:'Neometric lighter';
+  font-family: 'Neometric lighter';
   font-size: 10px;
   /* opacity: 0.75; */
   /* font-weight:bold; */
   /* font-style:italic; */
 }
 
+/** escalation info */
+
+.escalation-container {
+  background-color: #ffffff;
+  position: absolute;
+  z-index: 1;
+  width: 100%;
+  top: 395px;
+}
+
 /* monitoring info*/
+
 .monitoring {
   padding: 0 10px;
 }
 
 .monitoring-title {
-  font-size: 14px;
-  margin-bottom: 10px;
+  font-size: 12px;
   color: #333;
   border-bottom: 2px solid #ed3237;
-  padding: 5px;
+  padding: 6px 0;
   font-weight: 700;
   /* opacity: 0.7; */
 }
@@ -145,14 +155,14 @@
 }
 
 .monitoring td {
-  padding: 4px;
+  padding: 4px 0;
   vertical-align: top;
   /* border-bottom: 1px solid #ddd; */
-  font-size: 12px;
+  font-size: 10px;
   font-weight: bold;
 }
 
-.monitoring strong{
+.monitoring strong {
   font-weight: lighter;
 }
 
@@ -161,32 +171,45 @@
   color: #000000;
   width: 150px;
   opacity: 0.5;
-  font-size: 12px;
+  font-size: 10px;
 }
 
 /* Tag List */
 .tag-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 2px;
-  padding: 6px;
-  max-width: 800px;
-  margin: auto;
   position: absolute;
   z-index: 1;
   top: 24px;
   background-color: #fde8e8;
+  border-radius: 6px;
+  padding: 16px;
+}
+
+.tag-grid p {
+  margin-bottom: 10px !important;
+  text-align: left;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.tag-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2px;
+  max-width: 800px;
 }
 
 .tag-button {
-  padding: 8px;
+  padding: 10px;
   border: 1px solid #cce3d4;
-  border-radius: 6px;
+  border-radius: 4px;
   background-color: #f9f9f9;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-size: 12px;
+  font-size: 10px;
   text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .tag-button:hover {
@@ -200,7 +223,8 @@
 }
 
 
-/* escalation info */
+/** law info */
+
 .contacts-container {
   padding: 10px;
 }
@@ -216,7 +240,7 @@
   border-radius: 8px;
   min-width: 200px;
   flex: 1;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
 .card-header {
@@ -249,8 +273,7 @@
 }
 
 .law-card p {
-    margin: 4px 0;
+  margin: 4px 0;
   color: #333;
   font-size: 12px;
 }
-

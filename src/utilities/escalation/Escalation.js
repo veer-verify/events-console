@@ -11,14 +11,11 @@ const Escalation = ({ closeEscalation, currentEvent, handleEvent }) => {
   const [subAlerts, setSubAlerts] = useState([]);
   const [selectedAlertType, setSelectedAlertType] = useState("");
   const [selectedSubType, setSelectedSubType] = useState("");
-
   const [selection, setSelection] = useState("person");
   //  const [selectedButton, setSelectedButton] = useState("mail");
   //  const selectButton = (button) => setSelectedButton(button);
-
-
-
-  const [emaildata, setEmailData] = useState('');
+  const [emaildata, setEmailData] = useState(null);
+  // console.log(emaildata)
 
   const fetchEmailData = async (val) => {
     setSelectedSubType(val)
@@ -27,12 +24,6 @@ const Escalation = ({ closeEscalation, currentEvent, handleEvent }) => {
   }
 
   const escalate = () => {
-    // const type = getStorage('id');
-    // if(type === 1) {
-    //   write2VmsDispatchQueue(currentEvent);
-    // } else {
-    //   updateEventFullDetails({...currentEvent, selectedAlertType, selectedSubType});
-    // }
     updateEventFullDetails({ ...currentEvent, selectedAlertType, selectedSubType });
     setStorage('id', 1);
     handleEvent(currentEvent);
@@ -128,7 +119,8 @@ const Escalation = ({ closeEscalation, currentEvent, handleEvent }) => {
       {/* Right Panel */}
       <div className="alert-preview">
         {
-          emaildata ?
+          emaildata && emaildata.length
+            ?
             <Fragment>
               <div className="flex-group">
                 <p className="section-title">PREVIEW</p>
@@ -137,21 +129,17 @@ const Escalation = ({ closeEscalation, currentEvent, handleEvent }) => {
               <button
                 className={`toggle-button ${selectedButton === "mail" ? "active" : ""
                   }`}
-                onClick={() => selectButton("mail")}
-              >
+                onClick={() => selectButton("mail")}>
                 Mail
               </button>
-
               <button
                 className={`toggle-button ${selectedButton === "message" ? "activerej" : ""
                   }`}
                 style={{ position: "relative", left: "-30px" }}
-                onClick={() => selectButton("message")}
-              >
+                onClick={() => selectButton("message")}>
                 Message
               </button>
             </div> */}
-
               </div>
 
               <div className="preview-card">
@@ -178,21 +166,26 @@ const Escalation = ({ closeEscalation, currentEvent, handleEvent }) => {
 
               <div className="alert-details">
                 <p>
-                  <strong>Location:</strong> {emaildata?.emailFields?.LOCATION}
+                  <strong>Location</strong> {emaildata?.emailFields?.LOCATION}
                 </p>
                 <p>
-                  <strong>Date:</strong> {emaildata?.emailFields?.DATE}
+                  <strong>Date</strong> {emaildata?.emailFields?.DATE}
                 </p>
                 <p>
-                  <strong>Time:</strong> {emaildata?.emailFields?.TIME}
+                  <strong>Time</strong> {emaildata?.emailFields?.TIME}
                 </p>
               </div>
 
               <p className="alert-note">
                 {emaildata?.emailFooter}
               </p>
-            </Fragment> :
-            <p>Loading...</p>
+            </Fragment>
+            :
+            !emaildata
+              ?
+              <p></p>
+              :
+              <p>no data</p>
         }
       </div>
     </div>

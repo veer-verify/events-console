@@ -11,7 +11,7 @@ const Dashboard = () => {
     "siteName": "Loading...",
     "siteId": "0",
     "cameraId": "Loading...",
-    "objectName": "person",
+    "objectName": "Loading...",
     "eventTag": "",
     "eventTime": "",
     "httpUrl": "",
@@ -39,7 +39,6 @@ const Dashboard = () => {
       write2VmsDispatchQueue({ ...item, queue_name: '2nd-level', actionTag: 'false activity', eventTag: eventTag });
 
       const filtered = eventData.filter((_, i) => index !== i);
-      // setEventData(filtered);
       if (index === 0) {
         setEventData([...dummy, ...filtered]);
         const eventResponse = await getVmsEventsQueueData('live-events');
@@ -79,7 +78,7 @@ const Dashboard = () => {
 
       <div className='tiles'>
         {eventData.map((item, i) =>
-          <EventContext.Provider value={item}>
+          <EventContext.Provider value={item} key={i}>
             <Tile
               key={i}
               index={i}

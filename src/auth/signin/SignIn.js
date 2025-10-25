@@ -52,7 +52,7 @@ const SignIn = () => {
         <div className="right-panel">
           <div className="login-box">
             <div className="logo">
-              <img src='images/verifai-logo.png' alt='loading' loading='lazy' />
+              <img src='events-console/images/verifai-logo.png' alt='loading' loading='lazy' />
             </div>
 
             <p className='welcome'>Welcome to sign in</p>
