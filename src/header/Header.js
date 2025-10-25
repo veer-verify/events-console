@@ -27,7 +27,7 @@ const Header = () => {
         <div className="header-container">
             <div className="header-left">
                 <div className="logo">
-                    <img src='images/logo.svg' alt='loading' loading='lazy' />
+                    <img src='images/verifai-logo.png' alt='loading' loading='lazy' />
                 </div>
                 <div className="page-title">
                     <span className='title'>EVENTS CONSOLE</span><span className='bar'> | </span><span className="level">LEVEL - {user?.userLevel ?? 1}</span>

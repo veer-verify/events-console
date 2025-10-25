@@ -80,6 +80,10 @@
     /* cursor: pointer; */
 }
 
+.remember-me label {
+    cursor: pointer;
+}
+
 input[type="checkbox"] {
     display: none;
 }
@@ -94,7 +98,7 @@ input[type="checkbox"] + span {
     vertical-align: middle;
     background: white left top no-repeat;
     border: 1px solid red;
-    cursor: pointer;
+    /* cursor: pointer; */
 }
 
 input[type="checkbox"]:checked + span {
