@@ -1,10 +1,10 @@
 import axios from "axios";
-import { getAccessforRefreshToken } from "./ApiService";
-import { get, set } from "./StorageService";
+import { getAccessforRefreshToken, Logout } from "./services/ApiService";
+import { getStorage, setStorage } from "./services/StorageService";
 
 
 
-// ✅ Axios instance
+// Axios instance
 const api = axios.create();
 
 // Refresh control flags
@@ -20,11 +20,11 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
-// ✅ Request Interceptor — attach token to every request
+// Request Interceptor — attach token to every request
 api.interceptors.request.use(
   (config) => {
-    const token = get("AccessToken");
-    if (token && !config.url.startsWith("https://api.800.com")) {
+    const token = getStorage("AccessToken");
+    if (token) {
       config.headers["Authorization"] = `Bearer ${token}`;
     }
     return config;
@@ -32,7 +32,7 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ✅ Response Interceptor — handle expired tokens
+// Response Interceptor — handle expired tokens
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -56,26 +56,23 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const currentUser = get("user");
+        const currentUser = getStorage("user");
         if (!currentUser) throw new Error("No user data found");
 
-        // ✅ Await refresh token call
         const response = await getAccessforRefreshToken();
 
-        console.log("Refresh Token API Response:", response.data);
-
         // Extract new token safely
-        const newToken = response?.data?.access_token || response?.access_token;
+        const newToken = response?.access_token;
         if (!newToken) throw new Error("No access token returned from refresh API");
 
-        // ✅ Save new access token
-        set("AccessToken", newToken);
+        // Save new access token
+        setStorage("AccessToken", newToken);
 
-        // ✅ Resume queued requests
+        // Resume queued requests
         processQueue(null, newToken);
         isRefreshing = false;
 
-        // ✅ Retry original request with new token
+        // Retry original request with new token
         originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
         return api(originalRequest);
       } catch (err) {
@@ -84,13 +81,10 @@ api.interceptors.response.use(
         isRefreshing = false;
 
         // Optional logout if refresh fails
-        localStorage.clear();
-        window.location.href = "/";
-
+        Logout();
         return Promise.reject(err);
       }
     }
-
     return Promise.reject(error);
   }
 );

@@ -2,9 +2,9 @@ import "./Escalation.css";
 import { useState, useEffect, Fragment } from "react";
 import { getAlertCategoriesForSiteId, getEmailDataForVMSEvents, updateEventFullDetails, write2VmsDispatchQueue } from "../../services/ApiService";
 import { useAuth } from "../../dashboard/Dashboard";
-import { get } from "../../services/StorageService";
+import { getStorage, setStorage } from "../../services/StorageService";
 
-const Escalation = ({ closeEscalation, currentEvent }) => {
+const Escalation = ({ closeEscalation, currentEvent, handleEvent }) => {
   // const data = useAuth();
 
   const [alerts, setAlerts] = useState([]);
@@ -16,39 +16,43 @@ const Escalation = ({ closeEscalation, currentEvent }) => {
   //  const [selectedButton, setSelectedButton] = useState("mail");
   //  const selectButton = (button) => setSelectedButton(button);
 
-  const fetchMetadata = async () => {
-    const response = await getAlertCategoriesForSiteId(currentEvent);
-    setAlerts(response);
-  };
+
 
   const [emaildata, setEmailData] = useState('');
-  
+
   const fetchEmailData = async (val) => {
     setSelectedSubType(val)
-    const response = await getEmailDataForVMSEvents({ ...currentEvent, selectedAlertType, ...{selectedSubType: val} });
+    const response = await getEmailDataForVMSEvents({ ...currentEvent, selectedAlertType, ...{ selectedSubType: val } });
     setEmailData(response);
   }
 
   const escalate = () => {
-    const type = get('id');
-    if(type === 1) {
-      write2VmsDispatchQueue(currentEvent);
-    } else {
-      updateEventFullDetails({...currentEvent, selectedAlertType, selectedSubType});
-    }
+    // const type = getStorage('id');
+    // if(type === 1) {
+    //   write2VmsDispatchQueue(currentEvent);
+    // } else {
+    //   updateEventFullDetails({...currentEvent, selectedAlertType, selectedSubType});
+    // }
+    updateEventFullDetails({ ...currentEvent, selectedAlertType, selectedSubType });
+    setStorage('id', 1);
+    handleEvent(currentEvent);
     closeEscalation();
   }
 
   const getSubAlerts = (val) => {
     setSelectedSubType("");
     setSelectedAlertType(val)
-    const x  = alerts.filter((item) => item.guardAlertTypeId === parseInt(val)).flatMap((el) => el.subAlerts);
+    const x = alerts.filter((item) => item.guardAlertTypeId === parseInt(val)).flatMap((el) => el.subAlerts);
     setSubAlerts(x);
   };
 
   useEffect(() => {
+    const fetchMetadata = async () => {
+      const response = await getAlertCategoriesForSiteId(currentEvent);
+      setAlerts(response);
+    };
     fetchMetadata();
-  }, []);
+  }, [currentEvent]);
 
   return (
     <div className="alert-container">
@@ -100,7 +104,7 @@ const Escalation = ({ closeEscalation, currentEvent }) => {
           <label>Alert Sub Type</label>
           <select
             value={selectedSubType}
-            onChange={(e) =>  fetchEmailData(e.target.value)}
+            onChange={(e) => fetchEmailData(e.target.value)}
           >
             <option value="" disabled>Select Alert Sub Type</option>
             {subAlerts?.map((item) => (
@@ -112,11 +116,11 @@ const Escalation = ({ closeEscalation, currentEvent }) => {
         </div>
 
         {/* Action Buttons */}
-        {emaildata && 
-        <div className="button-group">
-          <button className="btn-secondary" onClick={escalate}>COMPLETED</button>
-          <button className="btn-primary" onClick={escalate}>ESCALATED</button>
-        </div>
+        {emaildata &&
+          <div className="button-group">
+            <button className="btn-secondary" onClick={escalate}>COMPLETE</button>
+            <button className="btn-primary" onClick={escalate}>ESCALATE</button>
+          </div>
         }
       </div>
 
@@ -125,11 +129,11 @@ const Escalation = ({ closeEscalation, currentEvent }) => {
       <div className="alert-preview">
         {
           emaildata ?
-          <Fragment>
-            <div className="flex-group">
-              <p className="section-title">PREVIEW</p>
+            <Fragment>
+              <div className="flex-group">
+                <p className="section-title">PREVIEW</p>
 
-            {/* <div className="button-group1">
+                {/* <div className="button-group1">
               <button
                 className={`toggle-button ${selectedButton === "mail" ? "active" : ""
                   }`}
@@ -148,47 +152,47 @@ const Escalation = ({ closeEscalation, currentEvent }) => {
               </button>
             </div> */}
 
-            </div>
-
-            <div className="preview-card">
-              <div className="alert-header">
-                <span>
-                  {emaildata?.emailSubject}
-                </span>
               </div>
-            </div>
 
-            <p className="alert-message">
-              {emaildata?.emailBody}
-            </p>
+              <div className="preview-card">
+                <div className="alert-header">
+                  <span>
+                    {emaildata?.emailSubject}
+                  </span>
+                </div>
+              </div>
 
-            {
-              emaildata?.screenshots?.map((item, i) =>
-                <img
-                  src={item}
-                  alt="Alert"
-                  className="alert-image"
-                />
-              )
-            }
-
-            <div className="alert-details">
-              <p>
-                <strong>Location:</strong> {emaildata?.emailFields?.LOCATION}
+              <p className="alert-message">
+                {emaildata?.emailBody}
               </p>
-              <p>
-                <strong>Date:</strong> {emaildata?.emailFields?.DATE}
-              </p>
-              <p>
-                <strong>Time:</strong> {emaildata?.emailFields?.TIME}
-              </p>
-            </div>
 
-            <p className="alert-note">
-              {emaildata?.emailFooter}
-            </p>
-          </Fragment> :
-          <p>Loading...</p>
+              {
+                emaildata?.screenshots?.map((item, i) =>
+                  <img
+                    src={item}
+                    alt="Alert"
+                    className="alert-image"
+                  />
+                )
+              }
+
+              <div className="alert-details">
+                <p>
+                  <strong>Location:</strong> {emaildata?.emailFields?.LOCATION}
+                </p>
+                <p>
+                  <strong>Date:</strong> {emaildata?.emailFields?.DATE}
+                </p>
+                <p>
+                  <strong>Time:</strong> {emaildata?.emailFields?.TIME}
+                </p>
+              </div>
+
+              <p className="alert-note">
+                {emaildata?.emailFooter}
+              </p>
+            </Fragment> :
+            <p>Loading...</p>
         }
       </div>
     </div>

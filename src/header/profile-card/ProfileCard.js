@@ -1,13 +1,14 @@
 import { Link, useNavigate } from 'react-router-dom';
 import './ProfileCard.css';
-import { clear, get } from '../../services/StorageService';
+import { getStorage } from '../../services/StorageService';
 
 const ProfileCard = () => {
-    const user = get('user');
+    const user = getStorage('user');
 
     const navigate = useNavigate('');
     const logout = () => {
-        navigate('/')
+        navigate('/');
+        window.location.reload();
     };
 
     return (

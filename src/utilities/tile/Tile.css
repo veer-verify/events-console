@@ -32,7 +32,13 @@
   /* border: 1px solid #ccc; */
   /* border-radius: 4px; */
   overflow: hidden;
-  background-color: #f9f9f9;
+  background-color: #000000;
+}
+
+@media (max-width: 1280px) {
+  .camera {
+    height: 300px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -75,7 +81,6 @@
   margin-top: 10px !important;
   padding: 0 10px;
   margin-bottom: 10px;
-  /* background-color: #fff; */
   /* border-top: 2px solid #e91e63; */
 }
 
@@ -121,7 +126,6 @@
 /* monitoring info*/
 .monitoring {
   padding: 0 10px;
-  /* background-color: #ffffff; */
 }
 
 .monitoring-title {

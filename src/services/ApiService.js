@@ -1,37 +1,34 @@
-import api from './interceptor';
+import api from '../interceptor';
 import { environment } from '../environment';
-import { get, set } from './StorageService';
+import { clearStorage, getStorage } from './StorageService';
 import moment from 'moment-timezone';
+import { useNavigate } from 'react-router-dom';
+
+export const Logout = () => {
+  const navigate = useNavigate('');
+  clearStorage();
+  navigate('/');
+}
 
 export const getAccessforRefreshToken = async () => {
-  try {
     const url = `${environment.login_url}/getAccessforRefreshToken`;
-    const user = get('user');
-    const response = await api.post(url, null, {
+    const user = getStorage('user');
+    return api.post(url, null, {
       params: {
-        refresh_token: user?.data.RefreshToken,
-        modifiedBy: user?.data.UserId,
+        refresh_token: user?.RefreshToken,
+        modifiedBy: user?.UserId,
       },
-    });
-    return response.data;
-  } catch (err) {
-    console.error('Error refreshing token:', err);
-    throw err;
-  }
+    }).then((res) => res.data).catch((err) => console.log(err));
 };
 
 export const getMetadata = async () => {
-  try {
-    const response = await api.get(`${environment.common_url}/getValuesListByType_1_0`);
-    return response.data;
-  } catch (err) {
-    console.error(err);
-  }
+    const url = `${environment.common_url}/getValuesListByType_1_0`;
+    return api.get(url).then((res) => res.data).catch((err) => console.log(err));
 };
 
 export const getActionTagCategories = async (payload) => {
   const url = `${environment.event_process_url}/getActionTagCategories_1_0`;
-  const user = get('user');
+  const user = getStorage('user');
   const params = new URLSearchParams();
   if (payload?.actionTagId) {
     params.append('actionTagId', payload.actionTagId)
@@ -51,7 +48,7 @@ export const getAlertCategoriesForSiteId = async (payload) => {
 
 export const write2VmsDispatchQueue = async (payload) => {
   const url = `${environment.events_url}/write2Vms_EventsQueue_1_0/`;
-  const user = get('user');
+  const user = getStorage('user');
   const currentTime = moment().tz(payload?.timezone)?.format('YYYY-MM-DD hh:mm:ss');
   let obj = {
     siteId: payload?.siteId,
@@ -71,22 +68,22 @@ export const write2VmsDispatchQueue = async (payload) => {
     userLevelAlarmInfo: [],
     userName: user.UserName,
   }
-  return api.post(url, obj).then((res) => res).catch((err) => console.log(err));
+  return api.post(url, obj).then((res) => res.data).catch((err) => console.log(err));
 }
 
-export const getVmsEventsQueueData = async () => {
+export const getVmsEventsQueueData = async (name) => {
   const url = `${environment.events_url}/getVms_EventsQueueData_1_0/`;
-  const user = get('user');
+  const user = getStorage('user');
   const params = new URLSearchParams();
-  params.append('queue_name', 'live-events');
+  params.append('queue_name', user?.queueName);
   return api.get(url, { params: params }).then((res) => res.data).catch((err) => console.log(err));
 }
 
 export const updateEventFullDetails = async (payload) => {
   const url = `${environment.event_process_url}/updateEventFullDetails_1_0/`;
-  const user = get('user');
+  const user = getStorage('user');
   const currentTime = moment().tz(payload?.timezone)?.format('YYYY-MM-DD hh:mm:ss:SSS');
-  const actionType = get('id');
+  const actionType = getStorage('id');
   let obj = {
     siteName: payload?.siteName,
     siteId: payload?.siteId,
@@ -153,7 +150,7 @@ export const getEmailDataForVMSEvents = async (payload) => {
 
 export const eventsGenericEmail = async (payload) => {
   const url = `${environment.guard_monitoring_url}/eventsGenericEmail_1_0`;
-  const user = get('user');
+  const user = getStorage('user');
   const params = new URLSearchParams();
   params.append('siteId', payload?.siteId);
   params.append('day', payload?.day);
@@ -186,11 +183,18 @@ export const eventsGenericEmail = async (payload) => {
 }
 
 export const getMonitoringInfo = async (payload) => {
-  const url = `${environment.monitoring_info_url}/getMonitoringInfo_1_0`;
-  const user = get('user');
+  const url = `${environment.guard_monitoring_url}/getMonitoringInfo_1_0`;
+  const user = getStorage('user');
   const params = new URLSearchParams();
   params.append('siteId', payload?.siteId);
     params.append('cameraId', payload?.cameraId);
   params.append('level', user?.userLevel);
   return api.get(url, { params: params }).then((res) => res.data).catch((err) => console.log(err));
+}
+
+export const getLiveInfoForSiteAndCamera = async (payload) => {
+  const url = `${environment.site_url}/getLiveInfoForSiteAndCamera_1_0`;
+    const params = new URLSearchParams();
+    params.append('siteId', payload?.siteId);
+    return api.get(url, { params: params }).then((res) => res.data).catch((err) => console.log(err));
 }

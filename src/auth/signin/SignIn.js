@@ -1,8 +1,8 @@
-import axios from 'axios';
 import './SignIn.css';
+import axios from 'axios';
 import { Fragment, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { clear, Encrypt, set } from '../../services/StorageService';
+import { clearStorage, Encrypt, setStorage } from '../../services/StorageService';
 import PageLoader from '../../utilities/page-loader/PageLoader';
 import { environment } from '../../environment';
 
@@ -13,6 +13,7 @@ const SignIn = () => {
   const [loader, setLoader] = useState(false);
   const [userName, setUserName] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSignIn = async () => {
     const url = `${environment.login_url}/user_login_1_0`;
@@ -22,19 +23,22 @@ const SignIn = () => {
 
     axios.post(url, requestBody).then((res) => {
       setLoader(false);
-      if (!res.data.queueName) return alert('Queue is not assigned!');
-      set('user', res.data);
-      set('AccessToken', res.data.AccessToken);
-      set('RefreshToken', res.data.RefreshToken);
-      navigate('/dashboard');
-
+      if (res.data.Status === 'Success') {
+        if (!res.data.queueName) return alert('Queue is not assigned!');
+        setStorage('user', res.data);
+        setStorage('AccessToken', res.data.AccessToken);
+        setStorage('RefreshToken', res.data.RefreshToken);
+        navigate('/dashboard');
+      } else {
+        alert(res.data.message);
+      }
     }).catch((err) => {
       setLoader(false);
     });
   }
 
   useEffect(() => {
-    clear();
+    clearStorage();
   }, [])
 
 
@@ -48,7 +52,7 @@ const SignIn = () => {
         <div className="right-panel">
           <div className="login-box">
             <div className="logo">
-              <img src='images/logo.svg' alt='loading' loading='lazy' />
+              <img src='images/verifai-logo.png' alt='loading' loading='lazy' />
             </div>
 
             <p className='welcome'>Welcome to sign in</p>
@@ -60,18 +64,18 @@ const SignIn = () => {
 
             <div className="form-group">
               <label>Password</label>
-              <input type="password" placeholder="Password here" onChange={(e) => setPassword(e.target.value)} />
+              <input type={showPassword ? 'text' : 'password'} placeholder="Password here" onChange={(e) => setPassword(e.target.value)} />
               {/* <div>
                 <img src='icons/user.svg' alt='' style={{ position: 'absolute', top: '16px', right: '16px', cursor: 'pointer' }} />
               </div> */}
             </div>
 
             <div className="remember-me">
-              {/* <div>
-                <input type="checkbox" id="remember" />
+              <div>
+                <input type="checkbox" id="remember" onChange={() => setShowPassword(!showPassword)} />
                 <span></span>
                 <label htmlFor="remember">Show Password</label>
-              </div> */}
+              </div>
               {/* <a href="/" className="forgot">Forgot Password?</a> */}
             </div>
 

@@ -1,24 +1,27 @@
 import './Tile.css';
 import { useState, useRef, useEffect } from 'react';
 import { Fragment } from "react/jsx-runtime";
-import TagList from '../tag-list/TagList';
 import Escalation from '../escalation/Escalation';
-import { get, set } from '../../services/StorageService';
+import { getStorage, setStorage } from '../../services/StorageService';
 import Stream from '../stream/Stream';
 import { getActionTagCategories, getMonitoringInfo } from '../../services/ApiService';
+import Live from '../live/Live';
 
-const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeEscalation }) => {
+const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation }) => {
+    const eventIndex = getStorage('index');
+    const type = getStorage('id');
+    const actionTagsResponse = getStorage('actionTags');
 
     const tags = [
         {
             id: 1,
             path: 'icons/false.png',
             call: async (data) => {
-                set('id', 1);
+                setStorage('id', 1);
+                setStorage('index', index);
 
                 setShowTags(false);
-                const tagsResponse = await getActionTagCategories(data);
-                setActionTags(tagsResponse.actionTagCategories.filter((item) => item.categoryId === data?.id).flatMap((item) => item.actionTagSubCategories));
+                setActionTags(actionTagsResponse.actionTagCategories.filter((item) => item.categoryId === data?.id).flatMap((item) => item.actionTagSubCategories));
                 setShowTags(true);
             }
         },
@@ -26,46 +29,85 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
             id: 2,
             path: 'icons/suspicious.png',
             call: async (data) => {
-                set('id', 2);
+                setStorage('id', 2);
+                setStorage('index', index);
 
                 setShowTags(false);
-                const tagsResponse = await getActionTagCategories(data);
-                setActionTags(tagsResponse.actionTagCategories.filter((item) => item.categoryId === data?.id).flatMap((item) => item.actionTagSubCategories));
+                setActionTags(actionTagsResponse.actionTagCategories.filter((item) => item.categoryId === data?.id).flatMap((item) => item.actionTagSubCategories));
                 setShowTags(true);
             }
         },
         {
             path: 'icons/live.png',
-            call: (data) => console.log('called!')
-
+            call: () => openLiveDialog()
+            
         },
         {
             path: 'icons/siren.png',
-            call: (data) => console.log('called!')
-
-        },
+            call: () => console.log('called!')
+            
+        }
     ];
-
+    
     const [showTags, setShowTags] = useState(false);
     const [actionTags, setActionTags] = useState([]);
+    const [live, setLive] = useState(false);
     const [monitoringData, setMonitoringData] = useState(null);
     const dialogRef = useRef(null);
-    let monitoring_hours;
 
+    const openLiveDialog = () => {
+        setLive(true);
+    }
+    
+    const closeLiveDialog = () => {
+        setLive(false);
+    }
+    
     const closeTags = () => {
         setShowTags(false);
     }
-
-    const getData = async () => {
-        const data = await getMonitoringInfo(currentEvent);
-        setMonitoringData(data);
-        console.log('Current Event', currentEvent)
-        console.log('Monitoring Info', data);
-    }
-
+    
     const [imgindex, setIndex] = useState(0);
     const [imgSrc, setImgSrc] = useState(currentEvent?.image_list[0]);
-
+    
+    const timeFormat = () => {
+        const monitoring_hours = monitoringData?.cameras[0]?.monitoringHoursDetails;
+        if (!monitoring_hours) return null;
+        
+        const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        
+        const sortedDays = Object.keys(monitoring_hours).sort(
+            (a, b) => weekdays.indexOf(a) - weekdays.indexOf(b)
+        );
+        
+        const allHours = {};
+        sortedDays.forEach(day => {
+            const formatted = monitoring_hours[day]
+            .split(',')
+            .map(r => {
+                const [start, end] = r.split('-').map(Number);
+                return `${String(start).padStart(2, '0')}:00 ${start < 12 ? 'AM' : 'PM'} - ${String(end).padStart(2, '0')}:00 ${end < 12 ? 'AM' : 'PM'}`;
+            })
+            .join(' & ');
+            allHours[day] = formatted;
+        });
+        
+        const grouped = {};
+        sortedDays.forEach(day => {
+            const hours = allHours[day];
+            if (!grouped[hours]) grouped[hours] = [];
+            grouped[hours].push(day);
+        });
+        
+        return Object.entries(grouped).map(([hours, days], index) => {
+            const dayStr = days.length > 1
+            ? `${days[0][0].toUpperCase()}${days[0].slice(1)}–${days[days.length - 1][0].toUpperCase()}${days[days.length - 1].slice(1)}`
+            : `${days[0][0].toUpperCase()}${days[0].slice(1)}`;
+            
+            return <span key={index}>{dayStr}: {hours}<br /></span>;
+        });
+    }
+    
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (showTags && dialogRef.current && !dialogRef.current.contains(event.target)) {
@@ -76,79 +118,36 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
             window.addEventListener('mousedown', handleClickOutside);
         }
 
-        // getData();
-        return () => {
-            window.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [showTags]);
-
-    useEffect(() => {
-        async function info_monitoring() {
-            await getData();
-        }
-        info_monitoring();
-    }, [currentEvent])
-
-    useEffect(()=>{
         if (!currentEvent?.image_list || currentEvent?.image_list.length === 0) return;
 
         let i = 0;
-        setImgSrc(currentEvent?.image_list[0])
         const interval = setInterval(() => {
-            i = (i + 1) % currentEvent?.image_list.length;
             setIndex(i);
             setImgSrc(currentEvent?.image_list[i]);
+            if (i === 4) i = 0;
+            i += 1;
         }, 1000);
 
-        return clearInterval(interval);
-    },[currentEvent?.image_list]);
+        const getData = async () => {
+            const data = await getMonitoringInfo(currentEvent);
+            setMonitoringData(data);
+        }
+        if(!monitoringData) getData();
 
+        return () => {
+            window.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [currentEvent, showTags, monitoringData]);
 
-    function timeFormat() {
-        const monitoring_hours = monitoringData?.cameras[0]?.monitoringHoursDetails;
-        if (!monitoring_hours) return null;
-
-        const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-
-        const sortedDays = Object.keys(monitoring_hours).sort(
-            (a, b) => weekdays.indexOf(a) - weekdays.indexOf(b)
-        );
-
-        const allHours = {};
-        sortedDays.forEach(day => {
-            const formatted = monitoring_hours[day]
-                .split(',')
-                .map(r => {
-                    const [start, end] = r.split('-').map(Number);
-                    return `${String(start).padStart(2, '0')}:00 ${start < 12 ? 'AM' : 'PM'} - ${String(end).padStart(2, '0')}:00 ${end < 12 ? 'AM' : 'PM'}`;
-                })
-                .join(' & ');
-            allHours[day] = formatted;
-        });
-
-        const grouped = {};
-        sortedDays.forEach(day => {
-            const hours = allHours[day];
-            if (!grouped[hours]) grouped[hours] = [];
-            grouped[hours].push(day);
-        });
-
-        return Object.entries(grouped).map(([hours, days], index) => {
-            const dayStr = days.length > 1
-                ? `${days[0][0].toUpperCase()}${days[0].slice(1)}–${days[days.length - 1][0].toUpperCase()}${days[days.length - 1].slice(1)}`
-                : `${days[0][0].toUpperCase()}${days[0].slice(1)}`;
-
-            return <span key={index}>{dayStr}: {hours}<br /></span>;
-        });
-    }
-
+    // useEffect(() => {
+    // }, []);
 
     return (
         <Fragment>
             <div className='tile'>
                 <div className="camera-feeds">
                     <div className="camera">
-                        {imgSrc ? <img src={imgSrc} alt={`Camera Feed ${imgindex + 1}`} /> : <img src='public/images/camera.png' alt='' />}
+                        {imgSrc && <img src={imgSrc} alt={`Camera Feed ${imgindex + 1}`} />}
                     </div>
                     <div className="camera">
                         {currentEvent.httpUrl && <Stream videoData={`${currentEvent?.httpUrl}/`} />}
@@ -158,7 +157,20 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
                 <div className="camera-id">
                     <div style={{ position: 'relative' }} ref={dialogRef}>
                         {tags.map((item, i) => <img src={item?.path} alt='icon' width={20} key={i} onClick={() => { item?.call(item) }} />)}
-                        {showTags && <TagList actionTags={actionTags} handleEvent={handleEvent} closeTags={closeTags} index={index} currentEvent={currentEvent} />}
+                        {showTags &&
+                            <div className="tag-grid">
+                                {actionTags.map((tag, i) => (
+                                    <button
+                                        key={i}
+                                        className='tag-button'
+                                        style={{ border: type === 1 ? '1px solid #53BF8B' : '1px solid #ED3237' }}
+                                        onClick={() => { setStorage('eventTag', tag.subCategoryName); handleEvent(currentEvent); closeTags() }}
+                                    >
+                                        {tag.subCategoryName}
+                                    </button>
+                                ))}
+                            </div>
+                        }
                     </div>
 
                     <p >{currentEvent?.cameraId}</p>
@@ -207,9 +219,10 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
                     </table>
                 </div>
 
-                {/* {(monitoringData && monitoringData.escalation.length !== 0) && <MonitoringInfo monitoringData={monitoringData} />}
-                {(monitoringData && monitoringData.lawEnforcement.length !== 0 ) && <LawInfo monitoringData={monitoringData} />} */}
-                {(escalation && eventIndex === index) && <Escalation closeEscalation={closeEscalation} currentEvent={currentEvent} />}
+                {(monitoringData && monitoringData.escalation.length !== 0) && <MonitoringInfo monitoringData={monitoringData} />}
+                {(monitoringData && monitoringData.lawEnforcement.length !== 0) && <LawInfo monitoringData={monitoringData} />}
+                {(escalation && eventIndex === index) && <Escalation closeEscalation={closeEscalation} currentEvent={currentEvent} handleEvent={handleEvent} />}
+                {live && <Live currentEvent={currentEvent} closeLiveDialog={closeLiveDialog} />}
             </div>
         </Fragment>
     )
