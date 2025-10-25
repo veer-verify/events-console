@@ -5,6 +5,13 @@
   font-style: normal;
 }
 
+@font-face{
+  font-family: 'Neometric lighter';
+  src: url('../public/fonts/neometric-2/Neometric\ Alt\ Extra\ Light\ \(Regular\).otf') format('woff2');
+  font-weight: lighter;
+  font-style: normal;
+}
+
 body {
   margin: 0;
   font-family: 'Neometric Regular', sans-serif;

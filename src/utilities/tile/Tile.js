@@ -76,23 +76,11 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
             window.addEventListener('mousedown', handleClickOutside);
         }
 
-        if (!currentEvent?.image_list || currentEvent?.image_list.length === 0) return;
-
-        let i = 0;
-        const interval = setInterval(() => {
-            // i = (i + 1);
-            setIndex(i);
-            setImgSrc(currentEvent?.image_list[i]);
-            if (i == 5) i = 0;
-            i += 1;
-        }, 1000);
-
         // getData();
         return () => {
-            clearInterval(interval);
             window.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [currentEvent, showTags]);
+    }, [showTags]);
 
     useEffect(() => {
         async function info_monitoring() {
@@ -101,7 +89,19 @@ const Tile = ({ currentEvent, eventIndex, index, handleEvent, escalation, closeE
         info_monitoring();
     }, [currentEvent])
 
+    useEffect(()=>{
+        if (!currentEvent?.image_list || currentEvent?.image_list.length === 0) return;
 
+        let i = 0;
+        setImgSrc(currentEvent?.image_list[0])
+        const interval = setInterval(() => {
+            i = (i + 1) % currentEvent?.image_list.length;
+            setIndex(i);
+            setImgSrc(currentEvent?.image_list[i]);
+        }, 1000);
+
+        return clearInterval(interval);
+    },[currentEvent?.image_list]);
 
 
     function timeFormat() {
