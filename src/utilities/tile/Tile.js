@@ -140,9 +140,6 @@ const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation })
         };
     }, [currentEvent, showTags, monitoringData]);
 
-    // useEffect(() => {
-    // }, []);
-
     return (
         <Fragment>
             <div className='tile'>
@@ -151,7 +148,7 @@ const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation })
                         {imgSrc && <img src={imgSrc} alt={`Camera Feed ${imgindex + 1}`} />}
                     </div>
                     <div className="camera">
-                        {currentEvent.httpUrl &&<Stream streamUrl={`${currentEvent?.httpUrl}/`} />}
+                        {currentEvent.httpUrl && <Stream streamUrl={`${currentEvent?.httpUrl}/`} />}
                     </div>
                 </div>
 

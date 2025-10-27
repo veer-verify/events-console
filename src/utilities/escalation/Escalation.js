@@ -2,7 +2,7 @@ import "./Escalation.css";
 import { useState, useEffect, Fragment } from "react";
 import { getAlertCategoriesForSiteId, getEmailDataForVMSEvents, updateEventFullDetails, write2VmsDispatchQueue } from "../../services/ApiService";
 import { useAuth } from "../../dashboard/Dashboard";
-import { getStorage, setStorage } from "../../services/StorageService";
+import { getStorage, getUser, setStorage } from "../../services/StorageService";
 
 const Escalation = ({ closeEscalation, currentEvent, handleEvent }) => {
   // const data = useAuth();
@@ -15,7 +15,7 @@ const Escalation = ({ closeEscalation, currentEvent, handleEvent }) => {
   //  const [selectedButton, setSelectedButton] = useState("mail");
   //  const selectButton = (button) => setSelectedButton(button);
   const [emaildata, setEmailData] = useState(null);
-  // console.log(emaildata)
+
 
   const fetchEmailData = async (val) => {
     setSelectedSubType(val)
@@ -24,6 +24,47 @@ const Escalation = ({ closeEscalation, currentEvent, handleEvent }) => {
   }
 
   const escalate = () => {
+    getUser().userLevel === 1 ?
+      currentEvent?.userLevelAlarmInfo.push(
+        {
+          level: 2,
+          user: getUser().UserId,
+          alarm: 'N',
+          landingTime: currentEvent?.landingTime ?? '',
+          reviewStart: currentEvent?.reviewStart ?? '',
+          reviewEnd: '',
+          actionTag: this.currentActionTag?.categoryId,
+          subActionTag: this.currentSubActionTag?.subCategoryId,
+          notes: this.notes
+        }
+      ) :
+      getUser().userLevel === 2 ?
+        currentEvent?.userLevelAlarmInfo.push(
+          {
+            level: 3,
+            user: getUser().UserId,
+            alarm: 'N',
+            landingTime: currentEvent?.landingTime ?? '',
+            reviewStart: currentEvent?.reviewStart ?? '',
+            reviewEnd: '',
+            actionTag: this.currentActionTag?.categoryId,
+            subActionTag: this.currentSubActionTag?.subCategoryId,
+            notes: this.notes
+          }
+        ) :
+        currentEvent?.userLevelAlarmInfo.push(
+          {
+            level: 4,
+            user: getUser().UserId,
+            alarm: 'N',
+            landingTime: currentEvent?.landingTime ?? '',
+            reviewStart: currentEvent?.reviewStart ?? '',
+            reviewEnd: '',
+            actionTag: this.currentActionTag?.categoryId,
+            subActionTag: this.currentSubActionTag?.subCategoryId,
+            notes: this.notes
+          }
+        );
     updateEventFullDetails({ ...currentEvent, selectedAlertType, selectedSubType });
     setStorage('id', 1);
     handleEvent(currentEvent);
