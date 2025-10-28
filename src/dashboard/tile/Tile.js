@@ -1,15 +1,15 @@
 import './Tile.css';
 import { useState, useRef, useEffect } from 'react';
 import { Fragment } from "react/jsx-runtime";
-import Escalation from '../escalation/Escalation';
 import { getStorage, getUser, setStorage } from '../../services/StorageService';
-import Stream from '../stream/Stream';
 import { getActionTagCategories, getMonitoringInfo } from '../../services/ApiService';
-import Live from '../live/Live';
+import Escalation from '../escalation/Escalation';
+import Live from '../../utilities/live/Live';
+import Stream from '../../utilities/stream/Stream';
 
 const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation }) => {
     const eventIndex = getStorage('index');
-    const type = getStorage('id');
+    const customAction = getStorage('custom_action');
     const actionTagsResponse = getStorage('actionTags');
 
     const tags = [
@@ -17,7 +17,7 @@ const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation })
             id: 1,
             path: 'icons/false.png',
             call: async (data) => {
-                setStorage('id', 1);
+                setStorage('custom_action', 1);
                 setStorage('index', index);
 
                 setShowTags(false);
@@ -29,7 +29,7 @@ const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation })
             id: 2,
             path: 'icons/suspicious.png',
             call: async (data) => {
-                setStorage('id', 2);
+                setStorage('custom_action', 2);
                 setStorage('index', index);
 
                 setShowTags(false);
@@ -53,6 +53,7 @@ const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation })
     const [actionTags, setActionTags] = useState([]);
     const [live, setLive] = useState(false);
     const [monitoringData, setMonitoringData] = useState(null);
+
     const dialogRef = useRef(null);
 
     const openLiveDialog = () => {
@@ -101,7 +102,7 @@ const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation })
 
         return Object.entries(grouped).map(([hours, days], index) => {
             const dayStr = days.length > 1
-                ? `${days[0][0].toUpperCase()}${days[0].slice(1)}–${days[days.length - 1][0].toUpperCase()}${days[days.length - 1].slice(1)}`
+                ? `${days[0][0].toUpperCase()}${days[0].slice(1)}-${days[days.length - 1][0].toUpperCase()}${days[days.length - 1].slice(1)}`
                 : `${days[0][0].toUpperCase()}${days[0].slice(1)}`;
 
             return <span key={index}>{dayStr}: {hours}<br /></span>;
@@ -132,7 +133,7 @@ const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation })
             const data = await getMonitoringInfo(currentEvent);
             setMonitoringData(data);
         }
-        if (!monitoringData && getUser().userLevel === 2) getData();
+        if (!monitoringData) getData();
 
         return () => {
             window.removeEventListener('mousedown', handleClickOutside);
@@ -157,15 +158,15 @@ const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation })
                         {tags.map((item, i) => <img src={item?.path} alt='icon' width={20} key={i} onClick={() => { item?.call(item) }} />)}
                         {showTags &&
                             <div className='tag-grid'>
-                                <p>{type === 1 ? 'false' : 'suspicious'}</p>
+                                <p>{customAction === 1 ? 'false' : 'suspicious'}</p>
                                 <div className="tag-items">
                                     {actionTags.map((tag, i) => (
                                         <button
                                             key={i}
                                             className='tag-button'
                                             title={tag.subCategoryName}
-                                            style={{ border: type === 1 ? '1px solid #53BF8B' : '1px solid #ED3237' }}
-                                            onClick={() => { setStorage('eventTag', tag.subCategoryName); handleEvent(currentEvent); closeTags() }}
+                                            style={{ border: customAction === 1 ? '1px solid #53BF8B' : '1px solid #ED3237' }}
+                                            onClick={() => { setStorage('sub_alert', tag); handleEvent(currentEvent); closeTags() }}
                                         >
                                             {tag.subCategoryName}
                                         </button>
@@ -201,7 +202,7 @@ const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation })
                         <tbody>
                             <tr>
                                 <td><strong>Timezone</strong></td>
-                                <td>CST</td>
+                                <td>{currentEvent?.timezone}</td>
                             </tr>
                             <tr>
                                 <td><strong>Monitoring</strong></td>
@@ -221,13 +222,14 @@ const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation })
 
                 {(getUser().userLevel === 2 && monitoringData && monitoringData.escalation?.length !== 0) && <MonitoringInfo monitoringData={monitoringData} />}
                 {(getUser().userLevel === 2 && monitoringData && monitoringData.lawEnforcement?.length !== 0) && <LawInfo monitoringData={monitoringData} />}
-                {live && <Live currentEvent={currentEvent} closeLiveDialog={closeLiveDialog} />}
 
-                        {(escalation && eventIndex === index) &&
-                        <div className='escalation-container'>
-                            <Escalation closeEscalation={closeEscalation} currentEvent={currentEvent} handleEvent={handleEvent} />
-                        </div>}
+                {(escalation && eventIndex === index) &&
+                    <div className='escalation-container'>
+                        <Escalation closeEscalation={closeEscalation} currentEvent={currentEvent} handleEvent={handleEvent} />
+                    </div>}
             </div>
+            
+            {live && <Live currentEvent={currentEvent} closeLiveDialog={closeLiveDialog} />}
         </Fragment>
     )
 }

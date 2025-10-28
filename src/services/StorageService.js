@@ -1,9 +1,7 @@
 import { AES, enc } from 'crypto-js';
+import moment from 'moment-timezone';
 
 const key = 'verifai';
-
-// export const base_url = 'https://usstaging.ivisecurity.com';
-// export const events_url = 'https://stagingmq.ivisecurity.com';
 
 export const Encrypt = (data) => AES.encrypt(data, key).toString();
 export const Decrypt = (data) => AES.decrypt(data, key).toString(enc.Utf8);
@@ -13,3 +11,6 @@ export const getStorage = (key) => JSON.parse(localStorage.getItem(key));
 export const clearStorage = () => localStorage.clear();
 
 export const getUser = () => getStorage('user');
+export const getTimeByTimezone = (timezone) => timezone ? moment().tz(timezone).format('YYYY-MM-DD HH:mm:ss') : moment().format('YYYY-MM-DD HH:mm:ss');
+export const getHour = (timezone) => moment().tz(timezone).hours();
+export const getDay = (timezone) => moment().tz(timezone).day();

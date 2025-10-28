@@ -10,13 +10,12 @@ const Stream = ({ streamUrl }) => {
   const restartTimeoutRef = useRef(null);
 
   const [showLoader, setShowLoader] = useState(false);
-  const [hitStream, setHitStream] = useState(true);
   const encoded = btoa('admin:verifai123789');
 
 
   useEffect(() => {
     const requestICEServers = () => {
-      if (!hitStream) return;
+      // if (!hitStream) return;
 
       setShowLoader(true);
       fetch(`${streamUrl}whep`, {
@@ -93,7 +92,7 @@ const Stream = ({ streamUrl }) => {
     };
 
     const sendOffer = (offer) => {
-      if (!hitStream) return;
+      // if (!hitStream) return;
 
       setShowLoader(true);
       fetch(`${streamUrl}whep`, {
@@ -116,6 +115,7 @@ const Stream = ({ streamUrl }) => {
         .catch(err => {
           setShowLoader(false);
           onError(err.toString());
+          return;
         });
     };
 
@@ -204,10 +204,10 @@ const Stream = ({ streamUrl }) => {
       console.error('WebRTC Error:', err);
 
       peerConnectionRef.current?.close();
-      restartTimeoutRef.current = setTimeout(() => {
-        restartTimeoutRef.current = null;
-        requestICEServers();
-      }, 2000);
+      // restartTimeoutRef.current = setTimeout(() => {
+      //   restartTimeoutRef.current = null;
+      //   requestICEServers();
+      // }, 2000);
 
       if (sessionUrlRef.current) {
         fetch(sessionUrlRef.current, { method: 'DELETE' });
@@ -216,18 +216,21 @@ const Stream = ({ streamUrl }) => {
       sessionUrlRef.current = '';
       queuedCandidatesRef.current = [];
     };
-    if (hitStream) {
+
+    // if (hitStream) {
       requestICEServers();
-    }
+    // }
 
     return () => {
-      setHitStream(false);
-      peerConnectionRef.current?.close();
+      // setHitStream(false);
+      if(peerConnectionRef.current) {
+        peerConnectionRef.current.close();
+      }
     };
-  }, [encoded, hitStream, streamUrl]);
+  }, []);
 
   return (
-    <div style={{ position: 'relative', height: '350px' }}>
+    <div style={{ position: 'relative', height: '100%' }}>
       {showLoader && <div className="loader"></div>}
       <video ref={videoRef} autoPlay playsInline muted controls={false} width="100%" height="100%" style={{ objectFit: 'fill' }} />
     </div>

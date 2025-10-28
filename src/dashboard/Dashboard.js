@@ -1,9 +1,9 @@
 import './Dashboard.css';
 import { createContext, Fragment, useContext, useEffect, useState } from 'react'
 import Header from '../header/Header';
-import Tile from '../utilities/tile/Tile';
-import { getStorage, setStorage } from '../services/StorageService';
+import { getStorage, getTimeByTimezone, setStorage } from '../services/StorageService';
 import { getActionTagCategories, getVmsEventsQueueData, updateEventFullDetails, write2VmsDispatchQueue } from '../services/ApiService';
+import Tile from './tile/Tile';
 
 
 const Dashboard = () => {
@@ -31,24 +31,28 @@ const Dashboard = () => {
   }
 
   const handleEvent = async (item) => {
-    const selectedAction = getStorage('id');
+    const customAction = getStorage('custom_action');
     const index = getStorage('index');
-    const eventTag = getStorage('eventTag');
+    const eventTag = getStorage('sub_alert');
 
-    if (selectedAction === 1) {
-      write2VmsDispatchQueue({ ...item, queue_name: '2nd-level', actionTag: 'false activity', eventTag: eventTag });
+    if (customAction === 1) {
+      write2VmsDispatchQueue({ ...item, queue_name: '2nd-level', actionTag: 'false activity', eventTag: eventTag.subCategoryId });
 
       const filtered = eventData.filter((_, i) => index !== i);
       if (index === 0) {
         setEventData([...dummy, ...filtered]);
         const eventResponse = await getVmsEventsQueueData('live-events');
+        eventResponse[0].landingTime = getTimeByTimezone(eventResponse.timezone);
+        eventResponse[0].audioPlayed = false;
         setEventData([...eventResponse, ...filtered]);
       } else {
         setEventData([...filtered, ...dummy]);
         const eventResponse = await getVmsEventsQueueData('live-events');
+        eventResponse[0].landingTime = getTimeByTimezone(eventResponse.timezone);
+        eventResponse[0].audioPlayed = false;
         setEventData([...filtered, ...eventResponse]);
       }
-    } else if (selectedAction === 2) {
+    } else if (customAction === 2) {
       setEscalation(true);
     }
   };
@@ -56,16 +60,18 @@ const Dashboard = () => {
   useEffect(() => {
     const getEvent = async (type) => {
       const response = await getVmsEventsQueueData(type);
+      response[0].landingTime = getTimeByTimezone(response.timezone);
+      response[0].audioPlayed = false;
       setEventData((prev) => {
         return [...prev, ...response];
       });
     };
+
     const getTags = async () => {
       const tagsResponse = await getActionTagCategories();
       setStorage('actionTags', tagsResponse);
     };
 
-    // getEvent('live-events');
     if (eventData.length < 2) {
       getEvent('live-events');
     }

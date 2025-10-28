@@ -1,20 +1,24 @@
 import "./Escalation.css";
 import { useState, useEffect, Fragment } from "react";
-import { getAlertCategoriesForSiteId, getEmailDataForVMSEvents, updateEventFullDetails, write2VmsDispatchQueue } from "../../services/ApiService";
-import { useAuth } from "../../dashboard/Dashboard";
-import { getStorage, getUser, setStorage } from "../../services/StorageService";
+import { getAlertCategoriesForSiteId, getEmailDataForVMSEvents, listActionTags, updateEventFullDetails, write2VmsDispatchQueue } from "../../services/ApiService";
+import { useAuth } from "../Dashboard";
+import { getStorage, getTimeByTimezone, getUser, setStorage } from "../../services/StorageService";
+import ErrorInfo from "../../utilities/error-info/ErrorInfo";
 
 const Escalation = ({ closeEscalation, currentEvent, handleEvent }) => {
   // const data = useAuth();
 
   const [alerts, setAlerts] = useState([]);
+  const [actionTags, setActionTags] = useState([]);
   const [subAlerts, setSubAlerts] = useState([]);
+
+  const [selectedActionTag, setSelectedActionTag] = useState("");
   const [selectedAlertType, setSelectedAlertType] = useState("");
   const [selectedSubType, setSelectedSubType] = useState("");
   const [selection, setSelection] = useState("person");
+  const [emaildata, setEmailData] = useState(null);
   //  const [selectedButton, setSelectedButton] = useState("mail");
   //  const selectButton = (button) => setSelectedButton(button);
-  const [emaildata, setEmailData] = useState(null);
 
 
   const fetchEmailData = async (val) => {
@@ -23,51 +27,66 @@ const Escalation = ({ closeEscalation, currentEvent, handleEvent }) => {
     setEmailData(response);
   }
 
-  const escalate = () => {
-    getUser().userLevel === 1 ?
-      currentEvent?.userLevelAlarmInfo.push(
-        {
-          level: 2,
-          user: getUser().UserId,
-          alarm: 'N',
-          landingTime: currentEvent?.landingTime ?? '',
-          reviewStart: currentEvent?.reviewStart ?? '',
-          reviewEnd: '',
-          actionTag: this.currentActionTag?.categoryId,
-          subActionTag: this.currentSubActionTag?.subCategoryId,
-          notes: this.notes
-        }
-      ) :
-      getUser().userLevel === 2 ?
-        currentEvent?.userLevelAlarmInfo.push(
-          {
-            level: 3,
-            user: getUser().UserId,
-            alarm: 'N',
-            landingTime: currentEvent?.landingTime ?? '',
-            reviewStart: currentEvent?.reviewStart ?? '',
-            reviewEnd: '',
-            actionTag: this.currentActionTag?.categoryId,
-            subActionTag: this.currentSubActionTag?.subCategoryId,
-            notes: this.notes
-          }
-        ) :
-        currentEvent?.userLevelAlarmInfo.push(
-          {
-            level: 4,
-            user: getUser().UserId,
-            alarm: 'N',
-            landingTime: currentEvent?.landingTime ?? '',
-            reviewStart: currentEvent?.reviewStart ?? '',
-            reviewEnd: '',
-            actionTag: this.currentActionTag?.categoryId,
-            subActionTag: this.currentSubActionTag?.subCategoryId,
-            notes: this.notes
-          }
-        );
-    updateEventFullDetails({ ...currentEvent, selectedAlertType, selectedSubType });
-    setStorage('id', 1);
-    handleEvent(currentEvent);
+  const escalate = (type) => {
+    // getUser().userLevel === 1 ?
+    //   currentEvent?.userLevelAlarmInfo.push(
+    //     {
+    //       level: 2,
+    //       user: getUser().UserId,
+    //       alarm: 'N',
+    //       landingTime: currentEvent?.landingTime ?? '',
+    //       reviewStart: currentEvent?.reviewStart ?? '',
+    //       reviewEnd: '',
+    //       actionTag: this.currentActionTag?.categoryId,
+    //       subActionTag: this.currentSubActionTag?.subCategoryId,
+    //       notes: this.notes
+    //     }
+    //   ) :
+    //   getUser().userLevel === 2 ?
+    //     currentEvent?.userLevelAlarmInfo.push(
+    //       {
+    //         level: 3,
+    //         user: getUser().UserId,
+    //         alarm: 'N',
+    //         landingTime: currentEvent?.landingTime ?? '',
+    //         reviewStart: currentEvent?.reviewStart ?? '',
+    //         reviewEnd: '',
+    //         actionTag: this.currentActionTag?.categoryId,
+    //         subActionTag: this.currentSubActionTag?.subCategoryId,
+    //         notes: this.notes
+    //       }
+    //     ) :
+    //     currentEvent?.userLevelAlarmInfo.push(
+    //       {
+    //         level: 4,
+    //         user: getUser().UserId,
+    //         alarm: 'N',
+    //         landingTime: currentEvent?.landingTime ?? '',
+    //         reviewStart: currentEvent?.reviewStart ?? '',
+    //         reviewEnd: '',
+    //         actionTag: this.currentActionTag?.categoryId,
+    //         subActionTag: this.currentSubActionTag?.subCategoryId,
+    //         notes: this.notes
+    //       }
+    //     );
+
+    currentEvent?.userLevelAlarmInfo?.push(
+      {
+        level: getUser().userLevel,
+        user: getUser().UserId,
+        alarm: 'N',
+        landingTime: currentEvent?.landingTime ?? '',
+        reviewStart: currentEvent?.landingTime ?? '',
+        reviewEnd: getTimeByTimezone(currentEvent?.timezone),
+        actionTag: parseInt(selectedActionTag),
+        subActionTag: getStorage('sub_alert').subCategoryId,
+        notes: ''
+      })
+    updateEventFullDetails(
+      { ...currentEvent, ...{selectedActionTag: parseInt(selectedActionTag)}, ...{selectedSubAction: getStorage('sub_alert').subCategoryId}, selectedAlertType, selectedSubType }
+    );
+    setStorage('custom_action', 1);
+    type === 'escalate' ? handleEvent(currentEvent) : console.log(null);
     closeEscalation();
   }
 
@@ -80,6 +99,9 @@ const Escalation = ({ closeEscalation, currentEvent, handleEvent }) => {
 
   useEffect(() => {
     const fetchMetadata = async () => {
+      const res = await listActionTags(currentEvent);
+      console.log(res)
+      setActionTags(res.data[0].actionTags);
       const response = await getAlertCategoriesForSiteId(currentEvent);
       setAlerts(response);
     };
@@ -117,6 +139,22 @@ const Escalation = ({ closeEscalation, currentEvent, handleEvent }) => {
 
         {/* Alert Type Dropdown */}
         <div className="form-group">
+          <label>Action Tag</label>
+          <select
+            value={selectedActionTag}
+            onChange={(e) => setSelectedActionTag(e.target.value)}
+          >
+            <option value="" disabled>Select Action Tag</option>
+            {actionTags?.map((item) => (
+              <option key={item.value} value={item.id}>
+                {item.value}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Alert Type Dropdown */}
+        <div className="form-group">
           <label>Alert Type</label>
           <select
             value={selectedAlertType}
@@ -150,8 +188,8 @@ const Escalation = ({ closeEscalation, currentEvent, handleEvent }) => {
         {/* Action Buttons */}
         {emaildata &&
           <div className="button-group">
-            <button className="btn-secondary" onClick={escalate}>COMPLETE</button>
-            <button className="btn-primary" onClick={escalate}>ESCALATE</button>
+            <button className="btn-secondary" onClick={() => escalate('complete')}>COMPLETE</button>
+            <button className="btn-primary" onClick={() => escalate('escalate')}>ESCALATE</button>
           </div>
         }
       </div>
@@ -226,7 +264,7 @@ const Escalation = ({ closeEscalation, currentEvent, handleEvent }) => {
               ?
               <p></p>
               :
-              <p>no data</p>
+              <ErrorInfo message={'no data!'} />
         }
       </div>
     </div>

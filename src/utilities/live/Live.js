@@ -7,7 +7,6 @@ const Live = ({ currentEvent, closeLiveDialog }) => {
 
     const [cameras, setCameras] = useState([]);
 
-
     useEffect(() => {
         const getLive = async () => {
             const response = await getLiveInfoForSiteAndCamera(currentEvent);
@@ -15,14 +14,19 @@ const Live = ({ currentEvent, closeLiveDialog }) => {
         }
         getLive();
 
-        return () => setCameras([]);
-    }, [currentEvent]);
+        return () => {
+            setCameras([]);
+            console.log(cameras)
+        };
+    }, []);
 
     return (
         <Fragment>
             <div className="cam-container">
-            <button onClick={() => closeLiveDialog()}>close</button>
-                {cameras.map((item) => <Stream videoData={`${item.httpUrl}/`} />)}
+                <button onClick={() => { closeLiveDialog()}}>x</button>
+                <div className='cameras'>
+                    {cameras && cameras.map((item, i) => <Stream key={i} videoData={`${item.httpUrl}/`} />)}
+                </div>
             </div>
         </Fragment>
     )

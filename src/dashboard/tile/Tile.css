@@ -1,4 +1,5 @@
 /* camera feeds */
+
 .tile {
   width: 50%;
   height: calc(100vh - 75px);
@@ -78,6 +79,7 @@
 }
 
 /* store info */
+
 .store-info {
   margin: 10px 0 !important;
   padding: 0 10px;
@@ -175,6 +177,7 @@
 }
 
 /* Tag List */
+
 .tag-grid {
   position: absolute;
   z-index: 1;

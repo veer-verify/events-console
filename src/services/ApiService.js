@@ -1,7 +1,6 @@
 import api from '../interceptor';
 import { environment } from '../environment';
-import { clearStorage, getStorage } from './StorageService';
-import moment from 'moment-timezone';
+import { clearStorage, getDay, getHour, getStorage, getTimeByTimezone } from './StorageService';
 import { useNavigate } from 'react-router-dom';
 
 export const Logout = () => {
@@ -39,6 +38,13 @@ export const getActionTagCategories = async (payload) => {
   return api.get(url, { params: params }).then((res) => res.data).catch((err) => console.log(err));
 }
 
+export const listActionTags = async (payload) => {
+  const url = `${environment.guard_monitoring_url}/listActionTags_1_0/`;
+  const params = new URLSearchParams();
+  params.append('siteId', payload?.siteId);
+  return api.get(url, { params: params }).then((res) => res.data).catch((err) => console.log(err));
+}
+
 export const getAlertCategoriesForSiteId = async (payload) => {
   const url = `${environment.guard_monitoring_url}/getAlertCategoriesForSiteId_1_0/`;
   const params = new URLSearchParams();
@@ -49,7 +55,7 @@ export const getAlertCategoriesForSiteId = async (payload) => {
 export const write2VmsDispatchQueue = async (payload) => {
   const url = `${environment.events_url}/write2Vms_EventsQueue_1_0/`;
   const user = getStorage('user');
-  const currentTime = moment().tz(payload?.timezone)?.format('YYYY-MM-DD hh:mm:ss');
+  const currentTime = getTimeByTimezone(payload?.timezone);
   let obj = {
     siteId: payload?.siteId,
     siteName: payload?.siteName,
@@ -65,13 +71,13 @@ export const write2VmsDispatchQueue = async (payload) => {
     queue_name: payload?.queue_name,
     landingTime: '',
     timezone: payload?.timezone,
-    userLevelAlarmInfo: [],
+    userLevelAlarmInfo: payload?.userLevelAlarmInfo,
     userName: user.UserName,
   }
-  return api.post(url, obj).then((res) => res.data).catch((err) => console.log(err));
+  return api.post(url, obj).then((res) => console.log(res.data)).catch((err) => console.log(err));
 }
 
-export const getVmsEventsQueueData = async (name) => {
+export const getVmsEventsQueueData = async () => {
   const url = `${environment.events_url}/getVms_EventsQueueData_1_0/`;
   const user = getStorage('user');
   const params = new URLSearchParams();
@@ -80,24 +86,25 @@ export const getVmsEventsQueueData = async (name) => {
 }
 
 export const updateEventFullDetails = async (payload) => {
+  console.log(payload)
   const url = `${environment.event_process_url}/updateEventFullDetails_1_0/`;
   const user = getStorage('user');
-  const currentTime = moment().tz(payload?.timezone)?.format('YYYY-MM-DD hh:mm:ss:SSS');
-  const actionType = getStorage('id');
+  const currentTime = getTimeByTimezone(payload?.timezone);
+  const customAction = getStorage('custom_action');
   let obj = {
     siteName: payload?.siteName,
     siteId: payload?.siteId,
     objectName: payload?.objectName,
     cameraId: payload?.cameraId,
     eventTag: 'events-console',
-    actionTag: payload?.selectedAlertType,
-    subActionTag: payload?.selectedSubType,
+    actionTag: payload?.selectedActionTag,
+    subActionTag: payload?.selectedSubAction,
     userLevels: user.userLevel,
-    falseActivityTime: actionType === 1 ? payload?.actionTagTime : '',
-    suspiciousTime: actionType === 2 ? payload?.actionTagTime : '',
+    falseActivityTime: customAction === 1 ? payload?.actionTagTime : '',
+    suspiciousTime: customAction === 2 ? payload?.actionTagTime : '',
     callResponseTime: '',
     callNoResponseTime: '',
-    eventStartTime: payload?.timestamp,
+    eventStartTime: payload?.timestamp ?? '',
     eventEndtime: currentTime,
     emailTime: currentTime,
     httpUrl: payload?.httpUrl,
@@ -106,14 +113,14 @@ export const updateEventFullDetails = async (payload) => {
     remarks: '',
     eventType: '',
     timezone: payload?.timezone,
-    userLevelAlarmInfo: []
+    userLevelAlarmInfo: payload?.userLevelAlarmInfo
   };
-  return api.post(url, obj).then((res) => res).catch((err) => console.log(err));
+  return api.post(url, obj).then((res) => console.log(res.data)).catch((err) => console.log(err));
 }
 
 export const getEmailDataForVMSEvents = async (payload) => {
   const url = `${environment.guard_monitoring_url}/getEmailDataForVMSEvents_1_0`;
-  const weekday = [
+  const weekdays = [
     'Sunday',
     'Monday',
     'Tuesday',
@@ -122,18 +129,14 @@ export const getEmailDataForVMSEvents = async (payload) => {
     'Friday',
     'Saturday',
   ];
-  const currentTime = moment().format('YYYY-MM-DD HH:mm:ss');
-  const day = new Date(currentTime).getDay();
-  const hour = new Date(currentTime).getHours();
-
   const params = new URLSearchParams();
   params.append('siteId', payload?.siteId);
   params.append('camerasList', payload?.cameraId);
   params.append('alertTypeId', payload?.selectedAlertType);
   params.append('subTypeId', payload?.selectedSubType);
-  params.append('day', weekday[day]);
-  params.append('hour', hour);
-  params.append('currentTime', currentTime);
+  params.append('day', weekdays[getDay(payload?.timezone)]);
+  params.append('hour', getHour(payload?.timezone));
+  params.append('currentTime', getTimeByTimezone(payload?.timezone));
   // params.append('timer', 120);
   params.append('imageName', payload?.image_list.toString());
   return api.get(url, { params: params }).then((res) => res.data.statusCode === 200 ? res.data.emailDetails : []).catch((err) => console.log(err));
