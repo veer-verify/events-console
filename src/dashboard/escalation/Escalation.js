@@ -23,53 +23,30 @@ const Escalation = ({ closeEscalation, currentEvent, handleEvent }) => {
 
   const fetchEmailData = async (val) => {
     setSelectedSubType(val)
-    const response = await getEmailDataForVMSEvents({ ...currentEvent, selectedAlertType, ...{ selectedSubType: val } });
+    const response = await getEmailDataForVMSEvents({ ...currentEvent, ...{ alertTypeId: selectedAlertType }, ...{ subTypeId: val } });
     setEmailData(response);
   }
 
-  const escalate = (type) => {
-    // getUser().userLevel === 1 ?
-    //   currentEvent?.userLevelAlarmInfo.push(
-    //     {
-    //       level: 2,
-    //       user: getUser().UserId,
-    //       alarm: 'N',
-    //       landingTime: currentEvent?.landingTime ?? '',
-    //       reviewStart: currentEvent?.reviewStart ?? '',
-    //       reviewEnd: '',
-    //       actionTag: this.currentActionTag?.categoryId,
-    //       subActionTag: this.currentSubActionTag?.subCategoryId,
-    //       notes: this.notes
-    //     }
-    //   ) :
-    //   getUser().userLevel === 2 ?
-    //     currentEvent?.userLevelAlarmInfo.push(
-    //       {
-    //         level: 3,
-    //         user: getUser().UserId,
-    //         alarm: 'N',
-    //         landingTime: currentEvent?.landingTime ?? '',
-    //         reviewStart: currentEvent?.reviewStart ?? '',
-    //         reviewEnd: '',
-    //         actionTag: this.currentActionTag?.categoryId,
-    //         subActionTag: this.currentSubActionTag?.subCategoryId,
-    //         notes: this.notes
-    //       }
-    //     ) :
-    //     currentEvent?.userLevelAlarmInfo.push(
-    //       {
-    //         level: 4,
-    //         user: getUser().UserId,
-    //         alarm: 'N',
-    //         landingTime: currentEvent?.landingTime ?? '',
-    //         reviewStart: currentEvent?.reviewStart ?? '',
-    //         reviewEnd: '',
-    //         actionTag: this.currentActionTag?.categoryId,
-    //         subActionTag: this.currentSubActionTag?.subCategoryId,
-    //         notes: this.notes
-    //       }
-    //     );
+  const escalate = () => {
+    currentEvent?.userLevelAlarmInfo?.push(
+      {
+        level: getUser().userLevel,
+        user: getUser().UserId,
+        alarm: 'N',
+        landingTime: currentEvent?.landingTime ?? '',
+        reviewStart: currentEvent?.landingTime ?? '',
+        reviewEnd: getTimeByTimezone(currentEvent?.timezone),
+        actionTag: parseInt(selectedActionTag),
+        subActionTag: getStorage('sub_alert').subCategoryId,
+        notes: ''
+      })
+    write2VmsDispatchQueue(
+      { ...currentEvent, ...{ actionTag: parseInt(selectedActionTag) }, ...{ subActionTag: getStorage('sub_alert').subCategoryId } }
+    );
+    closeEscalation();
+  }
 
+  const complete = () => {
     currentEvent?.userLevelAlarmInfo?.push(
       {
         level: getUser().userLevel,
@@ -83,10 +60,8 @@ const Escalation = ({ closeEscalation, currentEvent, handleEvent }) => {
         notes: ''
       })
     updateEventFullDetails(
-      { ...currentEvent, ...{selectedActionTag: parseInt(selectedActionTag)}, ...{selectedSubAction: getStorage('sub_alert').subCategoryId}, selectedAlertType, selectedSubType }
+      { ...currentEvent, ...{ actionTag: parseInt(selectedActionTag) }, ...{ subActionTag: getStorage('sub_alert').subCategoryId }, selectedAlertType, selectedSubType }
     );
-    setStorage('custom_action', 1);
-    type === 'escalate' ? handleEvent(currentEvent) : console.log(null);
     closeEscalation();
   }
 
@@ -100,7 +75,6 @@ const Escalation = ({ closeEscalation, currentEvent, handleEvent }) => {
   useEffect(() => {
     const fetchMetadata = async () => {
       const res = await listActionTags(currentEvent);
-      console.log(res)
       setActionTags(res.data[0].actionTags);
       const response = await getAlertCategoriesForSiteId(currentEvent);
       setAlerts(response);
@@ -188,8 +162,8 @@ const Escalation = ({ closeEscalation, currentEvent, handleEvent }) => {
         {/* Action Buttons */}
         {emaildata &&
           <div className="button-group">
-            <button className="btn-secondary" onClick={() => escalate('complete')}>COMPLETE</button>
-            <button className="btn-primary" onClick={() => escalate('escalate')}>ESCALATE</button>
+            <button className="btn-secondary" onClick={() => complete()}>COMPLETE</button>
+            <button className="btn-primary" onClick={() => escalate()}>ESCALATE</button>
           </div>
         }
       </div>

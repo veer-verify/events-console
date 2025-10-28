@@ -1,7 +1,7 @@
 import './Dashboard.css';
 import { createContext, Fragment, useContext, useEffect, useState } from 'react'
 import Header from '../header/Header';
-import { getStorage, getTimeByTimezone, setStorage } from '../services/StorageService';
+import { getStorage, getTimeByTimezone, getUser, setStorage } from '../services/StorageService';
 import { getActionTagCategories, getVmsEventsQueueData, updateEventFullDetails, write2VmsDispatchQueue } from '../services/ApiService';
 import Tile from './tile/Tile';
 
@@ -35,19 +35,33 @@ const Dashboard = () => {
     const index = getStorage('index');
     const eventTag = getStorage('sub_alert');
 
+    item?.userLevelAlarmInfo?.push(
+      {
+        level: getUser().userLevel,
+        user: getUser().UserId,
+        alarm: 'N',
+        landingTime: item?.landingTime ?? '',
+        reviewStart: item?.landingTime ?? '',
+        reviewEnd: getTimeByTimezone(item?.timezone),
+        actionTag: getStorage('custom_action'),
+        subActionTag: getStorage('sub_alert').subCategoryId,
+        notes: ''
+      })
     if (customAction === 1) {
-      write2VmsDispatchQueue({ ...item, queue_name: '2nd-level', actionTag: 'false activity', eventTag: eventTag.subCategoryId });
+      updateEventFullDetails(
+        { ...item, ...{ actionTag: getStorage('custom_action') }, ...{ subActionTag: getStorage('sub_alert').subCategoryId } }
+      );
 
       const filtered = eventData.filter((_, i) => index !== i);
       if (index === 0) {
         setEventData([...dummy, ...filtered]);
-        const eventResponse = await getVmsEventsQueueData('live-events');
+        const eventResponse = await getVmsEventsQueueData();
         eventResponse[0].landingTime = getTimeByTimezone(eventResponse.timezone);
         eventResponse[0].audioPlayed = false;
         setEventData([...eventResponse, ...filtered]);
       } else {
         setEventData([...filtered, ...dummy]);
-        const eventResponse = await getVmsEventsQueueData('live-events');
+        const eventResponse = await getVmsEventsQueueData();
         eventResponse[0].landingTime = getTimeByTimezone(eventResponse.timezone);
         eventResponse[0].audioPlayed = false;
         setEventData([...filtered, ...eventResponse]);
@@ -73,7 +87,7 @@ const Dashboard = () => {
     };
 
     if (eventData.length < 2) {
-      getEvent('live-events');
+      getEvent();
     }
     getTags();
   }, [eventData.length]);

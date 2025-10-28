@@ -1,6 +1,6 @@
 import api from '../interceptor';
 import { environment } from '../environment';
-import { clearStorage, getDay, getHour, getStorage, getTimeByTimezone } from './StorageService';
+import { clearStorage, getDay, getHour, getQueue, getStorage, getTimeByTimezone, getUser } from './StorageService';
 import { useNavigate } from 'react-router-dom';
 
 export const Logout = () => {
@@ -61,15 +61,16 @@ export const write2VmsDispatchQueue = async (payload) => {
     siteName: payload?.siteName,
     cameraId: payload?.cameraId,
     objectName: 'person',
-    eventTag: payload?.eventTag,
+    eventTag: '',
     eventTime: payload?.eventTime,
     actionTag: payload?.actionTag,
+    subActionTag: payload?.subActionTag,
     actionTime: currentTime,
     userLevels: 0,
     httpUrl: payload?.httpUrl,
     imageUrl: payload?.image_list.toString(),
-    queue_name: payload?.queue_name,
-    landingTime: '',
+    queue_name: getQueue(getUser().userLevel),
+    landingTime: payload?.landingTime,
     timezone: payload?.timezone,
     userLevelAlarmInfo: payload?.userLevelAlarmInfo,
     userName: user.UserName,
@@ -82,11 +83,10 @@ export const getVmsEventsQueueData = async () => {
   const user = getStorage('user');
   const params = new URLSearchParams();
   params.append('queue_name', user?.queueName);
-  return api.get(url, { params: params }).then((res) => res.data).catch((err) => console.log(err));
+  return api.get(url, { params: params }).then((res) => res.data.statusCode === 200 ? res.data : []).catch((err) => console.log(err));
 }
 
 export const updateEventFullDetails = async (payload) => {
-  console.log(payload)
   const url = `${environment.event_process_url}/updateEventFullDetails_1_0/`;
   const user = getStorage('user');
   const currentTime = getTimeByTimezone(payload?.timezone);
@@ -97,8 +97,8 @@ export const updateEventFullDetails = async (payload) => {
     objectName: payload?.objectName,
     cameraId: payload?.cameraId,
     eventTag: 'events-console',
-    actionTag: payload?.selectedActionTag,
-    subActionTag: payload?.selectedSubAction,
+    actionTag: payload?.actionTag,
+    subActionTag: payload?.subActionTag,
     userLevels: user.userLevel,
     falseActivityTime: customAction === 1 ? payload?.actionTagTime : '',
     suspiciousTime: customAction === 2 ? payload?.actionTagTime : '',
@@ -132,8 +132,8 @@ export const getEmailDataForVMSEvents = async (payload) => {
   const params = new URLSearchParams();
   params.append('siteId', payload?.siteId);
   params.append('camerasList', payload?.cameraId);
-  params.append('alertTypeId', payload?.selectedAlertType);
-  params.append('subTypeId', payload?.selectedSubType);
+  params.append('alertTypeId', payload?.alertTypeId);
+  params.append('subTypeId', payload?.subTypeId);
   params.append('day', weekdays[getDay(payload?.timezone)]);
   params.append('hour', getHour(payload?.timezone));
   params.append('currentTime', getTimeByTimezone(payload?.timezone));
