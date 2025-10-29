@@ -37,15 +37,12 @@ export const getDay = (timezone) => moment().tz(timezone).day();
  */
 export const getQueue = (level) => {
     if(level === 1) {
-        return '2nd-level';
+        return 'staging-pre-dispatch';
     }
     else if(level === 2) {
-        return '3rd-level';
-    }
-    else if(level === 3) {
-        return '4th-level';
+        return 'staging-dispatch';
     }
     else {
-        return '1st-level';
+        return 'staging-screener';
     }
 }
