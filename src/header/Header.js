@@ -5,7 +5,7 @@ import { getStorage } from '../services/StorageService';
 
 
 const Header = () => {
-    const user = getStorage('user');
+    const user = getStorage('session');
 
     const [showProfile, setShowProfile] = useState(false);
     const profileRef = useRef(null);

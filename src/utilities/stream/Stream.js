@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
 const Stream = ({ streamUrl }) => {
-
   const videoRef = useRef(null);
   const peerConnectionRef = useRef(null);
   const queuedCandidatesRef = useRef([]);
@@ -210,7 +209,7 @@ const Stream = ({ streamUrl }) => {
       // }, 2000);
 
       if (sessionUrlRef.current) {
-        fetch(sessionUrlRef.current, { method: 'DELETE' });
+        fetch(sessionUrlRef.current, { method: 'DELETE' }).catch((err) => console.log(err));
       }
 
       sessionUrlRef.current = '';
@@ -227,7 +226,7 @@ const Stream = ({ streamUrl }) => {
         peerConnectionRef.current.close();
       }
     };
-  }, []);
+  }, [encoded, streamUrl]);
 
   return (
     <div style={{ position: 'relative', height: '100%' }}>

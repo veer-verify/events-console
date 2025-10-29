@@ -3,7 +3,7 @@ import './ProfileCard.css';
 import { getStorage } from '../../services/StorageService';
 
 const ProfileCard = () => {
-    const user = getStorage('user');
+    const user = getStorage('session');
 
     const navigate = useNavigate('');
     const logout = () => {

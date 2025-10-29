@@ -2,8 +2,6 @@ import axios from "axios";
 import { getAccessforRefreshToken, Logout } from "./services/ApiService";
 import { getStorage, setStorage } from "./services/StorageService";
 
-
-
 // Axios instance
 const api = axios.create();
 
@@ -21,21 +19,17 @@ const processQueue = (error, token = null) => {
 };
 
 // Request Interceptor — attach token to every request
-api.interceptors.request.use(
-  (config) => {
-    const token = getStorage("AccessToken");
-    if (token) {
-      config.headers["Authorization"] = `Bearer ${token}`;
+api.interceptors.request.use((config) => {
+    const session = getStorage("session");
+    if (session) {
+      config.headers["Authorization"] = `Bearer ${session.AccessToken}`;
     }
     return config;
-  },
-  (error) => Promise.reject(error)
+  }, (error) => Promise.reject(error)
 );
 
 // Response Interceptor — handle expired tokens
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
+api.interceptors.response.use((response) => response, async (error) => {
     const originalRequest = error.config;
 
     // If 401 error and we haven’t retried yet
@@ -56,24 +50,25 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const currentUser = getStorage("user");
-        if (!currentUser) throw new Error("No user data found");
-
+        const tempSession = getStorage("session");
+        if (!tempSession) throw new Error("No user data found");
         const response = await getAccessforRefreshToken();
 
         // Extract new token safely
-        const newToken = response?.access_token;
-        if (!newToken) throw new Error("No access token returned from refresh API");
+        // const newToken = response?.access_token;
+        if (!response.access_token) throw new Error("No access token returned from refresh API");
 
         // Save new access token
-        setStorage("AccessToken", newToken);
+        tempSession.AccessToken = response?.access_token;
+        tempSession.RefreshToken = response?.refresh_token
+        setStorage("session", tempSession);
 
         // Resume queued requests
-        processQueue(null, newToken);
+        processQueue(null, tempSession.AccessToken);
         isRefreshing = false;
 
         // Retry original request with new token
-        originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
+        originalRequest.headers["Authorization"] = `Bearer ${tempSession.AccessToken}`;
         return api(originalRequest);
       } catch (err) {
         console.error("Token refresh failed:", err);

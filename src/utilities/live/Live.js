@@ -16,16 +16,15 @@ const Live = ({ currentEvent, closeLiveDialog }) => {
 
         return () => {
             setCameras([]);
-            console.log(cameras)
         };
-    }, []);
+    }, [currentEvent]);
 
     return (
         <Fragment>
             <div className="cam-container">
                 <button onClick={() => { closeLiveDialog()}}>x</button>
                 <div className='cameras'>
-                    {cameras && cameras.map((item, i) => <Stream key={i} videoData={`${item.httpUrl}/`} />)}
+                    {cameras.length && cameras.map((item, i) => <Stream key={i} streamUrl={`${item.httpUrl}/`} />)}
                 </div>
             </div>
         </Fragment>

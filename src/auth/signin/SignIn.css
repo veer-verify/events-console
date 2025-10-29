@@ -41,7 +41,7 @@
 
 .welcome {
     font-size: 24px;
-    margin-bottom: 20px;
+    margin-bottom: 20px !important;
     color: #000000;
     text-align: center;
     opacity: 0.5;

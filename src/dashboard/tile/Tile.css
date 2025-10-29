@@ -118,7 +118,7 @@
 }
 
 .activity-box span {
-  font-family: 'Neometric lighter';
+  font-family: 'Neometric Lighter';
   font-size: 10px;
   /* opacity: 0.75; */
   /* font-weight:bold; */
@@ -128,6 +128,7 @@
 /** escalation info */
 
 .escalation-container {
+  display: flex;
   background-color: #ffffff;
   position: absolute;
   z-index: 1;
@@ -179,6 +180,7 @@
 /* Tag List */
 
 .tag-grid {
+  width: 45vw;
   position: absolute;
   z-index: 1;
   top: 24px;

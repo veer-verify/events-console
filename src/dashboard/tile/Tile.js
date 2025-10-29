@@ -1,8 +1,8 @@
 import './Tile.css';
 import { useState, useRef, useEffect } from 'react';
 import { Fragment } from "react/jsx-runtime";
-import { getStorage, getUser, setStorage } from '../../services/StorageService';
-import { getActionTagCategories, getMonitoringInfo } from '../../services/ApiService';
+import { getStorage, getSession, setStorage } from '../../services/StorageService';
+import { getActionTagCategories, getMonitoringInfo, playSiren } from '../../services/ApiService';
 import Escalation from '../escalation/Escalation';
 import Live from '../../utilities/live/Live';
 import Stream from '../../utilities/stream/Stream';
@@ -44,8 +44,7 @@ const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation })
         },
         {
             path: 'icons/siren.png',
-            call: () => console.log('called!')
-
+            call: () => play()
         }
     ];
 
@@ -66,6 +65,15 @@ const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation })
 
     const closeTags = () => {
         setShowTags(false);
+    }
+
+    const [playing, setPlaying] = useState(false);
+    const play = async () => {
+        setPlaying(true);
+        // currentEvent.audio = true;
+        const res = await playSiren(currentEvent);
+        alert(res.message);
+        setPlaying(false);
     }
 
     const [imgindex, setIndex] = useState(0);
@@ -155,7 +163,7 @@ const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation })
 
                 <div className="camera-id">
                     <div style={{ position: 'relative' }} ref={dialogRef}>
-                        {tags.map((item, i) => <img src={item?.path} alt='icon' width={20} key={i} onClick={() => { item?.call(item) }} />)}
+                        {tags.map((item, i) => <img src={item?.path} alt='icon' width={20} key={i} onClick={() => item?.call(item)} />)}
                         {showTags &&
                             <div className='tag-grid'>
                                 <p>{customAction === 1 ? 'false' : 'suspicious'}</p>
@@ -166,7 +174,7 @@ const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation })
                                             className='tag-button'
                                             title={tag.subCategoryName}
                                             style={{ border: customAction === 1 ? '1px solid #53BF8B' : '1px solid #ED3237' }}
-                                            onClick={() => { setStorage('sub_alert', tag); handleEvent(currentEvent); closeTags() }}
+                                            onClick={() => { setStorage('sub_action', tag); handleEvent(currentEvent); closeTags() }}
                                         >
                                             {tag.subCategoryName}
                                         </button>
@@ -220,16 +228,23 @@ const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation })
                     </table>
                 </div>
 
-                {(getUser().userLevel === 2 && monitoringData && monitoringData.escalation?.length !== 0) && <MonitoringInfo monitoringData={monitoringData} />}
-                {(getUser().userLevel === 2 && monitoringData && monitoringData.lawEnforcement?.length !== 0) && <LawInfo monitoringData={monitoringData} />}
-
-                {(escalation && eventIndex === index) &&
+                {
+                    (getSession().userLevel === 2 && monitoringData && monitoringData.escalation?.length !== 0) && <MonitoringInfo monitoringData={monitoringData} />
+                }
+                {
+                    (getSession().userLevel === 2 && monitoringData && monitoringData.lawEnforcement?.length !== 0) && <LawInfo monitoringData={monitoringData} />
+                }
+                {
+                    (escalation && eventIndex === index) &&
                     <div className='escalation-container'>
                         <Escalation closeEscalation={closeEscalation} currentEvent={currentEvent} handleEvent={handleEvent} />
-                    </div>}
+                    </div>
+                }
             </div>
             
-            {live && <Live currentEvent={currentEvent} closeLiveDialog={closeLiveDialog} />}
+            {
+                live && <Live currentEvent={currentEvent} closeLiveDialog={closeLiveDialog} />
+            }
         </Fragment>
     )
 }

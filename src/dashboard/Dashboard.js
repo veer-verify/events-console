@@ -1,7 +1,7 @@
 import './Dashboard.css';
 import { createContext, Fragment, useContext, useEffect, useState } from 'react'
 import Header from '../header/Header';
-import { getStorage, getTimeByTimezone, getUser, setStorage } from '../services/StorageService';
+import { getStorage, getTimeByTimezone, getSession, setStorage } from '../services/StorageService';
 import { getActionTagCategories, getVmsEventsQueueData, updateEventFullDetails, write2VmsDispatchQueue } from '../services/ApiService';
 import Tile from './tile/Tile';
 
@@ -31,29 +31,27 @@ const Dashboard = () => {
   }
 
   const handleEvent = async (item) => {
-    const customAction = getStorage('custom_action');
-    const index = getStorage('index');
-    const eventTag = getStorage('sub_alert');
+    if (getStorage('custom_action') === 1 || getStorage('custom_action') === 3) {
+      if (getStorage('custom_action') === 1) {
+        item?.userLevelAlarmInfo?.push(
+          {
+            level: getSession().userLevel,
+            user: getSession().UserId,
+            alarm: 'N',
+            landingTime: item?.landingTime ?? '',
+            reviewStart: item?.landingTime ?? '',
+            reviewEnd: getTimeByTimezone(item?.timezone),
+            actionTag: getStorage('custom_action'),
+            subActionTag: getStorage('sub_action').subCategoryId,
+            notes: ''
+          })
+        updateEventFullDetails(
+          { ...item, ...{ actionTag: getStorage('custom_action') }, ...{ subActionTag: getStorage('sub_action').subCategoryId } }
+        );
+      }
 
-    item?.userLevelAlarmInfo?.push(
-      {
-        level: getUser().userLevel,
-        user: getUser().UserId,
-        alarm: 'N',
-        landingTime: item?.landingTime ?? '',
-        reviewStart: item?.landingTime ?? '',
-        reviewEnd: getTimeByTimezone(item?.timezone),
-        actionTag: getStorage('custom_action'),
-        subActionTag: getStorage('sub_alert').subCategoryId,
-        notes: ''
-      })
-    if (customAction === 1) {
-      updateEventFullDetails(
-        { ...item, ...{ actionTag: getStorage('custom_action') }, ...{ subActionTag: getStorage('sub_alert').subCategoryId } }
-      );
-
-      const filtered = eventData.filter((_, i) => index !== i);
-      if (index === 0) {
+      const filtered = eventData.filter((_, i) => getStorage('index') !== i);
+      if (getStorage('index') === 0) {
         setEventData([...dummy, ...filtered]);
         const eventResponse = await getVmsEventsQueueData();
         eventResponse[0].landingTime = getTimeByTimezone(eventResponse.timezone);
@@ -66,7 +64,7 @@ const Dashboard = () => {
         eventResponse[0].audioPlayed = false;
         setEventData([...filtered, ...eventResponse]);
       }
-    } else if (customAction === 2) {
+    } else if (getStorage('custom_action') === 2) {
       setEscalation(true);
     }
   };
@@ -76,9 +74,7 @@ const Dashboard = () => {
       const response = await getVmsEventsQueueData(type);
       response[0].landingTime = getTimeByTimezone(response.timezone);
       response[0].audioPlayed = false;
-      setEventData((prev) => {
-        return [...prev, ...response];
-      });
+      setEventData((prev) => [...prev, ...response]);
     };
 
     const getTags = async () => {

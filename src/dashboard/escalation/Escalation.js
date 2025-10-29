@@ -1,8 +1,8 @@
 import "./Escalation.css";
 import { useState, useEffect, Fragment } from "react";
-import { getAlertCategoriesForSiteId, getEmailDataForVMSEvents, listActionTags, updateEventFullDetails, write2VmsDispatchQueue } from "../../services/ApiService";
+import { eventsGenericEmail, getAlertCategoriesForSiteId, getEmailDataForVMSEvents, listActionTags, updateEventFullDetails, write2VmsDispatchQueue } from "../../services/ApiService";
 import { useAuth } from "../Dashboard";
-import { getStorage, getTimeByTimezone, getUser, setStorage } from "../../services/StorageService";
+import { getStorage, getTimeByTimezone, getSession, setStorage } from "../../services/StorageService";
 import ErrorInfo from "../../utilities/error-info/ErrorInfo";
 
 const Escalation = ({ closeEscalation, currentEvent, handleEvent }) => {
@@ -28,40 +28,49 @@ const Escalation = ({ closeEscalation, currentEvent, handleEvent }) => {
   }
 
   const escalate = () => {
+    if (!selectedSubType) return alert('please select all fields!');
     currentEvent?.userLevelAlarmInfo?.push(
       {
-        level: getUser().userLevel,
-        user: getUser().UserId,
+        level: getSession().userLevel,
+        user: getSession().UserId,
         alarm: 'N',
         landingTime: currentEvent?.landingTime ?? '',
         reviewStart: currentEvent?.landingTime ?? '',
         reviewEnd: getTimeByTimezone(currentEvent?.timezone),
         actionTag: parseInt(selectedActionTag),
-        subActionTag: getStorage('sub_alert').subCategoryId,
+        subActionTag: getStorage('sub_action').subCategoryId,
         notes: ''
       })
     write2VmsDispatchQueue(
-      { ...currentEvent, ...{ actionTag: parseInt(selectedActionTag) }, ...{ subActionTag: getStorage('sub_alert').subCategoryId } }
+      { ...currentEvent, ...{ actionTag: parseInt(selectedActionTag) }, ...{ subActionTag: getStorage('sub_action').subCategoryId } }
     );
+    eventsGenericEmail(
+      { ...currentEvent, ...{ actionTag: parseInt(selectedActionTag) }, ...{ alertTypeId: selectedAlertType }, ...{ alertSubTypeId: selectedSubType }, ...{ objectName: selection }, ...emaildata }
+    );
+    setStorage('custom_action', 3);
+    handleEvent();
     closeEscalation();
   }
 
   const complete = () => {
+    if (!selectedSubType) return alert('please select all fields!');
     currentEvent?.userLevelAlarmInfo?.push(
       {
-        level: getUser().userLevel,
-        user: getUser().UserId,
+        level: getSession().userLevel,
+        user: getSession().UserId,
         alarm: 'N',
         landingTime: currentEvent?.landingTime ?? '',
         reviewStart: currentEvent?.landingTime ?? '',
         reviewEnd: getTimeByTimezone(currentEvent?.timezone),
         actionTag: parseInt(selectedActionTag),
-        subActionTag: getStorage('sub_alert').subCategoryId,
+        subActionTag: getStorage('sub_action').subCategoryId,
         notes: ''
       })
     updateEventFullDetails(
-      { ...currentEvent, ...{ actionTag: parseInt(selectedActionTag) }, ...{ subActionTag: getStorage('sub_alert').subCategoryId }, selectedAlertType, selectedSubType }
+      { ...currentEvent, ...{ actionTag: parseInt(selectedActionTag) }, ...{ subActionTag: getStorage('sub_action').subCategoryId }, selectedAlertType, selectedSubType }
     );
+    setStorage('custom_action', 3);
+    handleEvent();
     closeEscalation();
   }
 
@@ -74,16 +83,22 @@ const Escalation = ({ closeEscalation, currentEvent, handleEvent }) => {
 
   useEffect(() => {
     const fetchMetadata = async () => {
-      const res = await listActionTags(currentEvent);
-      setActionTags(res.data[0].actionTags);
-      const response = await getAlertCategoriesForSiteId(currentEvent);
-      setAlerts(response);
+      const actionTagsResponse = await listActionTags(currentEvent);
+      if (actionTagsResponse && actionTagsResponse.data) {
+        const [tags] = actionTagsResponse.data;
+        setActionTags(tags.actionTags);
+      }
+
+      const categoriesResponse = await getAlertCategoriesForSiteId(currentEvent);
+      if (categoriesResponse) {
+        setAlerts(categoriesResponse);
+      }
     };
     fetchMetadata();
   }, [currentEvent]);
 
   return (
-    <div className="alert-container">
+    <Fragment>
 
       {/* Left Panel */}
       <div className="alert-input">
@@ -92,21 +107,11 @@ const Escalation = ({ closeEscalation, currentEvent, handleEvent }) => {
         {/* Person / Vehicle radio buttons */}
         <div className="radio-group">
           <label>
-            <input
-              type="radio"
-              name="selection"
-              checked={selection === "person"}
-              onChange={() => setSelection("person")}
-            />
+            <input type="radio" name="selection" checked={selection === "person"} onChange={() => setSelection("person")} />
             Person
           </label>
           <label>
-            <input
-              type="radio"
-              name="selection"
-              checked={selection === "vehicle"}
-              onChange={() => setSelection("vehicle")}
-            />
+            <input type="radio" name="selection" checked={selection === "vehicle"} onChange={() => setSelection("vehicle")} />
             Vehicle
           </label>
         </div>
@@ -172,7 +177,7 @@ const Escalation = ({ closeEscalation, currentEvent, handleEvent }) => {
       {/* Right Panel */}
       <div className="alert-preview">
         {
-          emaildata && emaildata.length
+          emaildata
             ?
             <Fragment>
               <div className="flex-group">
@@ -217,17 +222,22 @@ const Escalation = ({ closeEscalation, currentEvent, handleEvent }) => {
                 )
               }
 
-              <div className="alert-details">
-                <p>
-                  <strong>Location</strong> {emaildata?.emailFields?.LOCATION}
-                </p>
-                <p>
-                  <strong>Date</strong> {emaildata?.emailFields?.DATE}
-                </p>
-                <p>
-                  <strong>Time</strong> {emaildata?.emailFields?.TIME}
-                </p>
-              </div>
+              <table>
+                <tbody>
+                  <tr>
+                    <td><strong>Location</strong></td>
+                    <td>{emaildata?.emailFields?.LOCATION}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Date</strong></td>
+                    <td>{emaildata?.emailFields?.DATE}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Time</strong></td>
+                    <td>{emaildata?.emailFields?.TIME}</td>
+                  </tr>
+                </tbody>
+              </table>
 
               <p className="alert-note">
                 {emaildata?.emailFooter}
@@ -241,7 +251,7 @@ const Escalation = ({ closeEscalation, currentEvent, handleEvent }) => {
               <ErrorInfo message={'no data!'} />
         }
       </div>
-    </div>
+    </Fragment>
   );
 }
 

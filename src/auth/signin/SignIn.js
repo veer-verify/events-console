@@ -25,9 +25,9 @@ const SignIn = () => {
       setLoader(false);
       if (res.data.Status === 'Success') {
         if (!res.data.queueName) return alert('Queue is not assigned!');
-        setStorage('user', res.data);
-        setStorage('AccessToken', res.data.AccessToken);
-        setStorage('RefreshToken', res.data.RefreshToken);
+        setStorage('session', res.data);
+        // setStorage('AccessToken', res.data.AccessToken);
+        // setStorage('RefreshToken', res.data.RefreshToken);
         navigate('/dashboard');
       } else {
         alert(res.data.message);
