@@ -44,9 +44,11 @@ const Escalation = ({ closeEscalation, currentEvent, handleEvent }) => {
     write2VmsDispatchQueue(
       { ...currentEvent, ...{ actionTag: parseInt(selectedActionTag) }, ...{ subActionTag: getStorage('sub_action').subCategoryId } }
     );
-    eventsGenericEmail(
-      { ...currentEvent, ...{ actionTag: parseInt(selectedActionTag) }, ...{ alertTypeId: selectedAlertType }, ...{ alertSubTypeId: selectedSubType }, ...{ objectName: selection }, ...emaildata }
-    );
+    if(getStorage('session').userLevel === 1) {
+      eventsGenericEmail(
+        { ...currentEvent, ...{ actionTag: parseInt(selectedActionTag) }, ...{ alertTypeId: selectedAlertType }, ...{ alertSubTypeId: selectedSubType }, ...{ objectName: selection }, ...emaildata }
+      );
+    }
     setStorage('custom_action', 3);
     handleEvent();
     closeEscalation();
