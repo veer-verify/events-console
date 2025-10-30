@@ -73,7 +73,7 @@ const SignIn = () => {
             <div className="remember-me">
               <div>
                 <input type="checkbox" id="remember" onChange={() => setShowPassword(!showPassword)} />
-                <span></span>
+                {/* <span></span> */}
                 <label htmlFor="remember">Show Password</label>
               </div>
               {/* <a href="/" className="forgot">Forgot Password?</a> */}

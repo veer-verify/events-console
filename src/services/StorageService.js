@@ -14,11 +14,11 @@ export const Decrypt = (data) => AES.decrypt(data, key).toString(enc.Utf8);
 /**
  * methods to set and get data from storage
  */
-export const setStorage = (key, data) =>localStorage.setItem(key, JSON.stringify(data));
-export const getStorage = (key) => JSON.parse(localStorage.getItem(key));
-export const clearStorage = () => localStorage.clear();
+export const setStorage = (key, data) =>sessionStorage.setItem(key, JSON.stringify(data));
+export const getStorage = (key) => JSON.parse(sessionStorage.getItem(key));
+export const clearStorage = () => sessionStorage.clear();
 
-export const getSession = () => getStorage('session') ?? '';
+export const getSession = () => getStorage('session');
 
 /**
  * methods to get time by timezone
@@ -37,7 +37,7 @@ export const getDay = (timezone) => moment().tz(timezone).day();
  */
 export const getQueue = (level) => {
     if(level === 1) {
-        return 'staging-pre-dispatch';
+        return '2nd-level';
     }
     else if(level === 2) {
         return 'staging-dispatch';

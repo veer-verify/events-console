@@ -1,6 +1,8 @@
 import axios from "axios";
-import { getAccessforRefreshToken, Logout } from "./services/ApiService";
+import { getAccessforRefreshToken } from "./services/ApiService";
 import { getStorage, setStorage } from "./services/StorageService";
+import { useLogout } from "./utilities/logout/Logout";
+
 
 // Axios instance
 const api = axios.create();
@@ -30,6 +32,7 @@ api.interceptors.request.use((config) => {
 
 // Response Interceptor — handle expired tokens
 api.interceptors.response.use((response) => response, async (error) => {
+    const logout = useLogout();
     const originalRequest = error.config;
 
     // If 401 error and we haven’t retried yet
@@ -76,7 +79,7 @@ api.interceptors.response.use((response) => response, async (error) => {
         isRefreshing = false;
 
         // Optional logout if refresh fails
-        Logout();
+        logout();
         return Promise.reject(err);
       }
     }

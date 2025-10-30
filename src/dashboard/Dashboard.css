@@ -16,3 +16,30 @@
         flex-direction: column;
     }
 }
+
+.no-event {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-transform: uppercase;
+    font-weight: 700;
+    font-size: 32px;
+    color: #ed3237;
+    /* text-shadow: 1px 1px 2px #ff002d; */
+    animation-name: blink;
+    animation-duration: 800ms;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+
+}
+
+@keyframes blink {
+    50% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}

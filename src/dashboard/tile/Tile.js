@@ -7,7 +7,7 @@ import Escalation from '../escalation/Escalation';
 import Live from '../../utilities/live/Live';
 import Stream from '../../utilities/stream/Stream';
 
-const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation }) => {
+const Tile = ({ currentEvent, index, handleFalse, handleSuspicious, escalation, openEscalation, closeEscalation }) => {
     const eventIndex = getStorage('index');
     const customAction = getStorage('custom_action');
     const actionTagsResponse = getStorage('actionTags');
@@ -117,6 +117,20 @@ const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation })
         });
     }
 
+    const handleAction = (data) => {
+        setStorage('sub_action', data);
+        if (getStorage('custom_action') === 1) {
+            handleFalse(currentEvent);
+        } else {
+            if (getSession('session').userLevel !== 1) {
+                openEscalation()
+            } else {
+                handleSuspicious(currentEvent);
+            }
+        }
+        closeTags()
+    }
+
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (showTags && dialogRef.current && !dialogRef.current.contains(event.target)) {
@@ -174,7 +188,7 @@ const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation })
                                             className='tag-button'
                                             title={tag.subCategoryName}
                                             style={{ border: customAction === 1 ? '1px solid #53BF8B' : '1px solid #ED3237' }}
-                                            onClick={() => { setStorage('sub_action', tag); handleEvent(currentEvent); closeTags() }}
+                                            onClick={() => handleAction(tag)}
                                         >
                                             {tag.subCategoryName}
                                         </button>
@@ -237,11 +251,11 @@ const Tile = ({ currentEvent, index, handleEvent, escalation, closeEscalation })
                 {
                     (escalation && eventIndex === index) &&
                     <div className='escalation-container'>
-                        <Escalation closeEscalation={closeEscalation} currentEvent={currentEvent} handleEvent={handleEvent} />
+                        <Escalation closeEscalation={closeEscalation} currentEvent={currentEvent} handleEvent={handleFalse} handleSuspicious={handleSuspicious} />
                     </div>
                 }
             </div>
-            
+
             {
                 live && <Live currentEvent={currentEvent} closeLiveDialog={closeLiveDialog} />
             }

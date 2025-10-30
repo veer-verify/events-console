@@ -68,7 +68,7 @@
 }
 
 .forgot {
-    color: red;
+    color: #ed3237;
     text-decoration: none;
 }
 
@@ -83,37 +83,16 @@
 .remember-me label {
     cursor: pointer;
     user-select: none;
-    opacity: 0.7;
     font-size: 14px;
-
-    &:hover {
-        opacity: 1;
-    }
 }
 
 input[type="checkbox"] {
-    display: none;
-}
-
-input[type="checkbox"] + span {
-    display: inline-block;
-    position: relative;
-    top: -1px;
-    width: 12px;
-    height: 12px;
-    margin: -1px 0px 0 0;
-    vertical-align: middle;
-    background: white left top no-repeat;
-    border: 1px solid red;
-    /* cursor: pointer; */
-}
-
-input[type="checkbox"]:checked + span {
-    background: #D9534F -19px top no-repeat;
-}
-
-input[type="checkbox"] + span {
+    accent-color: #D9534F;
+    cursor: pointer;
+    width: 14px;
+    height: 14px;
     margin-right: 4px;
+    vertical-align: middle;
 }
 
 .login-btn {

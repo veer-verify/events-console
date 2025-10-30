@@ -1,15 +1,10 @@
-import { Link, useNavigate } from 'react-router-dom';
 import './ProfileCard.css';
 import { getStorage } from '../../services/StorageService';
+import { useLogout } from '../../utilities/logout/Logout';
 
 const ProfileCard = () => {
     const user = getStorage('session');
-
-    const navigate = useNavigate('');
-    const logout = () => {
-        navigate('/');
-        window.location.reload();
-    };
+    const logout = useLogout();
 
     return (
         <div className="profile-card">

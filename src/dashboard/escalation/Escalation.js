@@ -1,11 +1,11 @@
 import "./Escalation.css";
 import { useState, useEffect, Fragment } from "react";
-import { eventsGenericEmail, getAlertCategoriesForSiteId, getEmailDataForVMSEvents, listActionTags, updateEventFullDetails, write2VmsDispatchQueue } from "../../services/ApiService";
+import { eventsGenericEmail, getAlertCategoriesForSiteId, getEmailDataForVMSEvents, listActionTags } from "../../services/ApiService";
 import { useAuth } from "../Dashboard";
-import { getStorage, getTimeByTimezone, getSession, setStorage } from "../../services/StorageService";
+import { getStorage } from "../../services/StorageService";
 import ErrorInfo from "../../utilities/error-info/ErrorInfo";
 
-const Escalation = ({ closeEscalation, currentEvent, handleEvent }) => {
+const Escalation = ({ closeEscalation, currentEvent, handleFalse, handleSuspicious }) => {
   // const data = useAuth();
 
   const [alerts, setAlerts] = useState([]);
@@ -27,61 +27,26 @@ const Escalation = ({ closeEscalation, currentEvent, handleEvent }) => {
     setEmailData(response);
   }
 
-  const escalate = () => {
-    if (!selectedSubType) return alert('please select all fields!');
-    currentEvent?.userLevelAlarmInfo?.push(
-      {
-        level: getSession().userLevel,
-        user: getSession().UserId,
-        alarm: 'N',
-        landingTime: currentEvent?.landingTime ?? '',
-        reviewStart: currentEvent?.landingTime ?? '',
-        reviewEnd: getTimeByTimezone(currentEvent?.timezone),
-        actionTag: parseInt(selectedActionTag),
-        subActionTag: getStorage('sub_action').subCategoryId,
-        notes: ''
-      })
-    write2VmsDispatchQueue(
-      { ...currentEvent, ...{ actionTag: parseInt(selectedActionTag) }, ...{ subActionTag: getStorage('sub_action').subCategoryId } }
-    );
-    if(getStorage('session').userLevel === 1) {
-      eventsGenericEmail(
-        { ...currentEvent, ...{ actionTag: parseInt(selectedActionTag) }, ...{ alertTypeId: selectedAlertType }, ...{ alertSubTypeId: selectedSubType }, ...{ objectName: selection }, ...emaildata }
-      );
-    }
-    setStorage('custom_action', 3);
-    handleEvent();
-    closeEscalation();
-  }
-
-  const complete = () => {
-    if (!selectedSubType) return alert('please select all fields!');
-    currentEvent?.userLevelAlarmInfo?.push(
-      {
-        level: getSession().userLevel,
-        user: getSession().UserId,
-        alarm: 'N',
-        landingTime: currentEvent?.landingTime ?? '',
-        reviewStart: currentEvent?.landingTime ?? '',
-        reviewEnd: getTimeByTimezone(currentEvent?.timezone),
-        actionTag: parseInt(selectedActionTag),
-        subActionTag: getStorage('sub_action').subCategoryId,
-        notes: ''
-      })
-    updateEventFullDetails(
-      { ...currentEvent, ...{ actionTag: parseInt(selectedActionTag) }, ...{ subActionTag: getStorage('sub_action').subCategoryId }, selectedAlertType, selectedSubType }
-    );
-    setStorage('custom_action', 3);
-    handleEvent();
-    closeEscalation();
-  }
-
   const getSubAlerts = (val) => {
     setSelectedSubType("");
     setSelectedAlertType(val)
     const x = alerts.filter((item) => item.guardAlertTypeId === parseInt(val)).flatMap((el) => el.subAlerts);
     setSubAlerts(x);
   };
+
+  const handle = (type) => {
+    if (type === 'escalate') {
+      handleSuspicious(currentEvent);
+      if (getStorage('session').userLevel === 2) {
+        eventsGenericEmail(
+          { ...currentEvent, ...{ actionTag: parseInt(selectedActionTag) }, ...{ alertTypeId: selectedAlertType }, ...{ alertSubTypeId: selectedSubType }, ...{ objectName: selection }, ...emaildata }
+        );
+      }
+    } else {
+      handleFalse(currentEvent);
+    }
+    closeEscalation();
+  }
 
   useEffect(() => {
     const fetchMetadata = async () => {
@@ -169,8 +134,8 @@ const Escalation = ({ closeEscalation, currentEvent, handleEvent }) => {
         {/* Action Buttons */}
         {emaildata &&
           <div className="button-group">
-            <button className="btn-secondary" onClick={() => complete()}>COMPLETE</button>
-            <button className="btn-primary" onClick={() => escalate()}>ESCALATE</button>
+            <button className="btn-secondary" onClick={() => handle('complete')}>COMPLETE</button>
+            <button className="btn-primary" onClick={() => handle('escalate')}>ESCALATE</button>
           </div>
         }
       </div>

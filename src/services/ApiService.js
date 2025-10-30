@@ -1,13 +1,7 @@
 import api from '../interceptor';
 import { environment } from '../environment';
-import { clearStorage, getDay, getHour, getQueue, getStorage, getTimeByTimezone, getSession } from './StorageService';
-import { useNavigate } from 'react-router-dom';
+import { getDay, getHour, getQueue, getStorage, getTimeByTimezone, getSession } from './StorageService';
 
-export const Logout = () => {
-  const navigate = useNavigate('');
-  clearStorage();
-  navigate('/');
-}
 
 export const getAccessforRefreshToken = async () => {
   const url = `${environment.login_url}/getAccessforRefreshToken`;
@@ -68,7 +62,7 @@ export const write2VmsDispatchQueue = async (payload) => {
     actionTime: currentTime,
     userLevels: 0,
     httpUrl: payload?.httpUrl,
-    imageUrl: payload?.image_list.toString(),
+    imageUrl: payload?.image_list?.toString(),
     queue_name: getQueue(getSession().userLevel),
     landingTime: payload?.landingTime,
     timezone: payload?.timezone,
