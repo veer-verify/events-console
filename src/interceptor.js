@@ -1,6 +1,6 @@
 import axios from "axios";
 import { getAccessforRefreshToken } from "./services/ApiService";
-import { getStorage, setStorage } from "./services/StorageService";
+import { clearStorage, getStorage, setStorage } from "./services/StorageService";
 import { useLogout } from "./utilities/logout/Logout";
 
 
@@ -22,6 +22,7 @@ const processQueue = (error, token = null) => {
 
 // Request Interceptor — attach token to every request
 api.interceptors.request.use((config) => {
+  // const logout = useLogout();
     const session = getStorage("session");
     if (session) {
       config.headers["Authorization"] = `Bearer ${session.AccessToken}`;
@@ -32,10 +33,9 @@ api.interceptors.request.use((config) => {
 
 // Response Interceptor — handle expired tokens
 api.interceptors.response.use((response) => response, async (error) => {
-    const logout = useLogout();
-    const originalRequest = error.config;
-
-    // If 401 error and we haven’t retried yet
+  const originalRequest = error.config;
+  
+  // If 401 error and we haven’t retried yet
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
         // Queue requests until refresh is done
@@ -79,7 +79,9 @@ api.interceptors.response.use((response) => response, async (error) => {
         isRefreshing = false;
 
         // Optional logout if refresh fails
-        logout();
+        // logout();
+        clearStorage();
+        window.location.href = "/";
         return Promise.reject(err);
       }
     }

@@ -30,7 +30,11 @@ const Header = () => {
                     <img src='images/verifai-logo.png' alt='loading' loading='lazy' />
                 </div>
                 <div className="page-title">
-                    <span className='title'>EVENTS CONSOLE</span><span className='bar'> | </span><span className="level">LEVEL - {user?.userLevel ?? 1}</span>
+                    <span className='title'>events console</span>
+                    <span className='bar'> | </span>
+                    <span className="level">level - {user?.userLevel ?? 0}</span>
+                    <span className='bar'> | </span>
+                    <span className="title">{user?.queueName ?? ''}</span>
                 </div>
             </div>
 

@@ -176,7 +176,7 @@ export const getMonitoringInfo = async (payload) => {
   params.append('siteId', payload?.siteId);
   params.append('cameraId', payload?.cameraId);
   params.append('level', user?.userLevel);
-  return api.get(url, { params: params }).then((res) => res.data.statusCode === 200 ? res.data : []).catch((err) => console.log(err));
+  return api.get(url, { params: params }).then((res) => res.data.statusCode === 200 ? res.data : null).catch((err) => console.log(err));
 }
 
 export const getLiveInfoForSiteAndCamera = async (payload) => {

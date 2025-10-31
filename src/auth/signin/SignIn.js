@@ -26,8 +26,6 @@ const SignIn = () => {
       if (res.data.Status === 'Success') {
         if (!res.data.queueName) return alert('Queue is not assigned!');
         setStorage('session', res.data);
-        // setStorage('AccessToken', res.data.AccessToken);
-        // setStorage('RefreshToken', res.data.RefreshToken);
         navigate('/dashboard');
       } else {
         alert(res.data.message);
@@ -52,7 +50,7 @@ const SignIn = () => {
         <div className="right-panel">
           <div className="login-box">
             <div className="logo">
-              <img src='events-console/images/verifai-logo.png' alt='loading' loading='lazy' />
+              <img src='images/verifai-logo.png' alt='loading' loading='lazy' />
             </div>
 
             <p className='welcome'>Welcome to sign in</p>

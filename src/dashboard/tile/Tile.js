@@ -72,7 +72,9 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious, escalation, 
         setPlaying(true);
         // currentEvent.audio = true;
         const res = await playSiren(currentEvent);
-        alert(res.message);
+        if(res) {
+            alert(res.message);
+        }
         setPlaying(false);
     }
 
@@ -80,7 +82,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious, escalation, 
     const [imgSrc, setImgSrc] = useState(currentEvent?.image_list[0]);
 
     const timeFormat = () => {
-        const monitoring_hours = monitoringData && monitoringData.length && monitoringData.cameras[0].monitoringHoursDetails;
+        const monitoring_hours = monitoringData && monitoringData.cameras[0].monitoringHoursDetails;
         if (!monitoring_hours) return;
 
         const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -112,7 +114,6 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious, escalation, 
             const dayStr = days.length > 1
                 ? `${days[0][0].toUpperCase()}${days[0].slice(1)}-${days[days.length - 1][0].toUpperCase()}${days[days.length - 1].slice(1)}`
                 : `${days[0][0].toUpperCase()}${days[0].slice(1)}`;
-
             return <span key={index}>{dayStr}: {hours}<br /></span>;
         });
     }
@@ -147,7 +148,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious, escalation, 
         const interval = setInterval(() => {
             setIndex(i);
             setImgSrc(currentEvent?.image_list[i]);
-            if (i === 4) i = 0;
+            if (i === 5) i = 0;
             i += 1;
         }, 1000);
 
@@ -206,16 +207,24 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious, escalation, 
                     <p>{currentEvent?.siteName}</p>
                     <p>Tadepally, Guntur District, Andhra Pradesh, INDIA - 500503</p>
 
+                    {(monitoringData && monitoringData.plannedSiteActivities.length !== 0) ??
+
                     <div className="activity-box">
                         <div>
-                            <strong>PLAN SITE ACTIVITY</strong><br />
-                            <span>31 JUL, 2025 13:30 PM - 31 JUL, 2025 14:10 PM</span>
+                            <strong>PLANNED SITE ACTIVITY</strong><br />
+                                <span>
+                                    {monitoringData && monitoringData.plannedSiteActivities.length && monitoringData.plannedSiteActivities[0].fromdatetime}
+                                    -
+                                    {monitoringData && monitoringData.plannedSiteActivities.length && monitoringData.plannedSiteActivities[0].todatetime}
+                                </span>
                         </div>
                         <div>
                             <strong>Early logout</strong><br />
-                            <span>Description display here Description display here Description display here</span>
+                            <span>{monitoringData && monitoringData.plannedSiteActivities.length && monitoringData.plannedSiteActivities[0].description}</span>
                         </div>
                     </div>
+                    }
+
                 </div>
 
                 <div className="monitoring">
@@ -228,11 +237,15 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious, escalation, 
                             </tr>
                             <tr>
                                 <td><strong>Monitoring</strong></td>
-                                <td>{timeFormat()}</td>
+                                <td>{ timeFormat() }</td>
                             </tr>
                             <tr>
                                 <td><strong>Camera</strong></td>
-                                <td>{monitoringData && monitoringData.length && monitoringData.cameras[0].cameraName}</td>
+                                <td>
+                                    {monitoringData && monitoringData.cameras.length && monitoringData.cameras[0].cameraId}
+                                    -
+                                    {monitoringData && monitoringData.cameras.length && monitoringData.cameras[0].cameraName}
+                                </td>
                             </tr>
                             <tr>
                                 <td><strong>Requirements</strong></td>
