@@ -110,7 +110,7 @@ const Dashboard = () => {
 
 
   useEffect(() => {
-    // let timerId;
+    let timerId;
     const getEvent = async (type) => {
       const response = await getVmsEventsQueueData(type);
       if (response.length) {
@@ -118,12 +118,18 @@ const Dashboard = () => {
         response[0].audioPlayed = false;
         setEventData((prev) => [...prev, ...response]);
       } else {
-        setTimeout(() => getEvent(), 2000);
+        if (eventData.length < 2) {
+          timerId = setTimeout(() => {
+            getEvent(type);
+          }, 2000);
+        }
       }
     };
 
     if (eventData.length < 2) {
       getEvent();
+    } else if (timerId) {
+      clearTimeout(timerId);
     }
 
     const getTags = async () => {
@@ -132,7 +138,9 @@ const Dashboard = () => {
     };
     getTags();
 
-    // return () =>  clearTimeout(timerId);
+    return () => {
+      if (timerId) clearTimeout(timerId);
+    };
   }, [eventData.length]);
 
   return (
@@ -144,34 +152,34 @@ const Dashboard = () => {
         {/* <EventContext.Provider value={item} key={i}> */}
         {
           eventData.length ?
-          <Fragment>
-            <Tile
-              key={0}
-              index={0}
-              currentEvent={eventData[0]}
+            <Fragment>
+              <Tile
+                key={0}
+                index={0}
+                currentEvent={eventData[0]}
 
-              escalation={escalation}
-              openEscalation={openEscalation}
-              closeEscalation={closeEscalation}
+                escalation={escalation}
+                openEscalation={openEscalation}
+                closeEscalation={closeEscalation}
 
-              handleFalse={handleFalse}
-              handleSuspicious={handleSuspicious}
-            />
+                handleFalse={handleFalse}
+                handleSuspicious={handleSuspicious}
+              />
 
-            <Tile
-              key={1}
-              index={1}
-              currentEvent={eventData[1]}
+              <Tile
+                key={1}
+                index={1}
+                currentEvent={eventData[1]}
 
-              escalation={escalation}
-              openEscalation={openEscalation}
-              closeEscalation={closeEscalation}
+                escalation={escalation}
+                openEscalation={openEscalation}
+                closeEscalation={closeEscalation}
 
-              handleFalse={handleFalse}
-              handleSuspicious={handleSuspicious}
-            />
-          </Fragment> :
-          <p className='no-event'>no events</p>
+                handleFalse={handleFalse}
+                handleSuspicious={handleSuspicious}
+              />
+            </Fragment> :
+            <p className='no-event'>no events</p>
         }
         {/* </EventContext.Provider> */}
         {/* ) : <p className='no-event'>no events</p>} */}
