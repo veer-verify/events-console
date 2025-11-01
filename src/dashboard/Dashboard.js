@@ -108,9 +108,9 @@ const Dashboard = () => {
     }
   }
 
-  
+
   useEffect(() => {
-    let timerId;
+    // let timerId;
     const getEvent = async (type) => {
       const response = await getVmsEventsQueueData(type);
       if (response.length) {
@@ -118,34 +118,37 @@ const Dashboard = () => {
         response[0].audioPlayed = false;
         setEventData((prev) => [...prev, ...response]);
       } else {
-        timerId = setTimeout(() => getEvent(), 2000);
+        setTimeout(() => getEvent(), 2000);
       }
     };
-    
+
     if (eventData.length < 2) {
       getEvent();
     }
-    
+
     const getTags = async () => {
       const tagsResponse = await getActionTagCategories();
       setStorage('actionTags', tagsResponse);
     };
     getTags();
 
-    return(() => clearTimeout(timerId));
+    // return () =>  clearTimeout(timerId);
   }, [eventData.length]);
-  
+
   return (
     <Fragment>
       <Header></Header>
 
       <div className='tiles'>
-        {eventData.length ? eventData.map((item, i) =>
-          <EventContext.Provider value={item} key={i}>
+        {/* {eventData.length ? eventData.map((item, i) => */}
+        {/* <EventContext.Provider value={item} key={i}> */}
+        {
+          eventData.length ?
+          <Fragment>
             <Tile
-              key={i}
-              index={i}
-              currentEvent={item}
+              key={0}
+              index={0}
+              currentEvent={eventData[0]}
 
               escalation={escalation}
               openEscalation={openEscalation}
@@ -154,8 +157,24 @@ const Dashboard = () => {
               handleFalse={handleFalse}
               handleSuspicious={handleSuspicious}
             />
-          </EventContext.Provider>
-        ) : <p className='no-event'>no events</p>}
+
+            <Tile
+              key={1}
+              index={1}
+              currentEvent={eventData[1]}
+
+              escalation={escalation}
+              openEscalation={openEscalation}
+              closeEscalation={closeEscalation}
+
+              handleFalse={handleFalse}
+              handleSuspicious={handleSuspicious}
+            />
+          </Fragment> :
+          <p className='no-event'>no events</p>
+        }
+        {/* </EventContext.Provider> */}
+        {/* ) : <p className='no-event'>no events</p>} */}
       </div>
     </Fragment>
   )

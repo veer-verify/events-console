@@ -18,7 +18,7 @@ const SignIn = () => {
   const handleSignIn = async () => {
     const url = `${environment.login_url}/user_login_1_0`;
     const encryptedPassword = Encrypt(password);
-    const requestBody = { userName, ...{ password: encryptedPassword, callingSystemDetail: 'vms' } };
+    const requestBody = { userName, ...{ password: encryptedPassword, callingSystemDetail: 'events-console' } };
     setLoader(true);
 
     axios.post(url, requestBody).then((res) => {

@@ -172,7 +172,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious, escalation, 
                         {imgSrc && <img src={imgSrc} alt={`Camera Feed ${imgindex + 1}`} />}
                     </div>
                     <div className="camera">
-                        {currentEvent.httpUrl && <Stream streamUrl={`${currentEvent?.httpUrl}/`} />}
+                        {currentEvent?.httpUrl && <Stream key={index} streamUrl={`${currentEvent?.httpUrl}/`} />}
                     </div>
                 </div>
 

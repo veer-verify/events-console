@@ -6,6 +6,7 @@ import { getStorage } from "../../services/StorageService";
 import ErrorInfo from "../../utilities/error-info/ErrorInfo";
 
 const Escalation = ({ closeEscalation, currentEvent, handleFalse, handleSuspicious }) => {
+  console.log(currentEvent)
   // const data = useAuth();
 
   const [alerts, setAlerts] = useState([]);
@@ -50,11 +51,11 @@ const Escalation = ({ closeEscalation, currentEvent, handleFalse, handleSuspicio
 
   useEffect(() => {
     const fetchMetadata = async () => {
-      const actionTagsResponse = await listActionTags(currentEvent);
-      if (actionTagsResponse && actionTagsResponse.data) {
-        const [tags] = actionTagsResponse.data;
-        setActionTags(tags.actionTags);
-      }
+      // const actionTagsResponse = await listActionTags(currentEvent);
+      // if (actionTagsResponse && actionTagsResponse.data) {
+      //   const [tags] = actionTagsResponse.data;
+      //   setActionTags(tags.actionTags);
+      // }
 
       const categoriesResponse = await getAlertCategoriesForSiteId(currentEvent);
       if (categoriesResponse) {
