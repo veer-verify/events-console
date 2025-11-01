@@ -1,7 +1,7 @@
 import './Tile.css';
 import { useState, useRef, useEffect } from 'react';
 import { Fragment } from "react/jsx-runtime";
-import { getStorage, getSession, setStorage } from '../../services/StorageService';
+import { getStorage, getSession, setStorage, getTimeByTimezone } from '../../services/StorageService';
 import { getActionTagCategories, getMonitoringInfo, playSiren } from '../../services/ApiService';
 import Escalation from '../escalation/Escalation';
 import Live from '../../utilities/live/Live';
@@ -97,7 +97,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious, escalation, 
                 .split(',')
                 .map(r => {
                     const [start, end] = r.split('-').map(Number);
-                    return `${String(start).padStart(2, '0')}:00 ${start < 12 ? 'AM' : 'PM'} - ${String(end).padStart(2, '0')}:00 ${end < 12 ? 'AM' : 'PM'}`;
+                    return `${String(start).padStart(2, '0')}:00 - ${String(end).padStart(2, '0')}:00`;
                 })
                 .join(' & ');
             allHours[day] = formatted;
@@ -119,14 +119,15 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious, escalation, 
     }
 
     const handleAction = (data) => {
+        const currentTime = getTimeByTimezone(currentEvent?.timezone);
         setStorage('sub_action', data);
         if (getStorage('custom_action') === 1) {
-            handleFalse(currentEvent);
+            handleFalse({...currentEvent, actionTagTime: currentTime});
         } else {
             if (getSession('session').userLevel !== 1) {
                 openEscalation()
             } else {
-                handleSuspicious(currentEvent);
+                handleSuspicious({...currentEvent, actionTagTime: currentTime});
             }
         }
         closeTags()
@@ -249,7 +250,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious, escalation, 
                             </tr>
                             <tr>
                                 <td><strong>Requirements</strong></td>
-                                <td>Homelessness, Loitering, Suspicious activity, Trash, Break-Ins.</td>
+                                <td>{monitoringData && monitoringData.requirements}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -264,7 +265,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious, escalation, 
                 {
                     (escalation && eventIndex === index) &&
                     <div className='escalation-container'>
-                        <Escalation closeEscalation={closeEscalation} currentEvent={currentEvent} handleEvent={handleFalse} handleSuspicious={handleSuspicious} />
+                        <Escalation closeEscalation={closeEscalation} currentEvent={currentEvent} handleFalse={handleFalse} handleSuspicious={handleSuspicious} />
                     </div>
                 }
             </div>

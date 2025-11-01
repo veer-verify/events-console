@@ -79,7 +79,7 @@ const Dashboard = () => {
       }
     }
   };
-
+  
   const handleSuspicious = async (item) => {
     write2VmsDispatchQueue(
       { ...item, ...{ actionTag: 2 }, ...{ subActionTag: getStorage('sub_action').subCategoryId } }
@@ -107,8 +107,8 @@ const Dashboard = () => {
       }
     }
   }
-
-
+  
+  
   useEffect(() => {
     let timerId;
     const getEvent = async (type) => {
@@ -151,8 +151,7 @@ const Dashboard = () => {
         {/* {eventData.length ? eventData.map((item, i) => */}
         {/* <EventContext.Provider value={item} key={i}> */}
         {
-          eventData.length ?
-          eventDatal.length>=2 ?
+          eventData.length ? eventData.length >= 2 ?
             <Fragment>
               <Tile
                 key={0}

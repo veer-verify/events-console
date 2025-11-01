@@ -2,18 +2,17 @@ import "./Escalation.css";
 import { useState, useEffect, Fragment } from "react";
 import { eventsGenericEmail, getAlertCategoriesForSiteId, getEmailDataForVMSEvents, listActionTags } from "../../services/ApiService";
 import { useAuth } from "../Dashboard";
-import { getStorage } from "../../services/StorageService";
+import { getStorage, getTimeByTimezone } from "../../services/StorageService";
 import ErrorInfo from "../../utilities/error-info/ErrorInfo";
 
 const Escalation = ({ closeEscalation, currentEvent, handleFalse, handleSuspicious }) => {
-  console.log(currentEvent)
   // const data = useAuth();
 
   const [alerts, setAlerts] = useState([]);
   const [actionTags, setActionTags] = useState([]);
   const [subAlerts, setSubAlerts] = useState([]);
 
-  const [selectedActionTag, setSelectedActionTag] = useState("");
+  // const [selectedActionTag, setSelectedActionTag] = useState("");
   const [selectedAlertType, setSelectedAlertType] = useState("");
   const [selectedSubType, setSelectedSubType] = useState("");
   const [selection, setSelection] = useState("person");
@@ -36,15 +35,16 @@ const Escalation = ({ closeEscalation, currentEvent, handleFalse, handleSuspicio
   };
 
   const handle = (type) => {
+    const currentTime = getTimeByTimezone(currentEvent?.timezone);
     if (type === 'escalate') {
-      handleSuspicious(currentEvent);
+      handleSuspicious({...currentEvent, actionTagTime: currentTime});
       if (getStorage('session').userLevel === 2) {
         eventsGenericEmail(
-          { ...currentEvent, ...{ actionTag: parseInt(selectedActionTag) }, ...{ alertTypeId: selectedAlertType }, ...{ alertSubTypeId: selectedSubType }, ...{ objectName: selection }, ...emaildata }
+          { ...currentEvent, ...{ actionTag: emaildata?.alertTagId }, ...{ alertTypeId: selectedAlertType }, ...{ alertSubTypeId: selectedSubType }, ...{ objectName: selection }, ...emaildata }
         );
       }
     } else {
-      handleFalse(currentEvent);
+      handleFalse({...currentEvent, actionTagTime: currentTime});
     }
     closeEscalation();
   }
@@ -85,7 +85,7 @@ const Escalation = ({ closeEscalation, currentEvent, handleFalse, handleSuspicio
         </div>
 
         {/* Alert Type Dropdown */}
-        <div className="form-group">
+        {/* <div className="form-group">
           <label>Action Tag</label>
           <select
             value={selectedActionTag}
@@ -98,7 +98,7 @@ const Escalation = ({ closeEscalation, currentEvent, handleFalse, handleSuspicio
               </option>
             ))}
           </select>
-        </div>
+        </div> */}
 
         {/* Alert Type Dropdown */}
         <div className="form-group">
@@ -180,7 +180,7 @@ const Escalation = ({ closeEscalation, currentEvent, handleFalse, handleSuspicio
                 {emaildata?.emailBody}
               </p>
 
-              {
+              {/* {
                 emaildata?.screenshots?.map((item, i) =>
                   <img
                     src={item}
@@ -188,10 +188,14 @@ const Escalation = ({ closeEscalation, currentEvent, handleFalse, handleSuspicio
                     className="alert-image"
                   />
                 )
-              }
+              } */}
 
               <table>
                 <tbody>
+                  <tr>
+                    <td><strong>Action Tag</strong></td>
+                    <td>{emaildata?.alertTag}</td>
+                  </tr>
                   <tr>
                     <td><strong>Location</strong></td>
                     <td>{emaildata?.emailFields?.LOCATION}</td>

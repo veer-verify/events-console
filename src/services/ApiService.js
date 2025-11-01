@@ -91,6 +91,7 @@ export const updateEventFullDetails = async (payload) => {
     objectName: payload?.objectName,
     cameraId: payload?.cameraId,
     eventTag: 'events-console',
+    eventType: 'Event_Wall',
     actionTag: payload?.actionTag,
     subActionTag: payload?.subActionTag,
     userLevels: user.userLevel,
@@ -98,14 +99,13 @@ export const updateEventFullDetails = async (payload) => {
     suspiciousTime: customAction === 2 ? payload?.actionTagTime : '',
     callResponseTime: '',
     callNoResponseTime: '',
-    eventStartTime: payload?.timestamp ?? '',
+    eventStartTime: payload?.eventTime ?? '',
     eventEndtime: currentTime,
     emailTime: currentTime,
     httpUrl: payload?.httpUrl,
     videoFile: payload?.image_list?.toString(),
     createdBy: user?.UserId,
     remarks: '',
-    eventType: '',
     timezone: payload?.timezone,
     userLevelAlarmInfo: payload?.userLevelAlarmInfo
   };
@@ -164,8 +164,9 @@ export const eventsGenericEmail = async (payload) => {
   formData.append("recipientEmails", payload?.recipientEmails?.join(', '));
   formData.append("Bcc", payload?.BCC?.join(','));
   formData.append("Cc", payload?.Cc?.join(','));
+  formData.append('callingSystemDetail', 'events-console');
   for (var i = 0; i < payload?.screenshots?.length; i++) {
-    formData.append("files", payload?.screenshots[i].substring(payload?.screenshots[i].lastIndexOf('/') + 1));
+    formData.append("files", payload?.screenshots[i]);
   }
   return api.post(url, formData, { params: params }).then((res) => res).catch((err) => console.log(err));
 }
