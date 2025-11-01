@@ -144,6 +144,7 @@ const Dashboard = () => {
         {/* <EventContext.Provider value={item} key={i}> */}
         {
           eventData.length ?
+          eventData.length>=2 ?
           <Fragment>
             <Tile
               key={0}
@@ -171,6 +172,21 @@ const Dashboard = () => {
               handleSuspicious={handleSuspicious}
             />
           </Fragment> :
+          <Fragment>
+            <Tile
+              key={0}
+              index={0}
+              currentEvent={eventData[0]}
+
+              escalation={escalation}
+              openEscalation={openEscalation}
+              closeEscalation={closeEscalation}
+
+              handleFalse={handleFalse}
+              handleSuspicious={handleSuspicious}
+            />
+            </Fragment>
+            :
           <p className='no-event'>no events</p>
         }
         {/* </EventContext.Provider> */}
