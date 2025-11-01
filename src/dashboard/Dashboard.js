@@ -152,7 +152,7 @@ const Dashboard = () => {
         {/* <EventContext.Provider value={item} key={i}> */}
         {
           eventData.length ?
-          eventDatal.length>=2 ?
+          eventData.length>=2 ?
             <Fragment>
               <Tile
                 key={0}
