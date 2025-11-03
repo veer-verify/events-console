@@ -67,7 +67,7 @@ const SignIn = () => {
             <div className="form-group">
               <label>Password</label>
               <input className='pass' type={showPassword ? 'text' : 'password'} placeholder="Password here" onChange={(e) => setPassword(e.target.value)} />
-              <img className='togglepass' src={showPassword ? '../images/hide.svg' : '../images/show.svg'} onClick={togglePassword}/>
+              <img className='togglepass' src={showPassword ?  'images/show.svg' : 'images/hide.svg' } onClick={togglePassword}/>
               {/* <div>
                 <img src='icons/user.svg' alt='' style={{ position: 'absolute', top: '16px', right: '16px', cursor: 'pointer' }} />
               </div> */}
