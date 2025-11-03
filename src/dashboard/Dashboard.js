@@ -64,6 +64,7 @@ const Dashboard = () => {
         eventResponse[0].landingTime = getTimeByTimezone(eventResponse.timezone);
         eventResponse[0].audioPlayed = false;
         setEventData([...eventResponse, ...filtered]);
+        writetoRedisQueueData({userId:0,level:"",queueInfo:eventResponse[0]}); 
       } else {
         setEventData((prev) => prev ? filtered : []);
       }
@@ -93,6 +94,7 @@ const Dashboard = () => {
         eventResponse[0].landingTime = getTimeByTimezone(eventResponse.timezone);
         eventResponse[0].audioPlayed = false;
         setEventData([...eventResponse, ...filtered]);
+        writetoRedisQueueData({userId:0,level:"",queueInfo:eventResponse[0]}); 
        
       } else {
         setEventData((prev) => prev ? filtered : []);
