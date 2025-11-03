@@ -15,6 +15,10 @@ const SignIn = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  const togglePassword = ()=>{
+    setShowPassword(!showPassword);
+  }
+
   const handleSignIn = async () => {
     const url = `${environment.login_url}/user_login_1_0`;
     const encryptedPassword = Encrypt(password);
@@ -62,20 +66,21 @@ const SignIn = () => {
 
             <div className="form-group">
               <label>Password</label>
-              <input type={showPassword ? 'text' : 'password'} placeholder="Password here" onChange={(e) => setPassword(e.target.value)} />
+              <input className='pass' type={showPassword ? 'text' : 'password'} placeholder="Password here" onChange={(e) => setPassword(e.target.value)} />
+              <img className='togglepass' src={showPassword ? '../images/hide.svg' : '../images/show.svg'} onClick={togglePassword}/>
               {/* <div>
                 <img src='icons/user.svg' alt='' style={{ position: 'absolute', top: '16px', right: '16px', cursor: 'pointer' }} />
               </div> */}
             </div>
 
-            <div className="remember-me">
-              <div>
-                <input type="checkbox" id="remember" onChange={() => setShowPassword(!showPassword)} />
+            {/* <div className="remember-me"> */}
+              {/* <div> */}
+                {/* <input type="checkbox" id="remember" onChange={() => setShowPassword(!showPassword)} /> */}
                 {/* <span></span> */}
-                <label htmlFor="remember">Show Password</label>
-              </div>
+                {/* <label htmlFor="remember">Show Password</label> */}
+              {/* </div> */}
               {/* <a href="/" className="forgot">Forgot Password?</a> */}
-            </div>
+            {/* </div> */}
 
             <button className="login-btn" onClick={handleSignIn}>LOG IN</button>
           </div>

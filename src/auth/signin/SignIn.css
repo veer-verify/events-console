@@ -10,6 +10,17 @@
     background-size: cover;
 }
 
+.pass{
+    position: relative;
+}
+
+.togglepass{
+    position: absolute;
+    right : 7px;
+    top: 35px;
+
+}
+
 @media (max-width: 768px) {
     .left-panel {
         display: none;
