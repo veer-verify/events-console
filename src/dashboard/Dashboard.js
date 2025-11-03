@@ -101,7 +101,7 @@ const Dashboard = () => {
       setEventData([...filtered, ...dummy]);
       const eventResponse = await getVmsEventsQueueData();
       if (eventResponse.length) {
-         writetoRedisQueueData({userId:0,level:"",queueInfo:{...eventResponse[0]}}); 
+         writetoRedisQueueData({userId:0,level:"",queueInfo:eventResponse[0]}); 
         eventResponse[0].landingTime = getTimeByTimezone(eventResponse.timezone);
         eventResponse[0].audioPlayed = false;
         setEventData([...filtered, ...eventResponse]);
