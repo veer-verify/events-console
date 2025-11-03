@@ -2,7 +2,7 @@ import './Dashboard.css';
 import { createContext, Fragment, useContext, useEffect, useState } from 'react'
 import Header from '../header/Header';
 import { getStorage, getTimeByTimezone, getSession, setStorage } from '../services/StorageService';
-import { getActionTagCategories, getVmsEventsQueueData, updateEventFullDetails, write2VmsDispatchQueue } from '../services/ApiService';
+import { getActionTagCategories, getVmsEventsQueueData, updateEventFullDetails, write2VmsDispatchQueue,writetoRedisQueueData } from '../services/ApiService';
 import Tile from './tile/Tile';
 import ErrorInfo from '../utilities/error-info/ErrorInfo';
 
@@ -71,6 +71,7 @@ const Dashboard = () => {
       setEventData([...filtered, ...dummy]);
       const eventResponse = await getVmsEventsQueueData();
       if (eventResponse.length) {
+        writetoRedisQueueData({userId:0,level:"",queueInfo:eventResponse[0]}); 
         eventResponse[0].landingTime = getTimeByTimezone(eventResponse.timezone);
         eventResponse[0].audioPlayed = false;
         setEventData([...filtered, ...eventResponse]);
@@ -92,6 +93,7 @@ const Dashboard = () => {
         eventResponse[0].landingTime = getTimeByTimezone(eventResponse.timezone);
         eventResponse[0].audioPlayed = false;
         setEventData([...eventResponse, ...filtered]);
+       
       } else {
         setEventData((prev) => prev ? filtered : []);
       }
@@ -99,6 +101,7 @@ const Dashboard = () => {
       setEventData([...filtered, ...dummy]);
       const eventResponse = await getVmsEventsQueueData();
       if (eventResponse.length) {
+         writetoRedisQueueData({userId:0,level:"",queueInfo:{...eventResponse[0]}}); 
         eventResponse[0].landingTime = getTimeByTimezone(eventResponse.timezone);
         eventResponse[0].audioPlayed = false;
         setEventData([...filtered, ...eventResponse]);
@@ -117,6 +120,7 @@ const Dashboard = () => {
         response[0].landingTime = getTimeByTimezone(response.timezone);
         response[0].audioPlayed = false;
         setEventData((prev) => [...prev, ...response]);
+        writetoRedisQueueData({userId:0,level:"",queueInfo:response[0]}); 
       } else {
         if (eventData.length < 2) {
           timerId = setTimeout(() => {

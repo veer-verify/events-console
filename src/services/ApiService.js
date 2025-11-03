@@ -192,3 +192,12 @@ export const playSiren = async (payload) => {
   const url = `${environment.site_url}/play_1_0/${payload?.cameraId}`;
   return api.get(url).then((res) => res.data).catch((err) => console.log(err));
 }
+
+
+export const writetoRedisQueueData = async (payload) => {
+  const url = `${environment.event_process_url}/addConsoleEvents_1_0`;
+  const user = getStorage('session');
+  payload.userId= user?.UserId;
+  payload.level=`Level${user?.userLevel}`;
+  return api.post(url,payload).then((res) => res.data).catch((err) => console.log(err));
+}
