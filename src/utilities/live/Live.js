@@ -24,7 +24,7 @@ const Live = ({ currentEvent, closeLiveDialog }) => {
             <div className="cam-container">
                 <button onClick={() => { closeLiveDialog()}}>x</button>
                 <div className='cameras'>
-                    {cameras.length && cameras.map((item, i) => <Stream key={i} streamUrl={`${item.httpUrl}/`} />)}
+                    { cameras.map((item, i) => <Stream key={i} streamUrl={`${item.httpUrl}/`} />)}
                 </div>
             </div>
         </Fragment>
