@@ -70,20 +70,20 @@ const SignIn = () => {
                 if(e.key==='Enter') handleSignIn(
                 )
               }}/>
-              <img className='togglepass' src={showPassword ?  'images/show.svg' : 'images/hide.svg' } onClick={togglePassword}/>
+              {/* <img className='togglepass' src={showPassword ?  'images/show.svg' : 'images/hide.svg' } onClick={togglePassword}/> */}
               {/* <div>
                 <img src='icons/user.svg' alt='' style={{ position: 'absolute', top: '16px', right: '16px', cursor: 'pointer' }} />
               </div> */}
             </div>
 
-            {/* <div className="remember-me"> */}
-              {/* <div> */}
-                {/* <input type="checkbox" id="remember" onChange={() => setShowPassword(!showPassword)} /> */}
+            <div className="remember-me">
+              <div>
+                <input type="checkbox" id="remember" onChange={() => setShowPassword(!showPassword)} />
                 {/* <span></span> */}
-                {/* <label htmlFor="remember">Show Password</label> */}
-              {/* </div> */}
+                <label htmlFor="remember">Show Password</label>
+              </div>
               {/* <a href="/" className="forgot">Forgot Password?</a> */}
-            {/* </div> */}
+            </div>
 
             <button className="login-btn" onClick={handleSignIn}>LOG IN</button>
           </div>

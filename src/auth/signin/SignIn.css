@@ -18,7 +18,7 @@
     position: absolute;
     right : 7px;
     top: 35px;
-
+    cursor: pointer;
 }
 
 @media (max-width: 768px) {
