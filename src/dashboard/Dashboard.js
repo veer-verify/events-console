@@ -2,7 +2,7 @@ import './Dashboard.css';
 import { createContext, Fragment, useContext, useEffect, useState } from 'react'
 import Header from '../header/Header';
 import { getStorage, getTimeByTimezone, getSession, setStorage } from '../services/StorageService';
-import { getActionTagCategories, getVmsEventsQueueData, updateEventFullDetails, write2VmsDispatchQueue,writetoRedisQueueData } from '../services/ApiService';
+import { getActionTagCategories, getVmsEventsQueueData, updateEventFullDetails, write2VmsDispatchQueue, writetoRedisQueueData } from '../services/ApiService';
 import Tile from './tile/Tile';
 import ErrorInfo from '../utilities/error-info/ErrorInfo';
 
@@ -38,6 +38,9 @@ const Dashboard = () => {
     setEscalation(false);
   }
 
+  /**
+   * to handle false activity
+   */
   const handleFalse = async (item) => {
     item?.userLevelAlarmInfo?.push(
       {
@@ -57,14 +60,28 @@ const Dashboard = () => {
     );
 
     const filtered = eventData.filter((_, i) => getStorage('index') !== i);
+    // setEventData([...dummy, ...filtered]);
+
+    // const eventResponse = await getVmsEventsQueueData();
+    // if (eventResponse.length) {
+    //   const [temp] = eventResponse;
+    //   writetoRedisQueueData({ userId: 0, level: '', queueInfo: temp });
+    //   temp.landingTime = getTimeByTimezone(eventResponse.timezone);
+    //   temp.audioPlayed = false;
+    //   setEventData([...eventResponse, ...filtered]);
+    // } else {
+    //   setEventData((prev) => prev ? filtered : []);
+    // }
+
     if (getStorage('index') === 0) {
       setEventData([...dummy, ...filtered]);
       const eventResponse = await getVmsEventsQueueData();
       if (eventResponse.length) {
-        eventResponse[0].landingTime = getTimeByTimezone(eventResponse.timezone);
-        eventResponse[0].audioPlayed = false;
+        const [temp] = eventResponse;
+        temp.landingTime = getTimeByTimezone(eventResponse.timezone);
+        temp.audioPlayed = false;
         setEventData([...eventResponse, ...filtered]);
-        writetoRedisQueueData({userId:0,level:"",queueInfo:eventResponse[0]}); 
+        writetoRedisQueueData({ userId: 0, level: "", queueInfo: temp });
       } else {
         setEventData((prev) => prev ? filtered : []);
       }
@@ -72,7 +89,7 @@ const Dashboard = () => {
       setEventData([...filtered, ...dummy]);
       const eventResponse = await getVmsEventsQueueData();
       if (eventResponse.length) {
-        writetoRedisQueueData({userId:0,level:"",queueInfo:eventResponse[0]}); 
+        writetoRedisQueueData({ userId: 0, level: "", queueInfo: eventResponse[0] });
         eventResponse[0].landingTime = getTimeByTimezone(eventResponse.timezone);
         eventResponse[0].audioPlayed = false;
         setEventData([...filtered, ...eventResponse]);
@@ -81,7 +98,11 @@ const Dashboard = () => {
       }
     }
   };
-  
+
+
+  /**
+   * to handel suspicious activity
+   */
   const handleSuspicious = async (item) => {
     write2VmsDispatchQueue(
       { ...item, ...{ actionTag: 2 }, ...{ subActionTag: getStorage('sub_action').subCategoryId } }
@@ -94,8 +115,7 @@ const Dashboard = () => {
         eventResponse[0].landingTime = getTimeByTimezone(eventResponse.timezone);
         eventResponse[0].audioPlayed = false;
         setEventData([...eventResponse, ...filtered]);
-        writetoRedisQueueData({userId:0,level:"",queueInfo:eventResponse[0]}); 
-       
+        writetoRedisQueueData({ userId: 0, level: "", queueInfo: eventResponse[0] });
       } else {
         setEventData((prev) => prev ? filtered : []);
       }
@@ -103,7 +123,7 @@ const Dashboard = () => {
       setEventData([...filtered, ...dummy]);
       const eventResponse = await getVmsEventsQueueData();
       if (eventResponse.length) {
-         writetoRedisQueueData({userId:0,level:"",queueInfo:eventResponse[0]}); 
+        writetoRedisQueueData({ userId: 0, level: "", queueInfo: eventResponse[0] });
         eventResponse[0].landingTime = getTimeByTimezone(eventResponse.timezone);
         eventResponse[0].audioPlayed = false;
         setEventData([...filtered, ...eventResponse]);
@@ -112,8 +132,7 @@ const Dashboard = () => {
       }
     }
   }
-  
-  
+
   useEffect(() => {
     let timerId;
     const getEvent = async (type) => {
@@ -122,7 +141,7 @@ const Dashboard = () => {
         response[0].landingTime = getTimeByTimezone(response.timezone);
         response[0].audioPlayed = false;
         setEventData((prev) => [...prev, ...response]);
-        writetoRedisQueueData({userId:0,level:"",queueInfo:response[0]}); 
+        writetoRedisQueueData({ userId: 0, level: "", queueInfo: response[0] });
       } else {
         if (eventData.length < 2) {
           timerId = setTimeout(() => {
@@ -203,7 +222,6 @@ const Dashboard = () => {
             <p className='no-event'>no events</p>
         }
         {/* </EventContext.Provider> */}
-        {/* ) : <p className='no-event'>no events</p>} */}
       </div>
     </Fragment>
   )
