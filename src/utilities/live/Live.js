@@ -1,11 +1,13 @@
 import './Live.css';
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useState, useRef } from "react";
 import { getLiveInfoForSiteAndCamera } from "../../services/ApiService";
 import Stream from "../stream/Stream";
 
 const Live = ({ currentEvent, closeLiveDialog }) => {
 
     const [cameras, setCameras] = useState([]);
+        const liveRef = useRef(null);
+    const pos = useRef({ x: 0, y: 0, offsetX: 0, offsetY: 0 });
 
     useEffect(() => {
         const getLive = async () => {
@@ -23,12 +25,36 @@ const Live = ({ currentEvent, closeLiveDialog }) => {
 
     // }
 
+     const handleMouseDown = (e) => {
+        const element = liveRef.current;
+        if (!element) return;
+
+        pos.current.offsetX = e.clientX - element.offsetLeft;
+        pos.current.offsetY = e.clientY - element.offsetTop;
+
+        document.addEventListener("mousemove", handleMouseMove);
+        document.addEventListener("mouseup", handleMouseUp);
+    };
+
+    const handleMouseMove = (e) => {
+        const element = liveRef.current;
+        if (!element) return;
+
+        element.style.left = `${e.clientX - pos.current.offsetX}px`;
+        element.style.top = `${e.clientY - pos.current.offsetY}px`;
+    };
+
+    const handleMouseUp = () => {
+        document.removeEventListener("mousemove", handleMouseMove);
+        document.removeEventListener("mouseup", handleMouseUp);
+    };
+
     return (
         <Fragment>
-            <div className="cam-container">
+            <div className="cam-container" ref={liveRef}
+                onMouseDown={handleMouseDown}>
                 <button onClick={() => { closeLiveDialog()}}>x</button>
                 <div className='cameras'>
-                
                     { cameras.map((item, i) => <Stream key={i} streamUrl={`${item.httpUrl}/`} />     )}
                 </div>
             </div>
