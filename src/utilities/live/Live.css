@@ -20,8 +20,27 @@
     border-radius: 8px;
 }
 
+.header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #ed3237;
+}
+.header p{
+    color: #ffff;
+    padding: 8px;
+}
+
 .cam-container button {
     cursor: pointer;
-    display: flex;
-    justify-content: end;
+background-color: transparent;
+  width: 24px;
+  height: 24px;
+  border: none;
+  font-weight: bold;
+  color: #ffff;
+  z-index: 999;
+
 }
+
+
