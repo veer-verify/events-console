@@ -219,7 +219,6 @@ const Stream = ({ streamUrl }) => {
     // if (hitStream) {
       requestICEServers();
     // }
-
     return () => {
       // setHitStream(false);
       if(peerConnectionRef.current) {
@@ -228,8 +227,31 @@ const Stream = ({ streamUrl }) => {
     };
   }, [encoded, streamUrl]);
 
+    const handleClick = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    // Create a canvas to draw the current frame
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext("2d");
+
+    // Draw current video frame onto the canvas
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // Convert canvas to image
+    const imageUrl = canvas.toDataURL("image/jpeg");
+
+    // Trigger download
+    const link = document.createElement("a");
+    link.href = imageUrl;
+    link.download = `camera_screenshot_${Date.now()}.jpeg`;
+    link.click();
+  };
+
   return (
-    <div style={{ position: 'relative', height: '100%' }}>
+    <div style={{ position: 'relative', height: '100%' }} onClick={handleClick}>
       {showLoader && <div className="loader"></div>}
       <video ref={videoRef} autoPlay playsInline muted controls={false} width="100%" height="100%" style={{ objectFit: 'fill' }} />
     </div>

@@ -19,12 +19,17 @@ const Live = ({ currentEvent, closeLiveDialog }) => {
         };
     }, [currentEvent]);
 
+    // normalCapture(item,i){
+
+    // }
+
     return (
         <Fragment>
             <div className="cam-container">
                 <button onClick={() => { closeLiveDialog()}}>x</button>
                 <div className='cameras'>
-                    { cameras.map((item, i) => <Stream key={i} streamUrl={`${item.httpUrl}/`} />)}
+                
+                    { cameras.map((item, i) => <Stream key={i} streamUrl={`${item.httpUrl}/`} />     )}
                 </div>
             </div>
         </Fragment>
