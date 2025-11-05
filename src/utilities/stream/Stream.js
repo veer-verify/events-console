@@ -1,16 +1,17 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react";
+import "./Stream.css";
 
-const Stream = ({ streamUrl }) => {
+const Stream = ({ streamUrl,screenshot }) => {
   const videoRef = useRef(null);
   const peerConnectionRef = useRef(null);
   const queuedCandidatesRef = useRef([]);
   const offerDataRef = useRef(null);
-  const sessionUrlRef = useRef('');
+  const sessionUrlRef = useRef("");
   const restartTimeoutRef = useRef(null);
+  const [showOverlay, setShowOverlay] = useState(false);
 
   const [showLoader, setShowLoader] = useState(false);
-  const encoded = btoa('admin:verifai123789');
-
+  const encoded = btoa("admin:verifai123789");
 
   useEffect(() => {
     const requestICEServers = () => {
@@ -18,21 +19,21 @@ const Stream = ({ streamUrl }) => {
 
       setShowLoader(true);
       fetch(`${streamUrl}whep`, {
-        method: 'OPTIONS',
+        method: "OPTIONS",
         headers: {
-          Authorization: `Basic ${encoded}`
-        }
+          Authorization: `Basic ${encoded}`,
+        },
       })
-        .then(res => {
+        .then((res) => {
           setShowLoader(false);
-          const linkHeader = res.headers.get('Link');
+          const linkHeader = res.headers.get("Link");
           const iceServers = linkToIceServers(linkHeader);
 
           const pc = new RTCPeerConnection({ iceServers });
           peerConnectionRef.current = pc;
 
-          pc.addTransceiver('video', { direction: 'sendrecv' });
-          pc.addTransceiver('audio', { direction: 'sendrecv' });
+          pc.addTransceiver("video", { direction: "sendrecv" });
+          pc.addTransceiver("audio", { direction: "sendrecv" });
 
           pc.onicecandidate = onLocalCandidate;
           pc.oniceconnectionstatechange = onConnectionState;
@@ -40,7 +41,7 @@ const Stream = ({ streamUrl }) => {
 
           createOffer(pc);
         })
-        .catch(err => {
+        .catch((err) => {
           setShowLoader(false);
           onError(err.toString());
         });
@@ -49,8 +50,10 @@ const Stream = ({ streamUrl }) => {
     const linkToIceServers = (links) => {
       const ics = [];
       if (links) {
-        links.split(', ').forEach(link => {
-          const m = link.match(/^<(.+?)>; rel="ice-server"(; username="(.*?)"; credential="(.*?)"; credential-type="password")?/i);
+        links.split(", ").forEach((link) => {
+          const m = link.match(
+            /^<(.+?)>; rel="ice-server"(; username="(.*?)"; credential="(.*?)"; credential-type="password")?/i
+          );
           if (m) {
             const ice = { urls: [m[1]] };
             if (m[3]) {
@@ -67,25 +70,27 @@ const Stream = ({ streamUrl }) => {
     const createOffer = (pc) => {
       setShowLoader(true);
       pc.createOffer()
-        .then(offer => {
+        .then((offer) => {
           offerDataRef.current = parseOffer(offer.sdp);
           return pc.setLocalDescription(offer).then(() => offer);
         })
-        .then(offer => {
+        .then((offer) => {
           sendOffer(offer);
         })
-        .catch(err => {
+        .catch((err) => {
           setShowLoader(false);
           onError(err.toString());
         });
     };
 
     const parseOffer = (sdp) => {
-      const ret = { iceUfrag: '', icePwd: '', medias: [] };
-      sdp.split('\r\n').forEach(line => {
-        if (line.startsWith('m=')) ret.medias.push(line.slice(2));
-        if (line.startsWith('a=ice-ufrag:') && !ret.iceUfrag) ret.iceUfrag = line.slice(12);
-        if (line.startsWith('a=ice-pwd:') && !ret.icePwd) ret.icePwd = line.slice(10);
+      const ret = { iceUfrag: "", icePwd: "", medias: [] };
+      sdp.split("\r\n").forEach((line) => {
+        if (line.startsWith("m=")) ret.medias.push(line.slice(2));
+        if (line.startsWith("a=ice-ufrag:") && !ret.iceUfrag)
+          ret.iceUfrag = line.slice(12);
+        if (line.startsWith("a=ice-pwd:") && !ret.icePwd)
+          ret.icePwd = line.slice(10);
       });
       return ret;
     };
@@ -95,23 +100,27 @@ const Stream = ({ streamUrl }) => {
 
       setShowLoader(true);
       fetch(`${streamUrl}whep`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/sdp',
-          Authorization: `Basic ${encoded}`
+          "Content-Type": "application/sdp",
+          Authorization: `Basic ${encoded}`,
         },
-        body: offer.sdp
+        body: offer.sdp,
       })
-        .then(res => {
+        .then((res) => {
           setShowLoader(false);
-          if (res.status !== 201) throw new Error(`Unexpected status ${res.status}`);
-          sessionUrlRef.current = new URL(res.headers.get('location'), streamUrl).toString();
+          if (res.status !== 201)
+            throw new Error(`Unexpected status ${res.status}`);
+          sessionUrlRef.current = new URL(
+            res.headers.get("location"),
+            streamUrl
+          ).toString();
           return res.text();
         })
-        .then(sdp => {
+        .then((sdp) => {
           onRemoteAnswer(sdp);
         })
-        .catch(err => {
+        .catch((err) => {
           setShowLoader(false);
           onError(err.toString());
           return;
@@ -120,16 +129,16 @@ const Stream = ({ streamUrl }) => {
 
     const onRemoteAnswer = (sdp) => {
       const pc = peerConnectionRef.current;
-      if (!pc || pc.signalingState !== 'have-local-offer') return;
+      if (!pc || pc.signalingState !== "have-local-offer") return;
 
-      pc.setRemoteDescription({ type: 'answer', sdp })
+      pc.setRemoteDescription({ type: "answer", sdp })
         .then(() => {
           if (queuedCandidatesRef.current.length > 0) {
             sendLocalCandidates(queuedCandidatesRef.current);
             queuedCandidatesRef.current = [];
           }
         })
-        .catch(err => onError(err.toString()));
+        .catch((err) => onError(err.toString()));
     };
 
     const onLocalCandidate = (evt) => {
@@ -148,18 +157,19 @@ const Stream = ({ streamUrl }) => {
 
       setShowLoader(true);
       fetch(url, {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/trickle-ice-sdpfrag',
-          'If-Match': '*'
+          "Content-Type": "application/trickle-ice-sdpfrag",
+          "If-Match": "*",
         },
-        body: generateSdpFragment(offerData, candidates)
+        body: generateSdpFragment(offerData, candidates),
       })
-        .then(res => {
+        .then((res) => {
           setShowLoader(false);
-          if (res.status !== 204) throw new Error(`Unexpected status ${res.status}`);
+          if (res.status !== 204)
+            throw new Error(`Unexpected status ${res.status}`);
         })
-        .catch(err => {
+        .catch((err) => {
           setShowLoader(false);
           onError(err.toString());
         });
@@ -177,7 +187,7 @@ const Stream = ({ streamUrl }) => {
       od.medias.forEach((media, i) => {
         if (grouped[i]) {
           frag += `m=${media}\r\na=mid:${i}\r\n`;
-          grouped[i].forEach(c => frag += `a=${c.candidate}\r\n`);
+          grouped[i].forEach((c) => (frag += `a=${c.candidate}\r\n`));
         }
       });
       return frag;
@@ -191,16 +201,16 @@ const Stream = ({ streamUrl }) => {
 
     const onConnectionState = () => {
       const state = peerConnectionRef.current?.iceConnectionState;
-      console.log('ICE State:', state);
+      console.log("ICE State:", state);
       if (restartTimeoutRef.current) return;
 
-      if (state === 'disconnected' || state === 'failed') {
-        onError('Peer connection disconnected');
+      if (state === "disconnected" || state === "failed") {
+        onError("Peer connection disconnected");
       }
     };
 
     const onError = (err) => {
-      console.error('WebRTC Error:', err);
+      console.error("WebRTC Error:", err);
 
       peerConnectionRef.current?.close();
       // restartTimeoutRef.current = setTimeout(() => {
@@ -209,25 +219,27 @@ const Stream = ({ streamUrl }) => {
       // }, 2000);
 
       if (sessionUrlRef.current) {
-        fetch(sessionUrlRef.current, { method: 'DELETE' }).catch((err) => console.log(err));
+        fetch(sessionUrlRef.current, { method: "DELETE" }).catch((err) =>
+          console.log(err)
+        );
       }
 
-      sessionUrlRef.current = '';
+      sessionUrlRef.current = "";
       queuedCandidatesRef.current = [];
     };
 
     // if (hitStream) {
-      requestICEServers();
+    requestICEServers();
     // }
     return () => {
       // setHitStream(false);
-      if(peerConnectionRef.current) {
+      if (peerConnectionRef.current) {
         peerConnectionRef.current.close();
       }
     };
   }, [encoded, streamUrl]);
 
-    const handleClick = () => {
+  const handleClick = () => {
     const video = videoRef.current;
     if (!video) return;
 
@@ -251,9 +263,34 @@ const Stream = ({ streamUrl }) => {
   };
 
   return (
-    <div style={{ position: 'relative', height: '100%' }} onClick={handleClick}>
+    <div
+      style={{ position: "relative", height: "100%" }}
+      onMouseEnter={() => setShowOverlay(true)}
+      onMouseLeave={() => setShowOverlay(false)}
+    >
       {showLoader && <div className="loader"></div>}
-      <video ref={videoRef} autoPlay playsInline muted controls={false} width="100%" height="100%" style={{ objectFit: 'fill' }} />
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        muted
+        controls={false}
+        width="100%"
+        height="100%"
+        style={{ objectFit: "fill" }}
+      />
+
+      {showOverlay && screenshot && (
+        <div className="hover-overlay">
+          <img
+            src="icons\screenshot.svg"
+            alt="overlay"
+            style={{ width: "20px", height: "20px", cursor: "pointer" }}
+            onClick={handleClick}
+            title="screenshot"
+          />
+        </div>
+      )}
     </div>
   );
 };
