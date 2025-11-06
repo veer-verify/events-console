@@ -185,6 +185,7 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789" }) 
     };
 
     const onConnectionState = () => {
+      setError(null);
       const state = peerConnectionRef.current?.iceConnectionState;
       console.log("ICE State:", state);
       if (restartTimeoutRef.current) return;
@@ -254,7 +255,7 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789" }) 
       onMouseLeave={() => setShowOverlay(false)}
     >
       {showLoader && <div className="loader"></div>}
-      {error && <div className="error-banner">{error}</div>}
+      {error && <div className="error-banner"><img src="icons/eyedisabled.svg" alt="" width={50} /></div>}
 
       <video
         ref={videoRef}

@@ -4,8 +4,6 @@ import Header from '../header/Header';
 import { getStorage, getTimeByTimezone, getSession, setStorage } from '../services/StorageService';
 import { getActionTagCategories, getMonitoringInfo, getVmsEventsQueueData, updateEventFullDetails, write2VmsDispatchQueue, writetoRedisQueueData } from '../services/ApiService';
 import Tile from './tile/Tile';
-import ErrorInfo from '../utilities/error-info/ErrorInfo';
-
 
 const Dashboard = () => {
   const dummy = [
@@ -27,8 +25,8 @@ const Dashboard = () => {
   const EventContext = createContext();
   const [eventData, setEventData] = useState([]);
   const [escalation, setEscalation] = useState(false);
-  const [monitoringData, setMonitoringData] = useState(null);
-  const [poolEvent, setPoolEvent] = useState(false);
+  const [monitoringData, setMonitoringData] = useState([]);
+  // const [poolEvent, setPoolEvent] = useState(false);
 
   const openEscalation = () => {
     setEscalation(true);
@@ -64,6 +62,7 @@ const Dashboard = () => {
     );
 
     const filtered = eventData.filter((_, i) => index !== i);
+    const filteredMonitoring = monitoringData.filter((_, i) => index !== i);
     const isFirst = index === 0;
     const reordered = isFirst ? [...dummy, ...filtered] : [...filtered, ...dummy];
     setEventData(reordered);
@@ -73,10 +72,12 @@ const Dashboard = () => {
       first.landingTime = getTimeByTimezone(first.timezone);
       first.audioPlayed = false;
       writetoRedisQueueData({ userId: 0, level: "", queueInfo: first });
-      const data = await getMonitoringInfo(first);
-      setMonitoringData(data);
       const updated = isFirst ? [...eventResponse, ...filtered] : [...filtered, ...eventResponse];
       setEventData(updated);
+
+      const data = await getMonitoringInfo(first);
+      const updatedMonitoring = isFirst ? [data, ...filteredMonitoring] : [...filteredMonitoring, data];
+      setMonitoringData(updatedMonitoring);
     } else {
       setEventData(filtered);
     }
@@ -108,6 +109,7 @@ const Dashboard = () => {
     );
 
     const filtered = eventData.filter((_, i) => index !== i);
+    const filteredMonitoring = monitoringData.filter((_, i) => index !== i);
     const isFirst = index === 0;
     const reordered = isFirst ? [...dummy, ...filtered] : [...filtered, ...dummy];
     setEventData(reordered);
@@ -117,10 +119,12 @@ const Dashboard = () => {
       first.landingTime = getTimeByTimezone(first.timezone);
       first.audioPlayed = false;
       writetoRedisQueueData({ userId: 0, level: "", queueInfo: first });
-      const data = await getMonitoringInfo(first);
-      setMonitoringData(data);
       const updated = isFirst ? [...eventResponse, ...filtered] : [...filtered, ...eventResponse];
       setEventData(updated);
+
+      const data = await getMonitoringInfo(first);
+      const updatedMonitoring = isFirst ? [data, ...filteredMonitoring] : [...filteredMonitoring, data];
+      setMonitoringData(updatedMonitoring);
     } else {
       setEventData(filtered);
     }
@@ -128,9 +132,8 @@ const Dashboard = () => {
 
   const timerRef = useRef(null);
   useEffect(() => {
-
-    const getEvent = async (type) => {
-      const response = await getVmsEventsQueueData(type);
+    const getEvent = async () => {
+      const response = await getVmsEventsQueueData();
       if (response.length) {
         const [first] = response;
         first.landingTime = getTimeByTimezone(response.timezone);
@@ -138,11 +141,11 @@ const Dashboard = () => {
         setEventData((prev) => [...prev, ...response]);
         writetoRedisQueueData({ userId: 0, level: "", queueInfo: first });
         const data = await getMonitoringInfo(first);
-        setMonitoringData(data);
+        setMonitoringData((prev) => [...prev, data]);
       } else {
         if (eventData.length < 2) {
           timerRef.current = setTimeout(() => {
-            getEvent(type);
+            getEvent();
           }, 2000);
         }
       }
@@ -163,7 +166,7 @@ const Dashboard = () => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [eventData.length]);
+  }, [eventData, eventData.length]);
 
   return (
     <Fragment>
@@ -179,7 +182,7 @@ const Dashboard = () => {
                 key={0}
                 index={0}
                 currentEvent={eventData[0]}
-                monitoringData={monitoringData}
+                monitoringData={monitoringData[0]}
 
                 escalation={escalation}
                 openEscalation={openEscalation}
@@ -188,27 +191,11 @@ const Dashboard = () => {
                 handleFalse={handleFalse}
                 handleSuspicious={handleSuspicious}
               />
-
               <Tile
                 key={1}
                 index={1}
                 currentEvent={eventData[1]}
-                monitoringData={monitoringData}
-
-                escalation={escalation}
-                openEscalation={openEscalation}
-                closeEscalation={closeEscalation}
-
-                handleFalse={handleFalse}
-                handleSuspicious={handleSuspicious}
-              />
-            </Fragment> :
-            <Fragment>
-              <Tile
-                key={0}
-                index={0}
-                currentEvent={eventData[0]}
-                monitoringData={monitoringData}
+                monitoringData={monitoringData[1]}
 
                 escalation={escalation}
                 openEscalation={openEscalation}
@@ -219,7 +206,25 @@ const Dashboard = () => {
               />
             </Fragment>
             :
-            <p className='no-event'>no events</p>
+            <Fragment>
+              <Tile
+                key={0}
+                index={0}
+                currentEvent={eventData[0]}
+                monitoringData={monitoringData[0]}
+
+                escalation={escalation}
+                openEscalation={openEscalation}
+                closeEscalation={closeEscalation}
+
+                handleFalse={handleFalse}
+                handleSuspicious={handleSuspicious}
+              />
+            </Fragment>
+            :
+            <Fragment>
+              <p className='no-event'>no events</p>
+            </Fragment>
         }
         {/* </EventContext.Provider> */}
       </div>

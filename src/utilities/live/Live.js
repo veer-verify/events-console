@@ -6,13 +6,15 @@ import Stream from "../stream/Stream";
 const Live = ({ currentEvent, closeLiveDialog }) => {
 
     const [cameras, setCameras] = useState([]);
-        const liveRef = useRef(null);
+    const liveRef = useRef(null);
     const pos = useRef({ x: 0, y: 0, offsetX: 0, offsetY: 0 });
 
     useEffect(() => {
         const getLive = async () => {
             const response = await getLiveInfoForSiteAndCamera(currentEvent);
-            setCameras(response);
+            if(response) {
+                setCameras(response);
+            }
         }
         getLive();
 
@@ -58,7 +60,7 @@ const Live = ({ currentEvent, closeLiveDialog }) => {
                 <button  onClick={() => { closeLiveDialog()}}>x</button>
             </div>
                 <div className='cameras'>
-                    { cameras.map((item, i) => <Stream key={i} streamUrl={`${item.httpUrl}/`} screenshot={true}/>     )}
+                    { cameras && cameras.map((item, i) => <Stream key={i} streamUrl={`${item.httpUrl}/`} screenshot={true}/>     )}
                 </div>
             </div>
         </Fragment>

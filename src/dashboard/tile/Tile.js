@@ -8,6 +8,7 @@ import Live from '../../utilities/live/Live';
 import Stream from '../../utilities/stream/Stream';
 
 const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicious, escalation, openEscalation, closeEscalation }) => {
+    // console.log(monitoringData)
     const eventIndex = getStorage('index');
     const customAction = getStorage('custom_action');
     const actionTagsResponse = getStorage('actionTags');
@@ -51,7 +52,7 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
     const [showTags, setShowTags] = useState(false);
     const [actionTags, setActionTags] = useState([]);
     const [live, setLive] = useState(false);
-    
+
 
     const dialogRef = useRef(null);
 
@@ -72,7 +73,7 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
         setPlaying(true);
         // currentEvent.audio = true;
         const res = await playSiren(currentEvent);
-        if(res) {
+        if (res) {
             alert(res.message);
         }
         setPlaying(false);
@@ -122,15 +123,22 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
         const currentTime = getTimeByTimezone(currentEvent?.timezone);
         setStorage('sub_action', data);
         if (getStorage('custom_action') === 1) {
-            handleFalse({...currentEvent, actionTagTime: currentTime});
+            handleFalse({ ...currentEvent, actionTagTime: currentTime });
         } else {
             if (getSession('session').userLevel !== 1) {
                 openEscalation()
             } else {
-                handleSuspicious({...currentEvent, actionTagTime: currentTime});
+                handleSuspicious({ ...currentEvent, actionTagTime: currentTime });
             }
         }
         closeTags()
+    }
+
+    const get = async () => {
+        if(data) return;
+        const data = await getMonitoringInfo(currentEvent);
+        console.log(data)
+        // setMonitoringData(data);
     }
 
     useEffect(() => {
@@ -152,8 +160,6 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
             if (i === 5) i = 0;
             i += 1;
         }, 1000);
-
-
 
         return () => {
             window.removeEventListener('mousedown', handleClickOutside);
@@ -204,22 +210,22 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
                     <p>{currentEvent?.siteName}</p>
                     <p>Tadepally, Guntur District, Andhra Pradesh, INDIA - 500503</p>
 
-                    {(monitoringData && monitoringData.plannedSiteActivities.length !== 0) ??
+                    {(monitoringData && monitoringData.plannedSiteActivities.length) &&
 
-                    <div className="activity-box">
-                        <div>
-                            <strong>PLANNED SITE ACTIVITY</strong><br />
+                        <div className="activity-box">
+                            <div>
+                                <strong>PLANNED SITE ACTIVITY</strong><br />
                                 <span>
                                     {monitoringData && monitoringData.plannedSiteActivities.length && monitoringData.plannedSiteActivities[0].fromdatetime}
                                     -
                                     {monitoringData && monitoringData.plannedSiteActivities.length && monitoringData.plannedSiteActivities[0].todatetime}
                                 </span>
+                            </div>
+                            <div>
+                                <strong>{monitoringData && monitoringData.plannedSiteActivities.length && monitoringData.plannedSiteActivities[0].activityName}</strong><br />
+                                <span>{monitoringData && monitoringData.plannedSiteActivities.length && monitoringData.plannedSiteActivities[0].description}</span>
+                            </div>
                         </div>
-                        <div>
-                            <strong>Early logout</strong><br />
-                            <span>{monitoringData && monitoringData.plannedSiteActivities.length && monitoringData.plannedSiteActivities[0].description}</span>
-                        </div>
-                    </div>
                     }
 
                 </div>
@@ -234,13 +240,13 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
                             </tr>
                             <tr>
                                 <td><strong>Monitoring</strong></td>
-                                <td>{ timeFormat() }</td>
+                                <td>{timeFormat()}</td>
                             </tr>
                             <tr>
                                 <td><strong>Camera</strong></td>
                                 <td>
-                                    {monitoringData && monitoringData.cameras.length && monitoringData.cameras[0].cameraId}
-                                    -
+                                    {/* {monitoringData && monitoringData.cameras.length && monitoringData.cameras[0].cameraId} */}
+                                    {/* - */}
                                     {monitoringData && monitoringData.cameras.length && monitoringData.cameras[0].cameraName}
                                 </td>
                             </tr>
