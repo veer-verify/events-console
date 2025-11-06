@@ -7,7 +7,7 @@ import Escalation from '../escalation/Escalation';
 import Live from '../../utilities/live/Live';
 import Stream from '../../utilities/stream/Stream';
 
-const Tile = ({ currentEvent, index, handleFalse, handleSuspicious, escalation, openEscalation, closeEscalation }) => {
+const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicious, escalation, openEscalation, closeEscalation }) => {
     const eventIndex = getStorage('index');
     const customAction = getStorage('custom_action');
     const actionTagsResponse = getStorage('actionTags');
@@ -51,7 +51,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious, escalation, 
     const [showTags, setShowTags] = useState(false);
     const [actionTags, setActionTags] = useState([]);
     const [live, setLive] = useState(false);
-    const [monitoringData, setMonitoringData] = useState(null);
+    
 
     const dialogRef = useRef(null);
 
@@ -153,17 +153,13 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious, escalation, 
             i += 1;
         }, 1000);
 
-        const getData = async () => {
-            const data = await getMonitoringInfo(currentEvent);
-            setMonitoringData(data);
-        }
-        if (!monitoringData) getData();
+
 
         return () => {
             window.removeEventListener('mousedown', handleClickOutside);
             clearInterval(interval);
         };
-    }, [currentEvent, showTags, monitoringData]);
+    }, [currentEvent, showTags]);
 
     return (
         <Fragment>

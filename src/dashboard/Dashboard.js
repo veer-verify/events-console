@@ -2,7 +2,7 @@ import './Dashboard.css';
 import { createContext, Fragment, useContext, useEffect, useRef, useState } from 'react'
 import Header from '../header/Header';
 import { getStorage, getTimeByTimezone, getSession, setStorage } from '../services/StorageService';
-import { getActionTagCategories, getVmsEventsQueueData, updateEventFullDetails, write2VmsDispatchQueue, writetoRedisQueueData } from '../services/ApiService';
+import { getActionTagCategories, getMonitoringInfo, getVmsEventsQueueData, updateEventFullDetails, write2VmsDispatchQueue, writetoRedisQueueData } from '../services/ApiService';
 import Tile from './tile/Tile';
 import ErrorInfo from '../utilities/error-info/ErrorInfo';
 
@@ -27,6 +27,7 @@ const Dashboard = () => {
   const EventContext = createContext();
   const [eventData, setEventData] = useState([]);
   const [escalation, setEscalation] = useState(false);
+  const [monitoringData, setMonitoringData] = useState(null);
   const [poolEvent, setPoolEvent] = useState(false);
 
   const openEscalation = () => {
@@ -72,6 +73,8 @@ const Dashboard = () => {
       first.landingTime = getTimeByTimezone(first.timezone);
       first.audioPlayed = false;
       writetoRedisQueueData({ userId: 0, level: "", queueInfo: first });
+      const data = await getMonitoringInfo(first);
+      setMonitoringData(data);
       const updated = isFirst ? [...eventResponse, ...filtered] : [...filtered, ...eventResponse];
       setEventData(updated);
     } else {
@@ -114,6 +117,8 @@ const Dashboard = () => {
       first.landingTime = getTimeByTimezone(first.timezone);
       first.audioPlayed = false;
       writetoRedisQueueData({ userId: 0, level: "", queueInfo: first });
+      const data = await getMonitoringInfo(first);
+      setMonitoringData(data);
       const updated = isFirst ? [...eventResponse, ...filtered] : [...filtered, ...eventResponse];
       setEventData(updated);
     } else {
@@ -123,6 +128,7 @@ const Dashboard = () => {
 
   const timerRef = useRef(null);
   useEffect(() => {
+
     const getEvent = async (type) => {
       const response = await getVmsEventsQueueData(type);
       if (response.length) {
@@ -131,6 +137,8 @@ const Dashboard = () => {
         first.audioPlayed = false;
         setEventData((prev) => [...prev, ...response]);
         writetoRedisQueueData({ userId: 0, level: "", queueInfo: first });
+        const data = await getMonitoringInfo(first);
+        setMonitoringData(data);
       } else {
         if (eventData.length < 2) {
           timerRef.current = setTimeout(() => {
@@ -145,8 +153,6 @@ const Dashboard = () => {
     } else if (timerRef.current) {
       clearTimeout(timerRef.current);
     }
-
-
 
     const getTags = async () => {
       const tagsResponse = await getActionTagCategories();
@@ -173,6 +179,7 @@ const Dashboard = () => {
                 key={0}
                 index={0}
                 currentEvent={eventData[0]}
+                monitoringData={monitoringData}
 
                 escalation={escalation}
                 openEscalation={openEscalation}
@@ -186,6 +193,7 @@ const Dashboard = () => {
                 key={1}
                 index={1}
                 currentEvent={eventData[1]}
+                monitoringData={monitoringData}
 
                 escalation={escalation}
                 openEscalation={openEscalation}
@@ -200,6 +208,7 @@ const Dashboard = () => {
                 key={0}
                 index={0}
                 currentEvent={eventData[0]}
+                monitoringData={monitoringData}
 
                 escalation={escalation}
                 openEscalation={openEscalation}
