@@ -68,7 +68,7 @@ const Escalation = ({ closeEscalation, currentEvent, handleFalse, handleSuspicio
   return (
     <Fragment>
 
-      <div className="close-btn" onClick={closeEscalation}>X</div>
+      <div className="close-btn" onClick={closeEscalation}>x</div>
       {/* Left Panel */}
       <div className="alert-input">
         <p className="section-title">SUSPICIOUS INPUT</p>

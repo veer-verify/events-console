@@ -1,86 +1,84 @@
 import { useEffect, useRef, useState } from "react";
 import "./Stream.css";
 
-const Stream = ({ streamUrl,screenshot }) => {
+const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789" }) => {
   const videoRef = useRef(null);
   const peerConnectionRef = useRef(null);
   const queuedCandidatesRef = useRef([]);
   const offerDataRef = useRef(null);
   const sessionUrlRef = useRef("");
   const restartTimeoutRef = useRef(null);
-  const [showOverlay, setShowOverlay] = useState(false);
 
+  const [showOverlay, setShowOverlay] = useState(false);
   const [showLoader, setShowLoader] = useState(false);
-  const encoded = btoa("admin:verifai123789");
+  const [error, setError] = useState(null);
+
+  const encoded = btoa(credentials);
 
   useEffect(() => {
-    const requestICEServers = () => {
-      // if (!hitStream) return;
+    let isMounted = true;
 
+    const withLoader = async (fn) => {
       setShowLoader(true);
-      fetch(`${streamUrl}whep`, {
-        method: "OPTIONS",
-        headers: {
-          Authorization: `Basic ${encoded}`,
-        },
-      })
-        .then((res) => {
-          setShowLoader(false);
-          const linkHeader = res.headers.get("Link");
-          const iceServers = linkToIceServers(linkHeader);
+      try {
+        await fn();
+      } finally {
+        if (isMounted) setShowLoader(false);
+      }
+    };
 
-          const pc = new RTCPeerConnection({ iceServers });
-          peerConnectionRef.current = pc;
-
-          pc.addTransceiver("video", { direction: "sendrecv" });
-          pc.addTransceiver("audio", { direction: "sendrecv" });
-
-          pc.onicecandidate = onLocalCandidate;
-          pc.oniceconnectionstatechange = onConnectionState;
-          pc.ontrack = onTrack;
-
-          createOffer(pc);
-        })
-        .catch((err) => {
-          setShowLoader(false);
-          onError(err.toString());
+    const requestICEServers = async () => {
+      try {
+        const res = await fetch(`${streamUrl}whep`, {
+          method: "OPTIONS",
+          headers: { Authorization: `Basic ${encoded}` },
         });
+
+        const linkHeader = res.headers.get("Link");
+        const iceServers = linkToIceServers(linkHeader);
+
+        const pc = new RTCPeerConnection({ iceServers });
+        peerConnectionRef.current = pc;
+
+        pc.addTransceiver("video", { direction: "sendrecv" });
+        pc.addTransceiver("audio", { direction: "sendrecv" });
+
+        pc.onicecandidate = onLocalCandidate;
+        pc.oniceconnectionstatechange = onConnectionState;
+        pc.ontrack = onTrack;
+
+        await createOffer(pc);
+      } catch (err) {
+        onError(err.toString());
+      }
     };
 
     const linkToIceServers = (links) => {
       const ics = [];
-      if (links) {
-        links.split(", ").forEach((link) => {
-          const m = link.match(
-            /^<(.+?)>; rel="ice-server"(; username="(.*?)"; credential="(.*?)"; credential-type="password")?/i
-          );
-          if (m) {
-            const ice = { urls: [m[1]] };
-            if (m[3]) {
-              ice.username = JSON.parse(`"${m[3]}"`);
-              ice.credential = JSON.parse(`"${m[4]}"`);
-            }
-            ics.push(ice);
+      if (!links) return ics;
+      links.split(", ").forEach((link) => {
+        const m = link.match(
+          /^<(.+?)>; rel="ice-server"(; username="(.*?)"; credential="(.*?)"; credential-type="password")?/i
+        );
+        if (m) {
+          const ice = { urls: [m[1]] };
+          if (m[3]) {
+            ice.username = JSON.parse(`"${m[3]}"`);
+            ice.credential = JSON.parse(`"${m[4]}"`);
           }
-        });
-      }
+          ics.push(ice);
+        }
+      });
       return ics;
     };
 
-    const createOffer = (pc) => {
-      setShowLoader(true);
-      pc.createOffer()
-        .then((offer) => {
-          offerDataRef.current = parseOffer(offer.sdp);
-          return pc.setLocalDescription(offer).then(() => offer);
-        })
-        .then((offer) => {
-          sendOffer(offer);
-        })
-        .catch((err) => {
-          setShowLoader(false);
-          onError(err.toString());
-        });
+    const createOffer = async (pc) => {
+      await withLoader(async () => {
+        const offer = await pc.createOffer();
+        offerDataRef.current = parseOffer(offer.sdp);
+        await pc.setLocalDescription(offer);
+        await sendOffer(offer);
+      });
     };
 
     const parseOffer = (sdp) => {
@@ -95,55 +93,47 @@ const Stream = ({ streamUrl,screenshot }) => {
       return ret;
     };
 
-    const sendOffer = (offer) => {
-      // if (!hitStream) return;
-
-      setShowLoader(true);
-      fetch(`${streamUrl}whep`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/sdp",
-          Authorization: `Basic ${encoded}`,
-        },
-        body: offer.sdp,
-      })
-        .then((res) => {
-          setShowLoader(false);
-          if (res.status !== 201)
-            throw new Error(`Unexpected status ${res.status}`);
-          sessionUrlRef.current = new URL(
-            res.headers.get("location"),
-            streamUrl
-          ).toString();
-          return res.text();
-        })
-        .then((sdp) => {
-          onRemoteAnswer(sdp);
-        })
-        .catch((err) => {
-          setShowLoader(false);
-          onError(err.toString());
-          return;
+    const sendOffer = async (offer) => {
+      await withLoader(async () => {
+        const res = await fetch(`${streamUrl}whep`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/sdp",
+            Authorization: `Basic ${encoded}`,
+          },
+          body: offer.sdp,
         });
+
+        if (res.status !== 201)
+          throw new Error(`Unexpected status ${res.status}`);
+
+        sessionUrlRef.current = new URL(
+          res.headers.get("location"),
+          streamUrl
+        ).toString();
+
+        const sdp = await res.text();
+        onRemoteAnswer(sdp);
+      });
     };
 
-    const onRemoteAnswer = (sdp) => {
+    const onRemoteAnswer = async (sdp) => {
       const pc = peerConnectionRef.current;
       if (!pc || pc.signalingState !== "have-local-offer") return;
 
-      pc.setRemoteDescription({ type: "answer", sdp })
-        .then(() => {
-          if (queuedCandidatesRef.current.length > 0) {
-            sendLocalCandidates(queuedCandidatesRef.current);
-            queuedCandidatesRef.current = [];
-          }
-        })
-        .catch((err) => onError(err.toString()));
+      try {
+        await pc.setRemoteDescription({ type: "answer", sdp });
+        if (queuedCandidatesRef.current.length > 0) {
+          await sendLocalCandidates(queuedCandidatesRef.current);
+          queuedCandidatesRef.current = [];
+        }
+      } catch (err) {
+        onError(err.toString());
+      }
     };
 
     const onLocalCandidate = (evt) => {
       if (!evt.candidate || restartTimeoutRef.current) return;
-
       if (!sessionUrlRef.current) {
         queuedCandidatesRef.current.push(evt.candidate);
       } else {
@@ -151,28 +141,23 @@ const Stream = ({ streamUrl,screenshot }) => {
       }
     };
 
-    const sendLocalCandidates = (candidates) => {
+    const sendLocalCandidates = async (candidates) => {
       const url = sessionUrlRef.current;
       const offerData = offerDataRef.current;
 
-      setShowLoader(true);
-      fetch(url, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/trickle-ice-sdpfrag",
-          "If-Match": "*",
-        },
-        body: generateSdpFragment(offerData, candidates),
-      })
-        .then((res) => {
-          setShowLoader(false);
-          if (res.status !== 204)
-            throw new Error(`Unexpected status ${res.status}`);
-        })
-        .catch((err) => {
-          setShowLoader(false);
-          onError(err.toString());
+      await withLoader(async () => {
+        const res = await fetch(url, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/trickle-ice-sdpfrag",
+            "If-Match": "*",
+          },
+          body: generateSdpFragment(offerData, candidates),
         });
+
+        if (res.status !== 204)
+          throw new Error(`Unexpected status ${res.status}`);
+      });
     };
 
     const generateSdpFragment = (od, candidates) => {
@@ -205,57 +190,57 @@ const Stream = ({ streamUrl,screenshot }) => {
       if (restartTimeoutRef.current) return;
 
       if (state === "disconnected" || state === "failed") {
-        onError("Peer connection disconnected");
+        onError("Peer connection disconnected. Attempting restart...");
+        restartTimeoutRef.current = setTimeout(() => {
+          restartTimeoutRef.current = null;
+          requestICEServers();
+        }, 2000);
       }
     };
 
-    const onError = (err) => {
-      console.error("WebRTC Error:", err);
-
-      peerConnectionRef.current?.close();
-      // restartTimeoutRef.current = setTimeout(() => {
-      //   restartTimeoutRef.current = null;
-      //   requestICEServers();
-      // }, 2000);
-
+    const cleanupSession = async () => {
       if (sessionUrlRef.current) {
-        fetch(sessionUrlRef.current, { method: "DELETE" }).catch((err) =>
-          console.log(err)
-        );
+        try {
+          await fetch(sessionUrlRef.current, { method: "DELETE" });
+        } catch (err) {
+          console.warn("Session cleanup failed:", err);
+        }
       }
-
       sessionUrlRef.current = "";
       queuedCandidatesRef.current = [];
     };
 
-    // if (hitStream) {
+    const onError = (err) => {
+      console.error("WebRTC Error:", err);
+      setError(err);
+      peerConnectionRef.current?.close();
+      cleanupSession();
+    };
+
+    // Start stream connection
     requestICEServers();
-    // }
+
+    // Cleanup on unmount
     return () => {
-      // setHitStream(false);
-      if (peerConnectionRef.current) {
-        peerConnectionRef.current.close();
+      isMounted = false;
+      peerConnectionRef.current?.close();
+      cleanupSession();
+      if (restartTimeoutRef.current) {
+        clearTimeout(restartTimeoutRef.current);
       }
     };
   }, [encoded, streamUrl]);
 
+  // Screenshot capture
   const handleClick = () => {
     const video = videoRef.current;
     if (!video) return;
-
-    // Create a canvas to draw the current frame
     const canvas = document.createElement("canvas");
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext("2d");
-
-    // Draw current video frame onto the canvas
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    // Convert canvas to image
     const imageUrl = canvas.toDataURL("image/jpeg");
-
-    // Trigger download
     const link = document.createElement("a");
     link.href = imageUrl;
     link.download = `camera_screenshot_${Date.now()}.jpeg`;
@@ -269,6 +254,8 @@ const Stream = ({ streamUrl,screenshot }) => {
       onMouseLeave={() => setShowOverlay(false)}
     >
       {showLoader && <div className="loader"></div>}
+      {error && <div className="error-banner">{error}</div>}
+
       <video
         ref={videoRef}
         autoPlay
@@ -283,11 +270,11 @@ const Stream = ({ streamUrl,screenshot }) => {
       {showOverlay && screenshot && (
         <div className="hover-overlay">
           <img
-            src="icons\screenshot.svg"
+            src="icons/screenshot.svg"
             alt="overlay"
             style={{ width: "20px", height: "20px", cursor: "pointer" }}
             onClick={handleClick}
-            title="screenshot"
+            title="Screenshot"
           />
         </div>
       )}

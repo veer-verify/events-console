@@ -54,7 +54,7 @@ const Live = ({ currentEvent, closeLiveDialog }) => {
             <div className="cam-container" ref={liveRef}
                 onMouseDown={handleMouseDown}>
             <div className="header">
-                <p>{currentEvent?.siteName} - {currentEvent?.siteId}</p>
+                <p>{currentEvent?.siteName}</p>
                 <button  onClick={() => { closeLiveDialog()}}>x</button>
             </div>
                 <div className='cameras'>

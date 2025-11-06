@@ -1,10 +1,39 @@
-.hover-overlay{
-    position: absolute;
-    top: 0%;
-    display: flex;
-    justify-content: end;
-    background-color: white;
-    width: 100%;
-    padding: 2px;
-   
+.loader {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top: 4px solid #fff;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+  z-index: 10;
+}
+
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+.hover-overlay {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0,0,0,0.4);
+  padding: 5px;
+  border-radius: 4px;
+  z-index: 10;
+}
+
+.error-banner {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  background: rgba(255, 50, 50, 0.8);
+  color: white;
+  padding: 6px;
+  text-align: center;
+  z-index: 15;
 }
