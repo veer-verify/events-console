@@ -89,8 +89,8 @@ const Dashboard = () => {
    */
   const handleSuspicious = async (item) => {
     const index = getStorage('index');
-    const subAction = getStorage('sub_action');
     const customAction = getStorage('custom_action');
+    const subAction = getStorage('sub_action');
     item?.userLevelAlarmInfo?.push(
       {
         level: getSession().userLevel,
@@ -138,6 +138,7 @@ const Dashboard = () => {
         const [first] = response;
         first.landingTime = getTimeByTimezone(response.timezone);
         first.audioPlayed = false;
+        first.autoHandled = false;
         setEventData((prev) => [...prev, ...response]);
         writetoRedisQueueData({ userId: 0, level: "", queueInfo: first });
         const data = await getMonitoringInfo(first);
@@ -166,7 +167,31 @@ const Dashboard = () => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [eventData, eventData.length]);
+  }, [eventData.length]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date().getTime();
+
+      eventData.forEach((item) => {
+        if (!item?.landingTime) return;
+
+        const landedAt = new Date(item.landingTime).getTime();
+        const diffInMs = now - landedAt;
+
+        // If event has been on screen for 1 minute or more, auto-mark as suspicious
+        if (diffInMs >= 60 * 1000 && !item.autoHandled) {
+          setStorage('custom_action', 2);
+          setStorage('index', 0);
+          item.autoHandled = true; // prevent repeated handling
+          handleSuspicious(item);
+        }
+      });
+    }, 5 * 1000); // Check every 10 seconds
+
+    return () => clearInterval(interval);
+  }, [eventData]);
+
 
   return (
     <Fragment>
