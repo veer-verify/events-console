@@ -8,6 +8,8 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789" }) 
   const offerDataRef = useRef(null);
   const sessionUrlRef = useRef("");
   const restartTimeoutRef = useRef(null);
+  const keepaliveIntervalRef = useRef(null);
+  const watchdogIntervalRef = useRef(null);
 
   const [showOverlay, setShowOverlay] = useState(false);
   const [showLoader, setShowLoader] = useState(false);
@@ -18,6 +20,7 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789" }) 
   useEffect(() => {
     let isMounted = true;
 
+    // Helper for showing a loading spinner during async calls
     const withLoader = async (fn) => {
       setShowLoader(true);
       try {
@@ -27,7 +30,58 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789" }) 
       }
     };
 
+    // Clean up everything
+    const cleanupSession = async () => {
+      if (keepaliveIntervalRef.current) {
+        clearInterval(keepaliveIntervalRef.current);
+        keepaliveIntervalRef.current = null;
+      }
+      if (watchdogIntervalRef.current) {
+        clearInterval(watchdogIntervalRef.current);
+        watchdogIntervalRef.current = null;
+      }
+
+      if (sessionUrlRef.current) {
+        try {
+          await fetch(sessionUrlRef.current, { method: "DELETE" });
+        } catch (err) {
+          console.warn("Session cleanup failed:", err);
+        }
+      }
+      sessionUrlRef.current = "";
+      queuedCandidatesRef.current = [];
+    };
+
+    // const cleanupSession = async () => {
+    //   if (!sessionUrlRef.current) return;
+
+    //   try {
+    //     console.log("Cleaning up WHEP session:", sessionUrlRef.current);
+    //     const res = await fetch(sessionUrlRef.current, { method: "DELETE" });
+
+    //     if (res.ok || res.status === 404) {
+    //       console.log("Session cleanup completed or already gone:", res.status);
+    //     } else {
+    //       console.warn("Unexpected cleanup response:", res.status, res.statusText);
+    //     }
+    //   } catch (err) {
+    //     console.warn("Session cleanup failed:", err);
+    //   } finally {
+    //     sessionUrlRef.current = "";
+    //     queuedCandidatesRef.current = [];
+    //   }
+    // };
+
+
+    const onError = (err) => {
+      console.error("WebRTC Error:", err);
+      setError(err);
+      peerConnectionRef.current?.close();
+      cleanupSession();
+    };
+
     const requestICEServers = async () => {
+      setError(null);
       try {
         const res = await fetch(`${streamUrl}whep`, {
           method: "OPTIONS",
@@ -104,8 +158,7 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789" }) 
           body: offer.sdp,
         });
 
-        if (res.status !== 201)
-          throw new Error(`Unexpected status ${res.status}`);
+        if (res.status !== 201) console.log("Unexpected response:", res);
 
         sessionUrlRef.current = new URL(
           res.headers.get("location"),
@@ -114,10 +167,15 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789" }) 
 
         const sdp = await res.text();
         onRemoteAnswer(sdp);
+
+        // Start keepalive after session established
+        startKeepalive();
+        startWatchdog();
       });
     };
 
     const onRemoteAnswer = async (sdp) => {
+      setError(null);
       const pc = peerConnectionRef.current;
       if (!pc || pc.signalingState !== "have-local-offer") return;
 
@@ -155,8 +213,7 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789" }) 
           body: generateSdpFragment(offerData, candidates),
         });
 
-        if (res.status !== 204)
-          throw new Error(`Unexpected status ${res.status}`);
+        if (res.status !== 204) console.log("Candidate PATCH failed:", res);
       });
     };
 
@@ -191,31 +248,45 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789" }) 
       if (restartTimeoutRef.current) return;
 
       if (state === "disconnected" || state === "failed") {
-        onError("Peer connection disconnected. Attempting restart...");
+        onError("Peer connection lost. Restarting...");
         restartTimeoutRef.current = setTimeout(() => {
           restartTimeoutRef.current = null;
-          requestICEServers();
+          restartStream();
         }, 2000);
       }
     };
 
-    const cleanupSession = async () => {
-      if (sessionUrlRef.current) {
-        try {
-          await fetch(sessionUrlRef.current, { method: "DELETE" });
-        } catch (err) {
-          console.warn("Session cleanup failed:", err);
-        }
-      }
-      sessionUrlRef.current = "";
-      queuedCandidatesRef.current = [];
+    const restartStream = async () => {
+      console.warn("Restarting WebRTC stream...");
+      await cleanupSession();
+      peerConnectionRef.current?.close();
+      peerConnectionRef.current = null;
+      requestICEServers();
     };
 
-    const onError = (err) => {
-      console.error("WebRTC Error:", err);
-      setError(err);
-      peerConnectionRef.current?.close();
-      cleanupSession();
+    const startKeepalive = () => {
+      if (keepaliveIntervalRef.current) clearInterval(keepaliveIntervalRef.current);
+      keepaliveIntervalRef.current = setInterval(() => {
+        if (sessionUrlRef.current) {
+          fetch(sessionUrlRef.current, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/trickle-ice-sdpfrag",
+              "If-Match": "*",
+            },
+            body: "",
+          }).catch(() => { });
+
+        }
+      }, 15000); // every 15s
+    };
+
+    const startWatchdog = () => {
+      if (watchdogIntervalRef.current) clearInterval(watchdogIntervalRef.current);
+      watchdogIntervalRef.current = setInterval(() => {
+        console.log("Watchdog: restarting stream...");
+        restartStream();
+      }, 5 * 60 * 1000); // every 5 minutes
     };
 
     // Start stream connection
@@ -255,7 +326,11 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789" }) 
       onMouseLeave={() => setShowOverlay(false)}
     >
       {showLoader && <div className="loader"></div>}
-      {error && <div className="error-banner"><img src="icons/eyedisabled.svg" alt="" width={50} /></div>}
+      {error && (
+        <div className="error-banner">
+          <img src="icons/eyedisabled.svg" alt="" width={50} />
+        </div>
+      )}
 
       <video
         ref={videoRef}

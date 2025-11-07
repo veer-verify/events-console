@@ -1,8 +1,7 @@
 import './Header.css';
 import React, { useState, useRef, useEffect } from 'react';
 import ProfileCard from './profile-card/ProfileCard';
-import { getStorage } from '../services/StorageService';
-
+import { getStorage } from '../utilities/StorageService';
 
 const Header = () => {
     const user = getStorage('session');

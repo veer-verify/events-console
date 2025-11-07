@@ -1,7 +1,7 @@
 import './Live.css';
 import { Fragment, useEffect, useState, useRef } from "react";
-import { getLiveInfoForSiteAndCamera } from "../../services/ApiService";
 import Stream from "../stream/Stream";
+import { getLiveInfoForSiteAndCamera } from '../ApiService';
 
 const Live = ({ currentEvent, closeLiveDialog }) => {
 

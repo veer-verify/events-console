@@ -1,5 +1,4 @@
 .cam-container {
-    /* padding: 10px; */
     position: absolute;
     z-index: 99;
     top: 50%;
@@ -41,5 +40,4 @@
     font-weight: bold;
     color: #ffff;
     z-index: 999;
-
 }

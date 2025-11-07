@@ -1,6 +1,6 @@
 import './ProfileCard.css';
-import { getStorage } from '../../services/StorageService';
-import { useLogout } from '../../utilities/logout/Logout';
+import { useLogout } from '../../utilities/hooks/logout';
+import { getStorage } from '../../utilities/StorageService';
 
 const ProfileCard = () => {
     const user = getStorage('session');

@@ -3,8 +3,6 @@
 .tile {
   width: 50%;
   height: calc(100vh - 75px);
-  /* margin: 0 2px;
-  border: 1px solid #0000001A; */
   border-radius: 5px;
   box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;
   background-color: #ffffff;
@@ -23,16 +21,12 @@
   border-radius: 8px;
   overflow: hidden;
   justify-content: space-between;
-  /* padding: 5px; */
-  /* gap: 5px; */
 }
 
 .camera {
   width: 50%;
   height: 350px;
   position: relative;
-  /* border: 1px solid #ccc; */
-  /* border-radius: 4px; */
   overflow: hidden;
   background-color: #000000;
 }
@@ -70,12 +64,34 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  /* margin: 10px; */
 }
 
 .camera-id img {
   margin: 0 5px;
   cursor: pointer;
+}
+
+.custom-action {
+  border: none;
+  background-color: transparent;
+  padding: 0;
+}
+
+.blink {
+  animation-name: blink;
+  animation-duration: 800ms;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
 }
 
 /* store info */
@@ -228,7 +244,7 @@
 }
 
 
-/** law info */
+/** law & law info */
 
 .contacts-container {
   padding: 10px;

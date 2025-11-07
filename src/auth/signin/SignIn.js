@@ -2,9 +2,10 @@ import './SignIn.css';
 import axios from 'axios';
 import { Fragment, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { clearStorage, Encrypt, setStorage } from '../../services/StorageService';
 import PageLoader from '../../utilities/page-loader/PageLoader';
 import { environment } from '../../environment';
+import { toast } from 'react-toastify';
+import { clearStorage, Encrypt, setStorage } from '../../utilities/StorageService';
 
 
 const SignIn = () => {
@@ -28,11 +29,11 @@ const SignIn = () => {
     axios.post(url, requestBody).then((res) => {
       setLoader(false);
       if (res.data.Status === 'Success') {
-        if (!res.data.queueName) return alert('Queue is not assigned!');
+        if (!res.data.queueName) return toast.warn('Queue is not assigned!');
         setStorage('session', res.data);
         navigate('/dashboard');
       } else {
-        alert(res.data.message);
+        toast.error(res.data.message);
       }
     }).catch((err) => {
       setLoader(false);

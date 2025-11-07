@@ -1,62 +1,36 @@
 import './Tile.css';
 import { useState, useRef, useEffect } from 'react';
 import { Fragment } from "react/jsx-runtime";
-import { getStorage, getSession, setStorage, getTimeByTimezone } from '../../services/StorageService';
-import { getActionTagCategories, getMonitoringInfo, playSiren } from '../../services/ApiService';
 import Escalation from '../escalation/Escalation';
 import Live from '../../utilities/live/Live';
 import Stream from '../../utilities/stream/Stream';
+import { toast } from 'react-toastify';
+import { getSession, getStorage, getTimeByTimezone, setStorage } from '../../utilities/StorageService';
+import { playSiren } from '../../utilities/ApiService';
 
 const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicious, escalation, openEscalation, closeEscalation }) => {
-    // console.log(monitoringData)
     const eventIndex = getStorage('index');
     const customAction = getStorage('custom_action');
     const actionTagsResponse = getStorage('actionTags');
 
-    const tags = [
-        {
-            id: 1,
-            path: 'icons/false.png',
-            call: async (data) => {
-                setStorage('custom_action', 1);
-                setStorage('index', index);
-
-                setShowTags(false);
-                setActionTags(actionTagsResponse.actionTagCategories.filter((item) => item.categoryId === data?.id).flatMap((item) => item.actionTagSubCategories));
-                setShowTags(true);
-            }
-        },
-        {
-            id: 2,
-            path: 'icons/suspicious.png',
-            call: async (data) => {
-                setStorage('custom_action', 2);
-                setStorage('index', index);
-
-                setShowTags(false);
-                setActionTags(actionTagsResponse.actionTagCategories.filter((item) => item.categoryId === data?.id).flatMap((item) => item.actionTagSubCategories));
-                setShowTags(true);
-            }
-        },
-        {
-            path: 'icons/live.png',
-            call: () => openLiveDialog()
-
-        },
-        {
-            path: 'icons/siren.png',
-            call: () => play()
-        }
-    ];
+    const handle = (id) => {
+        setStorage('custom_action', id);
+        setStorage('index', index);
+        setShowTags(false);
+        setActionTags(actionTagsResponse.actionTagCategories.filter((item) => item.categoryId === id).flatMap((item) => item.actionTagSubCategories));
+        setShowTags(true);
+    }
 
     const [showTags, setShowTags] = useState(false);
     const [actionTags, setActionTags] = useState([]);
     const [live, setLive] = useState(false);
+    const [playing, setPlaying] = useState(false);
 
 
     const dialogRef = useRef(null);
 
     const openLiveDialog = () => {
+        setShowTags(false);
         setLive(true);
     }
 
@@ -68,13 +42,15 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
         setShowTags(false);
     }
 
-    const [playing, setPlaying] = useState(false);
     const play = async () => {
+        setShowTags(false);
         setPlaying(true);
         // currentEvent.audio = true;
         const res = await playSiren(currentEvent);
         if (res) {
-            alert(res.message);
+            toast.success(res.message)
+        } else {
+            toast.error("failed!")
         }
         setPlaying(false);
     }
@@ -83,7 +59,7 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
     const [imgSrc, setImgSrc] = useState(currentEvent?.image_list[0]);
 
     const timeFormat = () => {
-        const monitoring_hours = monitoringData && monitoringData.cameras[0].monitoringHoursDetails;
+        const monitoring_hours = monitoringData && monitoringData?.cameras.length && monitoringData?.cameras[0].monitoringHoursDetails;
         if (!monitoring_hours) return;
 
         const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -120,25 +96,20 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
     }
 
     const handleAction = (data) => {
+        const session = getStorage('session');
+        const customAction = getStorage('custom_action');
         const currentTime = getTimeByTimezone(currentEvent?.timezone);
         setStorage('sub_action', data);
-        if (getStorage('custom_action') === 1) {
+        if (customAction === 1) {
             handleFalse({ ...currentEvent, actionTagTime: currentTime });
         } else {
-            if (getSession('session').userLevel !== 1) {
-                openEscalation()
+            if (session?.userLevel !== 1) {
+                openEscalation();
             } else {
-                handleSuspicious({ ...currentEvent, actionTagTime: currentTime });
+                handleSuspicious({ ...currentEvent, actionTagTime: currentTime, ...monitoringData });
             }
         }
-        closeTags()
-    }
-
-    const get = async () => {
-        if(data) return;
-        const data = await getMonitoringInfo(currentEvent);
-        console.log(data)
-        // setMonitoringData(data);
+        closeTags();
     }
 
     useEffect(() => {
@@ -181,7 +152,20 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
 
                 <div className="camera-id">
                     <div style={{ position: 'relative' }} ref={dialogRef}>
-                        {tags.map((item, i) => <img src={item?.path} alt='icon' width={20} key={i} onClick={() => item?.call(item)} />)}
+                        <button className='custom-action' onClick={() => handle(1)} disabled={currentEvent?.siteId === 0}>
+                            <img src={currentEvent?.siteId === 0 ? 'icons/three-dots.svg' : 'icons/false.png'} alt='icon' width={20} />
+                        </button>
+                        <button className='custom-action' onClick={() => handle(2)} disabled={currentEvent?.siteId === 0}>
+                            <img src={currentEvent?.siteId === 0 ? 'icons/three-dots.svg' : 'icons/suspicious.png'} alt='icon' width={20} />
+                        </button>
+                        <button className='custom-action' onClick={() => openLiveDialog()} disabled={currentEvent?.siteId === 0}>
+                            <img src={currentEvent?.siteId === 0 ? 'icons/three-dots.svg' : 'icons/live.png'} alt='icon' width={20} />
+                        </button>
+                        <button className={playing ? 'custom-action blink' : 'custom-action'} onClick={() => play()} disabled={playing}>
+                            <img src={currentEvent.siteId === 0 ? 'icons/three-dots.svg' : 'icons/siren.png'} alt='icon' width={20} />
+                        </button>
+
+
                         {showTags &&
                             <div className='tag-grid'>
                                 <p>{customAction === 1 ? 'false' : 'suspicious'}</p>
@@ -210,24 +194,22 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
                     <p>{currentEvent?.siteName}</p>
                     <p>Tadepally, Guntur District, Andhra Pradesh, INDIA - 500503</p>
 
-                    {(monitoringData && monitoringData.plannedSiteActivities.length) &&
-
+                    {(monitoringData && monitoringData.plannedSiteActivities && monitoringData.plannedSiteActivities.length) &&
                         <div className="activity-box">
                             <div>
                                 <strong>PLANNED SITE ACTIVITY</strong><br />
                                 <span>
-                                    {monitoringData && monitoringData.plannedSiteActivities.length && monitoringData.plannedSiteActivities[0].fromdatetime}
+                                    {monitoringData.plannedSiteActivities[0].fromdatetime}
                                     -
-                                    {monitoringData && monitoringData.plannedSiteActivities.length && monitoringData.plannedSiteActivities[0].todatetime}
+                                    {monitoringData.plannedSiteActivities[0].todatetime}
                                 </span>
                             </div>
                             <div>
-                                <strong>{monitoringData && monitoringData.plannedSiteActivities.length && monitoringData.plannedSiteActivities[0].activityName}</strong><br />
-                                <span>{monitoringData && monitoringData.plannedSiteActivities.length && monitoringData.plannedSiteActivities[0].description}</span>
+                                <strong>{monitoringData.plannedSiteActivities[0].activityName}</strong><br />
+                                <span>{monitoringData.plannedSiteActivities[0].description}</span>
                             </div>
                         </div>
                     }
-
                 </div>
 
                 <div className="monitoring">
@@ -259,7 +241,7 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
                 </div>
 
                 {
-                    (getSession().userLevel === 2 && monitoringData && monitoringData.escalation?.length !== 0) && <MonitoringInfo monitoringData={monitoringData} />
+                    (getSession().userLevel === 2 && monitoringData && monitoringData.escalation?.length !== 0) && <ContactInfo monitoringData={monitoringData} />
                 }
                 {
                     (getSession().userLevel === 2 && monitoringData && monitoringData.lawEnforcement?.length !== 0) && <LawInfo monitoringData={monitoringData} />
@@ -267,7 +249,7 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
                 {
                     (escalation && eventIndex === index) &&
                     <div className='escalation-container'>
-                        <Escalation closeEscalation={closeEscalation} currentEvent={currentEvent} handleFalse={handleFalse} handleSuspicious={handleSuspicious} />
+                        <Escalation closeEscalation={closeEscalation} currentEvent={currentEvent} handleFalse={handleFalse} handleSuspicious={handleSuspicious} monitoringData={monitoringData} />
                     </div>
                 }
             </div>
@@ -282,7 +264,7 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
 export default Tile;
 
 
-export const MonitoringInfo = ({ monitoringData }) => {
+export const ContactInfo = ({ monitoringData }) => {
     return (
         <div className="contacts-container">
             <p className='monitoring-title'>ESCALATION CONTACT</p>

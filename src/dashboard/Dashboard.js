@@ -1,15 +1,17 @@
 import './Dashboard.css';
-import { createContext, Fragment, useContext, useEffect, useRef, useState } from 'react'
+import { createContext, Fragment, useContext, useEffect, useRef, useState } from 'react';
 import Header from '../header/Header';
-import { getStorage, getTimeByTimezone, getSession, setStorage } from '../services/StorageService';
-import { getActionTagCategories, getMonitoringInfo, getVmsEventsQueueData, updateEventFullDetails, write2VmsDispatchQueue, writetoRedisQueueData } from '../services/ApiService';
 import Tile from './tile/Tile';
+import { ToastContainer } from 'react-toastify';
+import { getSession, getStorage, getTimeByTimezone, setStorage } from '../utilities/StorageService';
+import { getActionTagCategories, getMonitoringInfo, getVmsEventsQueueData, updateEventFullDetails, write2VmsDispatchQueue, writetoRedisQueueData } from '../utilities/ApiService';
+
 
 const Dashboard = () => {
   const dummy = [
     {
       "siteName": "Loading...",
-      "siteId": "0",
+      "siteId": 0,
       "cameraId": "Loading...",
       "objectName": "Loading...",
       "eventTag": "",
@@ -88,9 +90,11 @@ const Dashboard = () => {
    * to handel suspicious activity
    */
   const handleSuspicious = async (item) => {
+    const session = getStorage('session');
     const index = getStorage('index');
     const customAction = getStorage('custom_action');
     const subAction = getStorage('sub_action');
+
     item?.userLevelAlarmInfo?.push(
       {
         level: getSession().userLevel,
@@ -105,8 +109,17 @@ const Dashboard = () => {
       }
     );
     write2VmsDispatchQueue(
-      { ...item, ...{ actionTag: customAction }, ...{ subActionTag: subAction?.subCategoryId } }
+      { ...item, ...{ actionTag: customAction }, ...{ subActionTag: subAction?.subCategoryId }, ...{ queue_name: item?.nextQueueName } }
     );
+    // if (session?.userLevel === 4) {
+    //   updateEventFullDetails(
+    //     { ...item, ...{ actionTag: customAction }, ...{ subActionTag: subAction?.subCategoryId } }
+    //   );
+    // } else {
+    //   write2VmsDispatchQueue(
+    //     { ...item, ...{ actionTag: customAction }, ...{ subActionTag: subAction?.subCategoryId }, ...{ queue_name: item?.nextQueueName } }
+    //   );
+    // }
 
     const filtered = eventData.filter((_, i) => index !== i);
     const filteredMonitoring = monitoringData.filter((_, i) => index !== i);
@@ -122,9 +135,9 @@ const Dashboard = () => {
       const updated = isFirst ? [...eventResponse, ...filtered] : [...filtered, ...eventResponse];
       setEventData(updated);
 
-      const data = await getMonitoringInfo(first);
-      const updatedMonitoring = isFirst ? [data, ...filteredMonitoring] : [...filteredMonitoring, data];
-      setMonitoringData(updatedMonitoring);
+      const monitoringRes = await getMonitoringInfo(first);
+      const latestMonitoringData = isFirst ? [monitoringRes, ...filteredMonitoring] : [...filteredMonitoring, monitoringRes];
+      setMonitoringData(latestMonitoringData);
     } else {
       setEventData(filtered);
     }
@@ -134,7 +147,7 @@ const Dashboard = () => {
   useEffect(() => {
     const getEvent = async () => {
       const response = await getVmsEventsQueueData();
-      if (response.length) {
+      if (response && response.length) {
         const [first] = response;
         first.landingTime = getTimeByTimezone(response.timezone);
         first.audioPlayed = false;
@@ -169,32 +182,34 @@ const Dashboard = () => {
     };
   }, [eventData.length]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const now = new Date().getTime();
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     const now = new Date().getTime();
 
-      eventData.forEach((item) => {
-        if (!item?.landingTime) return;
+  //     eventData.forEach((item) => {
+  //       if (!item?.landingTime) return;
 
-        const landedAt = new Date(item.landingTime).getTime();
-        const diffInMs = now - landedAt;
+  //       const landedAt = new Date(item.landingTime).getTime();
+  //       const diffInMs = now - landedAt;
 
-        // If event has been on screen for 1 minute or more, auto-mark as suspicious
-        if (diffInMs >= 60 * 1000 && !item.autoHandled) {
-          setStorage('custom_action', 2);
-          setStorage('index', 0);
-          item.autoHandled = true; // prevent repeated handling
-          handleSuspicious(item);
-        }
-      });
-    }, 5 * 1000); // Check every 10 seconds
+  //       // If event has been on screen for 1 minute or more, auto-mark as suspicious
+  //       if (diffInMs >= 60 * 1000 && !item.autoHandled) {
+  //         setStorage('custom_action', 2);
+  //         setStorage('index', 0);
+  //         item.autoHandled = true; // prevent repeated handling
+  //         handleSuspicious(item);
+  //       }
+  //     });
+  //   }, 5 * 1000); // Check every 10 seconds
 
-    return () => clearInterval(interval);
-  }, [eventData]);
+  //   return () => clearInterval(interval);
+  // }, [eventData]);
 
 
   return (
     <Fragment>
+      <ToastContainer />
+
       <Header></Header>
 
       <div className='tiles'>
@@ -253,8 +268,28 @@ const Dashboard = () => {
         }
         {/* </EventContext.Provider> */}
       </div>
+      <Reload></Reload>
     </Fragment>
   )
 }
 
 export default Dashboard;
+
+const Reload = () => {
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      event.preventDefault();
+      // Some browsers require returnValue to be set
+      event.returnValue = "Are you sure you want to leave this page?";
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
+
+  return (
+    <Fragment></Fragment>
+  );
+}

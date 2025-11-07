@@ -1,11 +1,11 @@
 import "./Escalation.css";
 import { useState, useEffect, Fragment } from "react";
-import { eventsGenericEmail, getAlertCategoriesForSiteId, getEmailDataForVMSEvents, listActionTags } from "../../services/ApiService";
 import { useAuth } from "../Dashboard";
-import { getStorage, getTimeByTimezone } from "../../services/StorageService";
 import ErrorInfo from "../../utilities/error-info/ErrorInfo";
+import { eventsGenericEmail, getAlertCategoriesForSiteId, getEmailDataForVMSEvents } from "../../utilities/ApiService";
+import { getStorage, getTimeByTimezone } from "../../utilities/StorageService";
 
-const Escalation = ({ closeEscalation, currentEvent, handleFalse, handleSuspicious }) => {
+const Escalation = ({ closeEscalation, currentEvent, handleFalse, handleSuspicious, monitoringData }) => {
   // const data = useAuth();
 
   const [alerts, setAlerts] = useState([]);
@@ -35,16 +35,17 @@ const Escalation = ({ closeEscalation, currentEvent, handleFalse, handleSuspicio
   };
 
   const handle = (type) => {
+    const session = getStorage('session');
     const currentTime = getTimeByTimezone(currentEvent?.timezone);
     if (type === 'escalate') {
-      handleSuspicious({...currentEvent, actionTagTime: currentTime});
-      if (getStorage('session').userLevel === 2) {
+      handleSuspicious({ ...currentEvent, actionTagTime: currentTime, ...monitoringData });
+      if (session?.userLevel === 2) {
         eventsGenericEmail(
           { ...currentEvent, ...{ actionTag: emaildata?.alertTagId }, ...{ alertTypeId: selectedAlertType }, ...{ alertSubTypeId: selectedSubType }, ...{ objectName: selection }, ...emaildata }
         );
       }
     } else {
-      handleFalse({...currentEvent, actionTagTime: currentTime});
+      handleFalse({ ...currentEvent, actionTagTime: currentTime });
     }
     closeEscalation();
   }

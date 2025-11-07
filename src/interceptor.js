@@ -1,7 +1,7 @@
 import axios from "axios";
-import { getAccessforRefreshToken } from "./services/ApiService";
-import { clearStorage, getStorage, setStorage } from "./services/StorageService";
-import { useLogout } from "./utilities/logout/Logout";
+import { getAccessforRefreshToken } from "./utilities/ApiService";
+import { clearStorage, getStorage, setStorage } from "./utilities/StorageService";
+import { useLogout } from "./utilities/hooks/logout";
 
 
 // Axios instance
@@ -33,6 +33,7 @@ api.interceptors.request.use((config) => {
 
 // Response Interceptor — handle expired tokens
 api.interceptors.response.use((response) => response, async (error) => {
+  // const logout = useLogout();
   const originalRequest = error.config;
   
   // If 401 error and we haven’t retried yet
@@ -54,12 +55,14 @@ api.interceptors.response.use((response) => response, async (error) => {
 
       try {
         const tempSession = getStorage("session");
-        if (!tempSession) throw new Error("No user data found");
+        // if (!tempSession) throw new Error("No user data found");
+        if (!tempSession) console.log("No user data found");
         const response = await getAccessforRefreshToken();
 
         // Extract new token safely
         // const newToken = response?.access_token;
-        if (!response.access_token) throw new Error("No access token returned from refresh API");
+        // if (!response.access_token) throw new Error("No access token returned from refresh API");
+        if (!response.access_token) console.log("No access token returned from refresh API");
 
         // Save new access token
         tempSession.AccessToken = response?.access_token;

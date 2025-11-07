@@ -1,6 +1,6 @@
 import api from '../interceptor';
 import { environment } from '../environment';
-import { getDay, getHour, getQueue, getStorage, getTimeByTimezone, getSession } from './StorageService';
+import { getDay, getHour, getQueue, getSession, getStorage, getTimeByTimezone } from './StorageService';
 
 
 export const getAccessforRefreshToken = async () => {
@@ -63,7 +63,7 @@ export const write2VmsDispatchQueue = async (payload) => {
     userLevels: 0,
     httpUrl: payload?.httpUrl,
     imageUrl: payload?.image_list?.toString(),
-    queue_name: getQueue(getSession().userLevel),
+    queue_name: payload?.queue_name,
     landingTime: payload?.landingTime,
     timezone: payload?.timezone,
     userLevelAlarmInfo: payload?.userLevelAlarmInfo,
@@ -197,7 +197,7 @@ export const playSiren = async (payload) => {
 export const writetoRedisQueueData = async (payload) => {
   const url = `${environment.event_process_url}/addConsoleEvents_1_0`;
   const user = getStorage('session');
-  payload.userId= user?.UserId;
-  payload.level=`Level${user?.userLevel}`;
+  payload.userId = user?.UserId;
+  payload.level = `Level${user?.userLevel}`;
   return api.post(url,payload).then((res) => res.data).catch((err) => console.log(err));
 }

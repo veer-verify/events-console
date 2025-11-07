@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { clearStorage } from '../../services/StorageService';
+import { clearStorage } from '../StorageService';
 
 export const useLogout = () => {
     const navigate = useNavigate('');

@@ -35,14 +35,14 @@ export const getDay = (timezone) => moment().tz(timezone).day();
  * @param {*} level current queue name
  * @returns queue name to which level user nee to write
  */
-export const getQueue = (level) => {
-    if(level === 1) {
-        return '2nd-level';
-    }
-    else if(level === 2) {
-        return 'staging-dispatch';
-    }
-    else {
-        return 'staging-screener';
-    }
-}
+// export const getQueue = (level) => {
+//     if(level === 1) {
+//         return '2nd-level';
+//     }
+//     else if(level === 2) {
+//         return 'staging-dispatch';
+//     }
+//     else {
+//         return 'staging-screener';
+//     }
+// }
