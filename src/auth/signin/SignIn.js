@@ -6,6 +6,8 @@ import PageLoader from '../../utilities/page-loader/PageLoader';
 import { environment } from '../../environment';
 import { toast } from 'react-toastify';
 import { clearStorage, Encrypt, setStorage } from '../../utilities/StorageService';
+import { useDispatch } from 'react-redux';
+import { save, saveSession } from '../sessionSlice';
 
 
 const SignIn = () => {
@@ -16,33 +18,27 @@ const SignIn = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const togglePassword = ()=>{
-    setShowPassword(!showPassword);
-  }
-
+  const dispatch = useDispatch();
   const handleSignIn = async () => {
     const url = `${environment.login_url}/user_login_1_0`;
     const encryptedPassword = Encrypt(password);
     const requestBody = { userName, ...{ password: encryptedPassword, callingSystemDetail: 'events-console' } };
+    if (!userName || !password) return toast.error("Please Fill Username & Password");
+
     setLoader(true);
-    if(!userName || !password){
-      toast.error("Please Enter The Details")
+    axios.post(url, requestBody).then((res) => {
       setLoader(false);
-    }
-    else{
-      axios.post(url, requestBody).then((res) => {
-        setLoader(false);
-        if (res.data.Status === 'Success') {
-          if (!res.data.queueName) return toast.warn('Queue is not assigned!');
-          setStorage('session', res.data);
-          navigate('/dashboard');
-        } else {
-          toast.error(res.data.message);
-        }
-      }).catch((err) => {
-        setLoader(false);
-      });
-    }
+      if (res.data.Status === 'Success') {
+        if (!res.data.queueName) return toast.warn('Queue is not assigned!');
+        setStorage('session', res.data);
+        dispatch(saveSession(res.data));
+        navigate('/dashboard');
+      } else {
+        toast.error(res.data.message);
+      }
+    }).catch((err) => {
+      setLoader(false);
+    });
   }
 
   useEffect(() => {
@@ -72,10 +68,10 @@ const SignIn = () => {
 
             <div className="form-group">
               <label>Password</label>
-              <input className='pass' type={showPassword ? 'text' : 'password'} placeholder="Password here" onChange={(e) => setPassword(e.target.value)} onKeyDown={(e)=>{
-                if(e.key==='Enter') handleSignIn(
+              <input className='pass' type={showPassword ? 'text' : 'password'} placeholder="Password here" onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSignIn(
                 )
-              }}/>
+              }} />
               {/* <img className='togglepass' src={showPassword ?  'images/show.svg' : 'images/hide.svg' } onClick={togglePassword}/> */}
               {/* <div>
                 <img src='icons/user.svg' alt='' style={{ position: 'absolute', top: '16px', right: '16px', cursor: 'pointer' }} />

@@ -31,9 +31,9 @@ const Header = () => {
                 <div className="page-title">
                     <span className='title'>events console</span>
                     <span className='bar'> | </span>
-                    <span className="level">level - {user?.userLevel ?? 0}</span>
+                    <span className="level" title='User Level'>level - {user?.userLevel ?? 0}</span>
                     <span className='bar'> | </span>
-                    <span className="title">{user?.queueName ?? ''}</span>
+                    <span className="title" title='Queue Name'>{user?.queueName ?? ''}</span>
                 </div>
             </div>
 

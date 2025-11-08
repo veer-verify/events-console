@@ -1,9 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { sessionReducer } from "./auth/sessionSlice";
+import { actionTagReducer } from "./dashboard/actionTagSlice";
 
 
 export const store = configureStore({
   reducer: {
-    session: sessionReducer
+    sessionStore: sessionReducer,
+    actionStore: actionTagReducer
   },
 });

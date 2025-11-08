@@ -7,25 +7,42 @@ import Stream from '../../utilities/stream/Stream';
 import { toast } from 'react-toastify';
 import { getSession, getStorage, getTimeByTimezone, setStorage } from '../../utilities/StorageService';
 import { playSiren } from '../../utilities/ApiService';
+import { useSelector } from 'react-redux';
 
 const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicious, escalation, openEscalation, closeEscalation }) => {
+    const session = getStorage('session');
     const eventIndex = getStorage('index');
     const customAction = getStorage('custom_action');
-    const actionTagsResponse = getStorage('actionTags');
+    const actionTags = getStorage('actionTags');
+
+    // const store = useSelector((state) => state);
+
+    const { sessionStore, actionStore } = useSelector((state) => ({
+        sessionStore: state.sessionStore,
+        actionStore: state.actionStore
+    }));
+
+    if (!sessionStore.data) {
+        setStorage('session', session);
+        setStorage('actionTags', actionTags);
+    }
+    if (!session) {
+        setStorage('session', sessionStore.data);
+        setStorage('actionTags', actionStore.data)
+    }
 
     const handle = (id) => {
         setStorage('custom_action', id);
         setStorage('index', index);
         setShowTags(false);
-        setActionTags(actionTagsResponse.actionTagCategories.filter((item) => item.categoryId === id).flatMap((item) => item.actionTagSubCategories));
+        setCategories(actionTags.actionTagCategories.filter((item) => item.categoryId === id).flatMap((item) => item.actionTagSubCategories));
         setShowTags(true);
     }
 
     const [showTags, setShowTags] = useState(false);
-    const [actionTags, setActionTags] = useState([]);
+    const [categories, setCategories] = useState([]);
     const [live, setLive] = useState(false);
     const [playing, setPlaying] = useState(false);
-
 
     const dialogRef = useRef(null);
 
@@ -43,10 +60,11 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
     }
 
     const play = async () => {
+        if(monitoringData.audioUrl === '') return toast.warn('No URL Found!')
         setShowTags(false);
         setPlaying(true);
-        // currentEvent.audio = true;
-        const res = await playSiren(currentEvent);
+        currentEvent.audio = true;
+        const res = await playSiren(monitoringData);
         if (res) {
             toast.success(res.message)
         } else {
@@ -128,8 +146,11 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
         const interval = setInterval(() => {
             setIndex(i);
             setImgSrc(currentEvent?.image_list[i]);
-            if (i === 5) i = 0;
-            i += 1;
+            if (i === 5) {
+                i = 0
+            } else {
+                i += 1
+            }
         }, 1000);
 
         return () => {
@@ -137,6 +158,9 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
             clearInterval(interval);
         };
     }, [currentEvent, showTags]);
+
+    const [hoverIndex, setHoverIndex] = useState(null);
+
 
     return (
         <Fragment>
@@ -156,7 +180,7 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
                             <img src={currentEvent?.siteId === 0 ? 'icons/three-dots.svg' : 'icons/false.png'} alt='icon' width={20} title='False Activity' />
                         </button>
                         <button className='custom-action' onClick={() => handle(2)} disabled={currentEvent?.siteId === 0}>
-                            <img src={currentEvent?.siteId === 0 ? 'icons/three-dots.svg' : 'icons/suspicious.png'} alt='icon' width={20} title='Suspicious' />
+                            <img src={currentEvent?.siteId === 0 ? 'icons/three-dots.svg' : 'icons/suspicious.png'} alt='icon' width={20} title='Suspicious Activity' />
                         </button>
                         <button className='custom-action' onClick={() => openLiveDialog()} disabled={currentEvent?.siteId === 0}>
                             <img src={currentEvent?.siteId === 0 ? 'icons/three-dots.svg' : 'icons/live.png'} alt='icon' width={20} title='Live' />
@@ -170,12 +194,20 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
                             <div className='tag-grid'>
                                 <p>{customAction === 1 ? 'false' : 'suspicious'}</p>
                                 <div className="tag-items">
-                                    {actionTags.map((tag, i) => (
+                                    {categories.map((tag, i) => (
                                         <button
                                             key={i}
                                             className='tag-button'
                                             title={tag.subCategoryName}
-                                            style={{ border: customAction === 1 ? '1px solid #53BF8B' : '1px solid #ED3237' }}
+                                            style={{
+                                                border: customAction === 1 ? '1px solid #53BF8B' : '1px solid #ED3237',
+                                                backgroundColor: hoverIndex === i
+                                                    ? (customAction === 1 ? '#53BF8B' : '#ED3237')
+                                                    : 'transparent',
+                                                color: hoverIndex === i ? '#ffffff' : '#000000'
+                                            }}
+                                            onMouseEnter={() => setHoverIndex(i)}
+                                            onMouseLeave={() => setHoverIndex(null)}
                                             onClick={() => handleAction(tag)}
                                         >
                                             {tag.subCategoryName}
@@ -191,24 +223,21 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
                 </div>
 
                 <div className="store-info">
-                    <p>{currentEvent?.siteName}</p>
+                    <p>{`${currentEvent?.siteId} - ${currentEvent?.siteName}`}</p>
                     <p>Tadepally, Guntur District, Andhra Pradesh, INDIA - 500503</p>
 
-                    {(monitoringData && monitoringData.plannedSiteActivities && monitoringData.plannedSiteActivities.length) &&
-                        <div className="activity-box">
+                    {(monitoringData && monitoringData.plannedSiteActivities && monitoringData.plannedSiteActivities.length) && monitoringData.plannedSiteActivities.map((item, i) => (
+                        <div className="activity-box" key={i}>
                             <div>
                                 <strong>PLANNED SITE ACTIVITY</strong><br />
-                                <span>
-                                    {monitoringData.plannedSiteActivities[0].fromdatetime}
-                                    -
-                                    {monitoringData.plannedSiteActivities[0].todatetime}
-                                </span>
+                                <span>{`${item?.fromdatetime} - ${item?.todatetime}`}</span>
                             </div>
                             <div>
-                                <strong>{monitoringData.plannedSiteActivities[0].activityName}</strong><br />
-                                <span>{monitoringData.plannedSiteActivities[0].description}</span>
+                                <strong>{item?.activityName}</strong><br />
+                                <span>{item?.description}</span>
                             </div>
                         </div>
+                    ))
                     }
                 </div>
 

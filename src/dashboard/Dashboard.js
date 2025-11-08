@@ -7,9 +7,30 @@ import { getSession, getStorage, getTimeByTimezone, setStorage } from '../utilit
 import { getActionTagCategories, getMonitoringInfo, getVmsEventsQueueData, updateEventFullDetails, write2VmsDispatchQueue, writetoRedisQueueData } from '../utilities/ApiService';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
+import { save, saveSession } from '../auth/sessionSlice';
+import { saveAction } from './actionTagSlice';
 
 
 const Dashboard = () => {
+
+  const { sessionStore, actionStore } = useSelector((state) => ({
+    sessionStore: state.sessionStore,
+    actionStore: state.actionStore
+  }));
+  const dispatch = useDispatch();
+
+  const session = getStorage('session');
+  const tempAction = getStorage('actionTags');
+
+  if (!sessionStore.data) {
+    setStorage('session', session);
+    setStorage('actionTags', tempAction);
+  }
+  if (!session) {
+    setStorage('session', sessionStore.data);
+    setStorage('actionTags', actionStore.data)
+  }
+
   const dummy = [
     {
       "siteName": "Loading...",
@@ -52,7 +73,7 @@ const Dashboard = () => {
       {
         level: getSession().userLevel,
         user: getSession().UserId,
-        alarm: 'N',
+        alarm: item.audio ? 'P' : 'N',
         landingTime: item?.landingTime ?? '',
         reviewStart: item?.landingTime ?? '',
         reviewEnd: getTimeByTimezone(item?.timezone),
@@ -71,10 +92,7 @@ const Dashboard = () => {
     const reordered = isFirst ? [...dummy, ...filtered] : [...filtered, ...dummy];
     setEventData(reordered);
     const eventResponse = await getVmsEventsQueueData();
-    // console.log(eventResponse);
-    // toast.error("Event Cleared Successfully");
     if (eventResponse.length) {
-      // console.log(eventResponse);
       const [first] = eventResponse;
       first.landingTime = getTimeByTimezone(first.timezone);
       first.audioPlayed = false;
@@ -89,8 +107,6 @@ const Dashboard = () => {
     } else {
       setEventData(filtered);
       toast.error("Clearing Event Failed");
-      // toast.error(eventResponse.message);
-      // console.log(eventResponse);
     }
   };
 
@@ -99,7 +115,7 @@ const Dashboard = () => {
    * to handel suspicious activity
    */
   const handleSuspicious = async (item) => {
-    const session = getStorage('session');
+    // const session = getStorage('session');
     const index = getStorage('index');
     const customAction = getStorage('custom_action');
     const subAction = getStorage('sub_action');
@@ -108,7 +124,7 @@ const Dashboard = () => {
       {
         level: getSession().userLevel,
         user: getSession().UserId,
-        alarm: 'N',
+        alarm: item.audio ? 'P' : 'N',
         landingTime: item?.landingTime ?? '',
         reviewStart: item?.landingTime ?? '',
         reviewEnd: getTimeByTimezone(item?.timezone),
@@ -147,13 +163,17 @@ const Dashboard = () => {
       const monitoringRes = await getMonitoringInfo(first);
       const latestMonitoringData = isFirst ? [monitoringRes, ...filteredMonitoring] : [...filteredMonitoring, monitoringRes];
       setMonitoringData(latestMonitoringData);
+      toast.success("Event Cleared Successfully");
     } else {
       setEventData(filtered);
+      toast.error("Clearing Event Failed");
     }
   }
 
   const timerRef = useRef(null);
   useEffect(() => {
+    const session = getStorage('session');
+
     const getEvent = async () => {
       const response = await getVmsEventsQueueData();
       if (response && response.length) {
@@ -183,13 +203,14 @@ const Dashboard = () => {
     const getTags = async () => {
       const tagsResponse = await getActionTagCategories();
       setStorage('actionTags', tagsResponse);
+      dispatch(saveAction(tagsResponse));
     };
     getTags();
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [eventData.length]);
+  }, [dispatch, eventData.length]);
 
   // useEffect(() => {
   //   const interval = setInterval(() => {
@@ -215,9 +236,6 @@ const Dashboard = () => {
   // }, [eventData]);
 
 
-  const session = useSelector((state) => state.session);
-  const dispatch = useDispatch();
-  console.log(session)
   return (
     <Fragment>
       <Header></Header>

@@ -200,7 +200,7 @@
   position: absolute;
   z-index: 1;
   top: 24px;
-  background-color: #fde8e8;
+  background: transparent linear-gradient(180deg, #FFFFFF 0%, #EEEEEE 100%) 0% 0% no-repeat padding-box;;
   border-radius: 6px;
   padding: 16px;
 }
@@ -231,10 +231,6 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.tag-button:hover {
-  background-color: #e6f2ea;
 }
 
 .tag-button.selected {
