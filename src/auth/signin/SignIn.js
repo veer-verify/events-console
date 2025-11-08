@@ -25,19 +25,24 @@ const SignIn = () => {
     const encryptedPassword = Encrypt(password);
     const requestBody = { userName, ...{ password: encryptedPassword, callingSystemDetail: 'events-console' } };
     setLoader(true);
-
-    axios.post(url, requestBody).then((res) => {
+    if(!userName || !password){
+      toast.error("Please Enter The Details")
       setLoader(false);
-      if (res.data.Status === 'Success') {
-        if (!res.data.queueName) return toast.warn('Queue is not assigned!');
-        setStorage('session', res.data);
-        navigate('/dashboard');
-      } else {
-        toast.error(res.data.message);
-      }
-    }).catch((err) => {
-      setLoader(false);
-    });
+    }
+    else{
+      axios.post(url, requestBody).then((res) => {
+        setLoader(false);
+        if (res.data.Status === 'Success') {
+          if (!res.data.queueName) return toast.warn('Queue is not assigned!');
+          setStorage('session', res.data);
+          navigate('/dashboard');
+        } else {
+          toast.error(res.data.message);
+        }
+      }).catch((err) => {
+        setLoader(false);
+      });
+    }
   }
 
   useEffect(() => {

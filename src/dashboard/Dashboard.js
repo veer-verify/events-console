@@ -6,6 +6,7 @@ import { ToastContainer } from 'react-toastify';
 import { getSession, getStorage, getTimeByTimezone, setStorage } from '../utilities/StorageService';
 import { getActionTagCategories, getMonitoringInfo, getVmsEventsQueueData, updateEventFullDetails, write2VmsDispatchQueue, writetoRedisQueueData } from '../utilities/ApiService';
 import { useDispatch, useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
 
 
 const Dashboard = () => {
@@ -70,7 +71,10 @@ const Dashboard = () => {
     const reordered = isFirst ? [...dummy, ...filtered] : [...filtered, ...dummy];
     setEventData(reordered);
     const eventResponse = await getVmsEventsQueueData();
+    // console.log(eventResponse);
+    // toast.error("Event Cleared Successfully");
     if (eventResponse.length) {
+      // console.log(eventResponse);
       const [first] = eventResponse;
       first.landingTime = getTimeByTimezone(first.timezone);
       first.audioPlayed = false;
@@ -81,8 +85,12 @@ const Dashboard = () => {
       const data = await getMonitoringInfo(first);
       const updatedMonitoring = isFirst ? [data, ...filteredMonitoring] : [...filteredMonitoring, data];
       setMonitoringData(updatedMonitoring);
+      toast.success("Event Cleared Successfully");
     } else {
       setEventData(filtered);
+      toast.error("Clearing Event Failed");
+      // toast.error(eventResponse.message);
+      // console.log(eventResponse);
     }
   };
 
@@ -212,7 +220,6 @@ const Dashboard = () => {
   console.log(session)
   return (
     <Fragment>
-      <ToastContainer />
       <Header></Header>
 
       <div className='tiles'>
