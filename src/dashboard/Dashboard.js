@@ -5,6 +5,7 @@ import Tile from './tile/Tile';
 import { ToastContainer } from 'react-toastify';
 import { getSession, getStorage, getTimeByTimezone, setStorage } from '../utilities/StorageService';
 import { getActionTagCategories, getMonitoringInfo, getVmsEventsQueueData, updateEventFullDetails, write2VmsDispatchQueue, writetoRedisQueueData } from '../utilities/ApiService';
+import { useDispatch, useSelector } from 'react-redux';
 
 
 const Dashboard = () => {
@@ -206,10 +207,12 @@ const Dashboard = () => {
   // }, [eventData]);
 
 
+  const session = useSelector((state) => state.session);
+  const dispatch = useDispatch();
+  console.log(session)
   return (
     <Fragment>
       <ToastContainer />
-
       <Header></Header>
 
       <div className='tiles'>

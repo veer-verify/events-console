@@ -1,7 +1,9 @@
-const { configureStore } = require("@reduxjs/toolkit");
+import { configureStore } from "@reduxjs/toolkit";
+import { sessionReducer } from "./auth/sessionSlice";
 
-const store = configureStore({
-    reducer: {
-        session: {}
-    }
-})
+
+export const store = configureStore({
+  reducer: {
+    session: sessionReducer
+  },
+});
