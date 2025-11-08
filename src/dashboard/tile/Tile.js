@@ -153,16 +153,16 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
                 <div className="camera-id">
                     <div style={{ position: 'relative' }} ref={dialogRef}>
                         <button className='custom-action' onClick={() => handle(1)} disabled={currentEvent?.siteId === 0}>
-                            <img src={currentEvent?.siteId === 0 ? 'icons/three-dots.svg' : 'icons/false.png'} alt='icon' width={20} />
+                            <img src={currentEvent?.siteId === 0 ? 'icons/three-dots.svg' : 'icons/false.png'} alt='icon' width={20} title='False Activity' />
                         </button>
                         <button className='custom-action' onClick={() => handle(2)} disabled={currentEvent?.siteId === 0}>
-                            <img src={currentEvent?.siteId === 0 ? 'icons/three-dots.svg' : 'icons/suspicious.png'} alt='icon' width={20} />
+                            <img src={currentEvent?.siteId === 0 ? 'icons/three-dots.svg' : 'icons/suspicious.png'} alt='icon' width={20} title='Suspicious' />
                         </button>
                         <button className='custom-action' onClick={() => openLiveDialog()} disabled={currentEvent?.siteId === 0}>
-                            <img src={currentEvent?.siteId === 0 ? 'icons/three-dots.svg' : 'icons/live.png'} alt='icon' width={20} />
+                            <img src={currentEvent?.siteId === 0 ? 'icons/three-dots.svg' : 'icons/live.png'} alt='icon' width={20} title='Live' />
                         </button>
                         <button className={playing ? 'custom-action blink' : 'custom-action'} onClick={() => play()} disabled={playing}>
-                            <img src={currentEvent.siteId === 0 ? 'icons/three-dots.svg' : 'icons/siren.png'} alt='icon' width={20} />
+                            <img src={currentEvent.siteId === 0 ? 'icons/three-dots.svg' : 'icons/siren.png'} alt='icon' width={20} title='Play Siren' />
                         </button>
 
 
