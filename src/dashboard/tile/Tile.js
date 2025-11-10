@@ -119,11 +119,13 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
         const currentTime = getTimeByTimezone(currentEvent?.timezone);
         setStorage('sub_action', data);
         if (customAction === 1) {
+            setImgSrc(null);
             handleFalse({ ...currentEvent, actionTagTime: currentTime });
         } else {
             if (session?.userLevel !== 1) {
                 openEscalation();
             } else {
+                setImgSrc(null);
                 handleSuspicious({ ...currentEvent, actionTagTime: currentTime, ...monitoringData });
             }
         }
@@ -226,7 +228,7 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
                     <p>{`${currentEvent?.siteId} - ${currentEvent?.siteName}`}</p>
                     <p>Tadepally, Guntur District, Andhra Pradesh, INDIA - 500503</p>
 
-                    {(monitoringData && monitoringData.plannedSiteActivities && monitoringData.plannedSiteActivities.length) && monitoringData.plannedSiteActivities.map((item, i) => (
+                    {(monitoringData && monitoringData.plannedSiteActivities && monitoringData.plannedSiteActivities.length !==0) && monitoringData.plannedSiteActivities.map((item, i) => (
                         <div className="activity-box" key={i}>
                             <div>
                                 <strong>PLANNED SITE ACTIVITY</strong><br />

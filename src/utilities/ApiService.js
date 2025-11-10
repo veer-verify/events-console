@@ -1,6 +1,7 @@
 import api from '../interceptor';
 import { environment } from '../environment';
 import { getDay, getHour, getQueue, getSession, getStorage, getTimeByTimezone } from './StorageService';
+import { toast } from 'react-toastify';
 
 
 export const getAccessforRefreshToken = async () => {
@@ -69,8 +70,15 @@ export const write2VmsDispatchQueue = async (payload) => {
     userLevelAlarmInfo: payload?.userLevelAlarmInfo,
     userName: user.UserName,
   }
-  return api.post(url, obj).then((res) => console.log(res.data)).catch((err) => console.log(err));
+  return api.post(url, obj).then((res) => {
+    toast.success("Event Cleared Successfully");
+  }).catch((err) => {
+    console.log(err);
+    toast.error("Clearing Event Failed");
+  });
 }
+
+//check no
 
 export const getVmsEventsQueueData = async () => {
   const url = `${environment.events_url}/getVms_EventsQueueData_1_0/`;
@@ -196,9 +204,63 @@ export const playSiren = async (payload) => {
 
 
 export const writetoRedisQueueData = async (payload) => {
-  const url = `${environment.event_process_url}/addConsoleEvents_1_0`;
+  // const url = `${environment.event_process_url}/addConsoleEvents_1_0`;
+    const url ='http://192.168.0.206:8000/addConsoleEvents';
   const user = getStorage('session');
   payload.userId = user?.UserId;
   payload.level = `Level${user?.userLevel}`;
+  payload.consoleType='events-console';
+  payload.queueName=user?.queueName;
+  return api.post(url,payload).then((res) => {
+    return res.data
+  }).catch((err) => console.log(err));
+}
+
+
+export const userLogin =async ()=>{
+
+  //  const url = `${environment.event_process_url}/userLogin`;
+  const url = `http://192.168.0.206:8000/userLogin`;
+  const user = getStorage('session');
+  let payload={
+    userId:0,
+    userLevel:0
+  }
+  payload.userId = user?.UserId;
+  payload.userLevel = `Level${user?.userLevel}`;
   return api.post(url,payload).then((res) => res.data).catch((err) => console.log(err));
+
+}
+
+export function aliveUser(){
+
+  const url = `http://192.168.0.206:8000/alive`;
+  const user = getStorage('session');
+  let payload={
+    userId:0
+  }
+  payload.userId = user?.UserId;
+  return api.post(url,payload).then((res) => res.data).catch((err) => console.log(err));
+
+}
+
+export function refreshUser(){
+
+   const url = `http://192.168.0.206:8000/refresh`;
+  const user = getStorage('session');
+  let payload={
+    userId:0
+  }
+  payload.userId = user?.UserId;
+  return api.post(url,payload).then((res) => res.data).catch((err) => console.log(err));
+
+}
+
+export function consumeConsoleEvents(payload){
+  const url = 'http://192.168.0.206:8000/consumeConsoleEvents';
+   const user = getStorage('session');
+
+  payload.userId = user?.UserId;
+  payload.consoleType='events-console';
+  return api.put(url,payload).then((res) => res.data).catch((err) => console.log(err));
 }

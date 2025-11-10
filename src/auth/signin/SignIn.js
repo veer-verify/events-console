@@ -8,6 +8,7 @@ import { toast } from 'react-toastify';
 import { clearStorage, Encrypt, setStorage } from '../../utilities/StorageService';
 import { useDispatch } from 'react-redux';
 import { save, saveSession } from '../sessionSlice';
+import { userLogin } from '../../utilities/ApiService';
 
 
 const SignIn = () => {
@@ -32,6 +33,9 @@ const SignIn = () => {
         if (!res.data.queueName) return toast.warn('Queue is not assigned!');
         setStorage('session', res.data);
         dispatch(saveSession(res.data));
+
+        userLogin();
+        
         navigate('/dashboard');
       } else {
         toast.error(res.data.message);

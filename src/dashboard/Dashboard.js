@@ -4,7 +4,7 @@ import Header from '../header/Header';
 import Tile from './tile/Tile';
 import { ToastContainer } from 'react-toastify';
 import { getSession, getStorage, getTimeByTimezone, setStorage } from '../utilities/StorageService';
-import { getActionTagCategories, getMonitoringInfo, getVmsEventsQueueData, updateEventFullDetails, write2VmsDispatchQueue, writetoRedisQueueData } from '../utilities/ApiService';
+import { aliveUser,refreshUser,consumeConsoleEvents, getActionTagCategories, getMonitoringInfo, getVmsEventsQueueData, updateEventFullDetails, write2VmsDispatchQueue, writetoRedisQueueData } from '../utilities/ApiService';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { save, saveSession } from '../auth/sessionSlice';
@@ -87,6 +87,9 @@ const Dashboard = () => {
     );
 
     const filtered = eventData.filter((_, i) => index !== i);
+    const filtered1 = eventData.filter((_, i) => index === i);
+     
+    consumeConsoleEvents({userId: 0,eventTime:filtered1[0].eventTime,consoleType:''});
     const filteredMonitoring = monitoringData.filter((_, i) => index !== i);
     const isFirst = index === 0;
     const reordered = isFirst ? [...dummy, ...filtered] : [...filtered, ...dummy];
@@ -96,7 +99,8 @@ const Dashboard = () => {
       const [first] = eventResponse;
       first.landingTime = getTimeByTimezone(first.timezone);
       first.audioPlayed = false;
-      writetoRedisQueueData({ userId: 0, level: "", queueInfo: first });
+      
+      writetoRedisQueueData({ userId: 0, level: "", queueInfo: first,consoleType:'',queueName:'' });
       const updated = isFirst ? [...eventResponse, ...filtered] : [...filtered, ...eventResponse];
       setEventData(updated);
 
@@ -147,6 +151,9 @@ const Dashboard = () => {
     // }
 
     const filtered = eventData.filter((_, i) => index !== i);
+      const filtered1 = eventData.filter((_, i) => index === i);
+    
+    consumeConsoleEvents({userId: 0,eventTime:filtered1[0].eventTime,consoleType:''});
     const filteredMonitoring = monitoringData.filter((_, i) => index !== i);
     const isFirst = index === 0;
     const reordered = isFirst ? [...dummy, ...filtered] : [...filtered, ...dummy];
@@ -156,17 +163,17 @@ const Dashboard = () => {
       const [first] = eventResponse;
       first.landingTime = getTimeByTimezone(first.timezone);
       first.audioPlayed = false;
-      writetoRedisQueueData({ userId: 0, level: "", queueInfo: first });
+      
+      writetoRedisQueueData({ userId: 0, level: "", queueInfo: first ,consoleType:'',queueName:''});
       const updated = isFirst ? [...eventResponse, ...filtered] : [...filtered, ...eventResponse];
       setEventData(updated);
 
       const monitoringRes = await getMonitoringInfo(first);
       const latestMonitoringData = isFirst ? [monitoringRes, ...filteredMonitoring] : [...filteredMonitoring, monitoringRes];
       setMonitoringData(latestMonitoringData);
-      toast.success("Event Cleared Successfully");
     } else {
       setEventData(filtered);
-      toast.error("Clearing Event Failed");
+
     }
   }
 
@@ -179,10 +186,11 @@ const Dashboard = () => {
       if (response && response.length) {
         const [first] = response;
         first.landingTime = getTimeByTimezone(response.timezone);
+        console.log(first.landingTime)
         first.audioPlayed = false;
         first.autoHandled = false;
         setEventData((prev) => [...prev, ...response]);
-        writetoRedisQueueData({ userId: 0, level: "", queueInfo: first });
+        writetoRedisQueueData({ userId: 0, level: "", queueInfo: first,consoleType:'',queueName:'' });
         const data = await getMonitoringInfo(first);
         setMonitoringData((prev) => [...prev, data]);
       } else {
@@ -212,29 +220,14 @@ const Dashboard = () => {
     };
   }, [dispatch, eventData.length]);
 
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     const now = new Date().getTime();
+  
+  useEffect(() => {
 
-  //     eventData.forEach((item) => {
-  //       if (!item?.landingTime) return;
-
-  //       const landedAt = new Date(item.landingTime).getTime();
-  //       const diffInMs = now - landedAt;
-
-  //       // If event has been on screen for 1 minute or more, auto-mark as suspicious
-  //       if (diffInMs >= 60 * 1000 && !item.autoHandled) {
-  //         setStorage('custom_action', 2);
-  //         setStorage('index', 0);
-  //         item.autoHandled = true; // prevent repeated handling
-  //         handleSuspicious(item);
-  //       }
-  //     });
-  //   }, 5 * 1000); // Check every 10 seconds
-
-  //   return () => clearInterval(interval);
-  // }, [eventData]);
-
+    aliveUser();
+    refreshUser();
+    const interval = setInterval(aliveUser, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <Fragment>
@@ -308,11 +301,13 @@ const Reload = () => {
     const handleBeforeUnload = (event) => {
       event.preventDefault();
       // Some browsers require returnValue to be set
+      console.log("pppp")
       event.returnValue = "Are you sure you want to leave this page?";
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
+      console.log("pppp")
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, []);
