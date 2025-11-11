@@ -206,8 +206,8 @@ export const playSiren = async (payload) => {
 
 
 export const writetoRedisQueueData = async (payload) => {
-  // const url = `${environment.event_process_url}/addConsoleEvents_1_0`;
-    const url ='http://192.168.0.206:8000/addConsoleEvents';
+ 
+    const url =`${environment.event_process_url}/addConsoleEvents`;
   const user = getStorage('session');
   payload.userId = user?.UserId;
   payload.level = `Level${user?.userLevel}`;
@@ -221,8 +221,7 @@ export const writetoRedisQueueData = async (payload) => {
 
 export const userLogin =async ()=>{
 
-  //  const url = `${environment.event_process_url}/userLogin`;
-  const url = `http://192.168.0.206:8000/userLogin`;
+  const url = `${environment.event_process_url}/userLogin`;
   const user = getStorage('session');
   let payload={
     userId:0,
@@ -234,35 +233,50 @@ export const userLogin =async ()=>{
 
 }
 
-export function aliveUser(){
+export async function aliveUser(){
 
-  const url = `http://192.168.0.206:8000/alive`;
+  const url = `${environment.event_process_url}/alive`;
   const user = getStorage('session');
   let payload={
     userId:0
   }
   payload.userId = user?.UserId;
-  return api.post(url,payload).then((res) => res.data).catch((err) => console.log(err));
+  try {
+    const res = await api.post(url, payload);
+    return res.data;
+  } catch (err) {
+    return console.log(err);
+  }
 
 }
 
-export function refreshUser(){
+export async function refreshUser(){
 
-   const url = `http://192.168.0.206:8000/refresh`;
+   const url = `${environment.event_process_url}/refresh`;
   const user = getStorage('session');
   let payload={
     userId:0
   }
   payload.userId = user?.UserId;
-  return api.post(url,payload).then((res) => res.data).catch((err) => console.log(err));
+  try {
+    const res = await api.post(url, payload);
+    return res.data;
+  } catch (err) {
+    return console.log(err);
+  }
 
 }
 
-export function consumeConsoleEvents(payload){
-  const url = 'http://192.168.0.206:8000/consumeConsoleEvents';
+export async function consumeConsoleEvents(payload){
+  const url = `${environment.event_process_url}/consumeConsoleEvents`;
    const user = getStorage('session');
 
   payload.userId = user?.UserId;
   payload.consoleType='events-console';
-  return api.put(url,payload).then((res) => res.data).catch((err) => console.log(err));
+  try {
+    const res = await api.put(url, payload);
+    return res.data;
+  } catch (err) {
+    return console.log(err);
+  }
 }
