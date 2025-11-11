@@ -74,11 +74,10 @@ export const write2VmsDispatchQueue = async (payload) => {
     // toast.success("Event Cleared Successfully");
   }).catch((err) => {
     console.log(err);
-    // toast.error("Clearing Event Failed");
+    // toast.error('Failed to clear event!');
   });
 }
 
-//check no
 
 export const getVmsEventsQueueData = async () => {
   const url = `${environment.events_url}/getVms_EventsQueueData_1_0/`;
@@ -118,8 +117,10 @@ export const updateEventFullDetails = async (payload) => {
     userLevelAlarmInfo: payload?.userLevelAlarmInfo
   };
   return api.post(url, obj).then((res) => {
-    toast.success('done!')
-  }).catch((err) => console.log(err));
+    // toast.success('Event cleared successfully!');
+  }).catch((err) => {
+    // toast.error('Failed to clear event!');
+  });
 }
 
 const weekdays = [
@@ -251,8 +252,7 @@ export async function aliveUser(){
 }
 
 export async function refreshUser(){
-
-   const url = `${environment.event_process_url}/refresh`;
+  const url = `${environment.event_process_url}/refresh`;
   const user = getStorage('session');
   let payload={
     userId:0
@@ -264,7 +264,6 @@ export async function refreshUser(){
   } catch (err) {
     return console.log(err);
   }
-
 }
 
 export async function consumeConsoleEvents(payload){
