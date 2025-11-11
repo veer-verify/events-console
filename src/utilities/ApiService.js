@@ -71,10 +71,10 @@ export const write2VmsDispatchQueue = async (payload) => {
     userName: user.UserName,
   }
   return api.post(url, obj).then((res) => {
-    toast.success("Event Cleared Successfully");
+    // toast.success("Event Cleared Successfully");
   }).catch((err) => {
     console.log(err);
-    toast.error("Clearing Event Failed");
+    // toast.error("Clearing Event Failed");
   });
 }
 
@@ -117,7 +117,9 @@ export const updateEventFullDetails = async (payload) => {
     timezone: payload?.timezone,
     userLevelAlarmInfo: payload?.userLevelAlarmInfo
   };
-  return api.post(url, obj).then((res) => console.log(res.data)).catch((err) => console.log(err));
+  return api.post(url, obj).then((res) => {
+    toast.success('done!')
+  }).catch((err) => console.log(err));
 }
 
 const weekdays = [
