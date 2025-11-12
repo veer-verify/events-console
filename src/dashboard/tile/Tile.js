@@ -60,6 +60,7 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
         setShowTags(false);
         setPlaying(true);
         currentEvent.audio = true;
+        currentEvent.sirenTime = getTimeByTimezone(currentEvent.timezone);
         const res = await playSiren(monitoringData);
         if (res) {
             toast.success(res.message);
@@ -197,7 +198,7 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
                 <div
                     className="camera-feeds"
                     style={{
-                        border: currentEvent?.objectName === 'DUMMY' ? '1px solid yellow' : 'none'
+                        border: currentEvent?.objectName === 'DUMMY' ? '2px solid yellow' : 'none'
                     }}
                 >
                     <div className="camera">
@@ -215,11 +216,11 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
                         <button
                             className="custom-action"
                             onClick={() => handle(1)}
-                            disabled={currentEvent?.siteId === 0}
+                            disabled={currentEvent?.siteId === 0 || !monitoringData}
                         >
                             <img
                                 src={
-                                    currentEvent?.siteId === 0
+                                    currentEvent?.siteId === 0 || !monitoringData
                                         ? 'icons/three-dots.svg'
                                         : 'icons/false.png'
                                 }
@@ -231,11 +232,11 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
                         <button
                             className="custom-action"
                             onClick={() => handle(2)}
-                            disabled={currentEvent?.siteId === 0}
+                            disabled={currentEvent?.siteId === 0 || !monitoringData}
                         >
                             <img
                                 src={
-                                    currentEvent?.siteId === 0
+                                    currentEvent?.siteId === 0 || !monitoringData
                                         ? 'icons/three-dots.svg'
                                         : 'icons/suspicious.png'
                                 }

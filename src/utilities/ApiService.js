@@ -108,7 +108,7 @@ export const updateEventFullDetails = async (payload) => {
     callNoResponseTime: '',
     eventStartTime: payload?.eventTime ?? '',
     eventEndtime: currentTime,
-    emailTime: currentTime,
+    emailTime: (user.userLevel === 2 && customAction === 2) ? currentTime : '',
     httpUrl: payload?.httpUrl,
     videoFile: payload?.image_list?.toString(),
     createdBy: user?.UserId,

@@ -72,12 +72,13 @@ const Dashboard = () => {
         level: getSession().userLevel,
         user: getSession().UserId,
         alarm: item.audio ? 'P' : 'N',
+        activityDetTime: item.sirenTime ?? '',
         landingTime: item?.landingTime ?? '',
         reviewStart: item?.landingTime ?? '',
         reviewEnd: getTimeByTimezone(item?.timezone),
         actionTag: customAction,
         subActionTag: subAction?.subCategoryId,
-        notes: item.notes
+        notes: item.notes ?? ''
       }
     );
     updateEventFullDetails(
@@ -85,9 +86,8 @@ const Dashboard = () => {
     );
 
     const filtered = eventData.filter((_, i) => index !== i);
-    const filtered1 = eventData.filter((_, i) => index === i);
 
-    consumeConsoleEvents({ userId: 0, eventTime:[filtered1[0].eventTime], consoleType: '' });
+    consumeConsoleEvents({ userId: 0, eventTime:[item.eventTime], consoleType: '' });
     const filteredMonitoring = monitoringData.filter((_, i) => index !== i);
     const isFirst = index === 0;
     const reordered = isFirst ? [...dummy, ...filtered] : [...filtered, ...dummy];
@@ -115,6 +115,7 @@ const Dashboard = () => {
    * to handel suspicious activity
    */
   const handleSuspicious = async (item) => {
+    // console.log(item)
     // const session = getStorage('session');
     const index = getStorage('index');
     const customAction = getStorage('custom_action');
@@ -125,12 +126,13 @@ const Dashboard = () => {
         level: getSession().userLevel,
         user: getSession().UserId,
         alarm: item.audio ? 'P' : 'N',
+        activityDetTime: item.sirenTime ?? '',
         landingTime: item?.landingTime ?? '',
         reviewStart: item?.landingTime ?? '',
         reviewEnd: getTimeByTimezone(item?.timezone),
         actionTag: customAction,
         subActionTag: subAction?.subCategoryId,
-        notes: item.notes
+        notes: item.notes ?? ''
       }
     );
     await write2VmsDispatchQueue(
@@ -147,9 +149,8 @@ const Dashboard = () => {
     // }
 
     const filtered = eventData.filter((_, i) => index !== i);
-    const filtered1 = eventData.filter((_, i) => index === i);
 
-    consumeConsoleEvents({ userId: 0, eventTime:[filtered1[0].eventTime], consoleType: '' });
+    consumeConsoleEvents({ userId: 0, eventTime:[item.eventTime], consoleType: '' });
     const filteredMonitoring = monitoringData.filter((_, i) => index !== i);
     const isFirst = index === 0;
     const reordered = isFirst ? [...dummy, ...filtered] : [...filtered, ...dummy];
@@ -220,11 +221,14 @@ const Dashboard = () => {
   useEffect(() => {
     aliveUser();
     // refreshUser();
-    consumeConsoleEvents({ userId: 0, consoleType: '', consumeType:'refresh' });
     const interval = setInterval(aliveUser, 60000);
     return () => clearInterval(interval);
   }, []);
 
+
+  /**
+   * timed-out event handling
+   */
   useEffect(() => {
     const session = getStorage('session');
 
@@ -238,12 +242,13 @@ const Dashboard = () => {
           level: getSession().userLevel,
           user: getSession().UserId,
           alarm: item.audio ? 'P' : 'N',
+          activityDetTime: item.sirenTime ?? '',
           landingTime: item?.landingTime ?? '',
           reviewStart: item?.landingTime ?? '',
           reviewEnd: getTimeByTimezone(item?.timezone),
           actionTag: customAction,
           subActionTag: subAction?.subCategoryId,
-          notes: item.notes
+          notes: item.notes ?? ''
         }
       );
       await write2VmsDispatchQueue(
@@ -251,9 +256,8 @@ const Dashboard = () => {
       );
 
       const filtered = eventData.filter((_, i) => index !== i);
-      const filtered1 = eventData.filter((_, i) => index === i);
 
-      consumeConsoleEvents({ userId: 0, eventTime:[filtered1[0].eventTime], consoleType: '' });
+      consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: '' });
       const filteredMonitoring = monitoringData.filter((_, i) => index !== i);
       const isFirst = index === 0;
       const reordered = isFirst ? [...dummy, ...filtered] : [...filtered, ...dummy];
@@ -378,17 +382,13 @@ const Reload = () => {
   useEffect(() => {
     const handleBeforeUnload = (event) => {
       event.preventDefault();
-      // Some browsers require returnValue to be set
       event.returnValue = "Are you sure you want to leave this page?";
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
+    consumeConsoleEvents({ userId: 0, consoleType: '', consumeType: 'refresh' });
 
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, []);
-
-  return (
-    <Fragment></Fragment>
-  );
 }
