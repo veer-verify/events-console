@@ -220,14 +220,13 @@ const Dashboard = () => {
   useEffect(() => {
     aliveUser();
     // refreshUser();
-    consumeConsoleEvents({ userId: 0,consoleType: '',consumeType:'refresh' });
+    consumeConsoleEvents({ userId: 0, consoleType: '', consumeType:'refresh' });
     const interval = setInterval(aliveUser, 60000);
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
     const session = getStorage('session');
-
 
     const handleSus = async (item) => {
       const index = getStorage('index');
@@ -282,8 +281,12 @@ const Dashboard = () => {
 
     if (eventData.length !== 0 && session.userLevel === 1) {
       const interval = setInterval(() => {
-        eventData[0].timer--;
-        eventData[1].timer--;
+        if(eventData[0]) {
+          eventData[0].timer--;
+        }
+        if(eventData[1]) {
+          eventData[1].timer--;
+        }
         if (eventData[0]?.timer === 0) {
           setStorage('custom_action', 2);
           setStorage('index', 0);
