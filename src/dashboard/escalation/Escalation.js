@@ -17,6 +17,7 @@ const Escalation = ({ closeEscalation, currentEvent, handleFalse, handleSuspicio
   const [selectedSubType, setSelectedSubType] = useState("");
   const [selection, setSelection] = useState("person");
   const [emaildata, setEmailData] = useState(null);
+  const [notes, setNotes] = useState('');
   //  const [selectedButton, setSelectedButton] = useState("mail");
   //  const selectButton = (button) => setSelectedButton(button);
 
@@ -38,14 +39,14 @@ const Escalation = ({ closeEscalation, currentEvent, handleFalse, handleSuspicio
     const session = getStorage('session');
     const currentTime = getTimeByTimezone(currentEvent?.timezone);
     if (type === 'escalate') {
-      handleSuspicious({ ...currentEvent, actionTagTime: currentTime, ...monitoringData });
+      handleSuspicious({ ...currentEvent, actionTagTime: currentTime, ...monitoringData,notes });
       if (session?.userLevel === 2) {
         eventsGenericEmail(
           { ...currentEvent, ...{ actionTag: emaildata?.alertTagId }, ...{ alertTypeId: selectedAlertType }, ...{ alertSubTypeId: selectedSubType }, ...{ objectName: selection }, ...emaildata }
         );
       }
     } else {
-      handleFalse({ ...currentEvent, actionTagTime: currentTime });
+      handleFalse({ ...currentEvent, actionTagTime: currentTime,notes });
     }
     closeEscalation();
   }
@@ -132,6 +133,11 @@ const Escalation = ({ closeEscalation, currentEvent, handleFalse, handleSuspicio
               </option>
             ))}
           </select>
+        </div>
+
+          <div className="form-group">
+          <label>Notes</label>
+          <textarea rows={3} style={{width:'100%'}} value={notes} onChange={(e)=>setNotes(e.target.value)}></textarea>
         </div>
 
         {/* Action Buttons */}
