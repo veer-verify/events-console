@@ -226,6 +226,9 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
+    const session = getStorage('session');
+
+
     const handleSus = async (item) => {
       const index = getStorage('index');
       const customAction = getStorage('custom_action');
@@ -277,7 +280,7 @@ const Dashboard = () => {
     }
 
 
-    if (eventData.length !== 0) {
+    if (eventData.length !== 0 && session.userLevel === 1) {
       const interval = setInterval(() => {
         eventData[0].timer--;
         eventData[1].timer--;

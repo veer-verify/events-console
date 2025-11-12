@@ -292,5 +292,13 @@
 .law-card p {
   margin: 4px 0;
   color: #333;
-  font-size: 12px;
+  font-size: 10px;
+}
+
+.show-more-btn {
+  background: none;
+  border: none;
+  color: #007bff;
+  cursor: pointer;
+  margin-top: 10px;
 }
