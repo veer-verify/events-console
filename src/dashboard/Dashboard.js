@@ -77,7 +77,7 @@ const Dashboard = () => {
         reviewEnd: getTimeByTimezone(item?.timezone),
         actionTag: customAction,
         subActionTag: subAction?.subCategoryId,
-        notes: ''
+        notes: item.notes
       }
     );
     updateEventFullDetails(
@@ -130,7 +130,7 @@ const Dashboard = () => {
         reviewEnd: getTimeByTimezone(item?.timezone),
         actionTag: customAction,
         subActionTag: subAction?.subCategoryId,
-        notes: ''
+        notes: item.notes
       }
     );
     await write2VmsDispatchQueue(
@@ -244,7 +244,7 @@ const Dashboard = () => {
           reviewEnd: getTimeByTimezone(item?.timezone),
           actionTag: customAction,
           subActionTag: subAction?.subCategoryId,
-          notes: ''
+          notes: item.notes
         }
       );
       await write2VmsDispatchQueue(
