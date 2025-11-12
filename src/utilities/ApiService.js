@@ -207,7 +207,7 @@ export const playSiren = async (payload) => {
 
 export const writetoRedisQueueData = async (payload) => {
  
-    const url =`${environment.event_process_url}/addConsoleEvents`;
+    const url =`${environment.event_process_url}/addConsoleEvents_1_0`;
   const user = getStorage('session');
   payload.userId = user?.UserId;
   payload.level = `Level${user?.userLevel}`;
@@ -235,7 +235,7 @@ export const userLogin =async ()=>{
 
 export async function aliveUser(){
 
-  const url = `${environment.event_process_url}/alive`;
+  const url = `${environment.event_process_url}/userActiveStatus_1_0`;
   const user = getStorage('session');
   let payload={
     userId:0
@@ -268,7 +268,7 @@ export async function refreshUser(){
 }
 
 export async function consumeConsoleEvents(payload){
-  const url = `${environment.event_process_url}/consumeConsoleEvents`;
+  const url = `${environment.event_process_url}/consumeConsoleEvents_1_0`;
    const user = getStorage('session');
 
   payload.userId = user?.UserId;

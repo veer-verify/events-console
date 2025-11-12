@@ -87,7 +87,7 @@ const Dashboard = () => {
     const filtered = eventData.filter((_, i) => index !== i);
     const filtered1 = eventData.filter((_, i) => index === i);
 
-    consumeConsoleEvents({ userId: 0, eventTime: filtered1[0].eventTime, consoleType: '' });
+    consumeConsoleEvents({ userId: 0, eventTime:[filtered1[0].eventTime], consoleType: '' });
     const filteredMonitoring = monitoringData.filter((_, i) => index !== i);
     const isFirst = index === 0;
     const reordered = isFirst ? [...dummy, ...filtered] : [...filtered, ...dummy];
@@ -149,7 +149,7 @@ const Dashboard = () => {
     const filtered = eventData.filter((_, i) => index !== i);
     const filtered1 = eventData.filter((_, i) => index === i);
 
-    consumeConsoleEvents({ userId: 0, eventTime: filtered1[0].eventTime, consoleType: '' });
+    consumeConsoleEvents({ userId: 0, eventTime:[filtered1[0].eventTime], consoleType: '' });
     const filteredMonitoring = monitoringData.filter((_, i) => index !== i);
     const isFirst = index === 0;
     const reordered = isFirst ? [...dummy, ...filtered] : [...filtered, ...dummy];
@@ -219,7 +219,8 @@ const Dashboard = () => {
 
   useEffect(() => {
     aliveUser();
-    refreshUser();
+    // refreshUser();
+    consumeConsoleEvents({ userId: 0,consoleType: '',consumeType:'refresh' });
     const interval = setInterval(aliveUser, 60000);
     return () => clearInterval(interval);
   }, []);
@@ -250,7 +251,7 @@ const Dashboard = () => {
       const filtered = eventData.filter((_, i) => index !== i);
       const filtered1 = eventData.filter((_, i) => index === i);
 
-      consumeConsoleEvents({ userId: 0, eventTime: filtered1[0].eventTime, consoleType: '' });
+      consumeConsoleEvents({ userId: 0, eventTime:[filtered1[0].eventTime], consoleType: '' });
       const filteredMonitoring = monitoringData.filter((_, i) => index !== i);
       const isFirst = index === 0;
       const reordered = isFirst ? [...dummy, ...filtered] : [...filtered, ...dummy];
@@ -280,12 +281,12 @@ const Dashboard = () => {
       const interval = setInterval(() => {
         eventData[0].timer--;
         eventData[1].timer--;
-        if (eventData[0].timer === 0) {
+        if (eventData[0]?.timer === 0) {
           setStorage('custom_action', 2);
           setStorage('index', 0);
           handleSus(eventData[0]);
         }
-        if (eventData[1].timer === 0) {
+        if (eventData[1]?.timer === 0) {
           setStorage('custom_action', 2);
           setStorage('index', 1);
           handleSus(eventData[1]);

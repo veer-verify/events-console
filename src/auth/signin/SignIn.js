@@ -34,7 +34,7 @@ const SignIn = () => {
         setStorage('session', res.data);
         dispatch(saveSession(res.data));
 
-        userLogin();
+        // userLogin();
         
         navigate('/dashboard');
       } else {
