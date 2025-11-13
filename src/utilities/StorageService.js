@@ -25,7 +25,7 @@ export const getSession = () => getStorage('session');
  * @param {*} timezone 
  * @returns 
  */
-export const getTimeByTimezone = (timezone) => moment().tz(timezone)?.format('YYYY-MM-DD HH:mm:ss');
+export const getTimeByTimezone = (timezone) => timezone ? moment().tz(timezone).format('YYYY-MM-DD HH:mm:ss') : moment().format('YYYY-MM-DD HH:mm:ss');
 export const getHour = (timezone) => moment().tz(timezone).hours();
 export const getDay = (timezone) => moment().tz(timezone).day();
 

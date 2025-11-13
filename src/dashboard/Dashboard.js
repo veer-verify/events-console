@@ -269,7 +269,6 @@ const Dashboard = () => {
         first.audioPlayed = false;
         first.timer = 60;
 
-
         writetoRedisQueueData({ userId: 0, level: "", queueInfo: first, consoleType: '', queueName: '' });
         const updated = isFirst ? [...eventResponse, ...filtered] : [...filtered, ...eventResponse];
         setEventData(updated);

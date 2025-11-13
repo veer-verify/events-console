@@ -65,7 +65,7 @@ export const write2VmsDispatchQueue = async (payload) => {
     httpUrl: payload?.httpUrl,
     imageUrl: payload?.image_list?.toString(),
     queue_name: payload?.queue_name,
-    landingTime: payload?.landingTime,
+    landingTime: payload?.landingTime ?? '',
     timezone: payload?.timezone,
     userLevelAlarmInfo: payload?.userLevelAlarmInfo,
     userName: user.UserName,
