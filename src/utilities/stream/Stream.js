@@ -169,7 +169,7 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789" }) 
         onRemoteAnswer(sdp);
 
         // Start keepalive after session established
-        startKeepalive();
+        // startKeepalive();
         startWatchdog();
       });
     };

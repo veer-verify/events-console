@@ -87,7 +87,7 @@ const Dashboard = () => {
 
     const filtered = eventData.filter((_, i) => index !== i);
 
-    consumeConsoleEvents({ userId: 0, eventTime:[item.eventTime], consoleType: '' });
+    consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: '' });
     const filteredMonitoring = monitoringData.filter((_, i) => index !== i);
     const isFirst = index === 0;
     const reordered = isFirst ? [...dummy, ...filtered] : [...filtered, ...dummy];
@@ -97,7 +97,7 @@ const Dashboard = () => {
       const [first] = eventResponse;
       first.landingTime = getTimeByTimezone(first.timezone);
       first.audioPlayed = false;
-      first.timer = 60;
+      first.timer = 20;
 
       writetoRedisQueueData({ userId: 0, level: "", queueInfo: first, consoleType: '', queueName: '' });
       const updated = isFirst ? [...eventResponse, ...filtered] : [...filtered, ...eventResponse];
@@ -150,7 +150,7 @@ const Dashboard = () => {
 
     const filtered = eventData.filter((_, i) => index !== i);
 
-    consumeConsoleEvents({ userId: 0, eventTime:[item.eventTime], consoleType: '' });
+    consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: '' });
     const filteredMonitoring = monitoringData.filter((_, i) => index !== i);
     const isFirst = index === 0;
     const reordered = isFirst ? [...dummy, ...filtered] : [...filtered, ...dummy];
@@ -160,7 +160,7 @@ const Dashboard = () => {
       const [first] = eventResponse;
       first.landingTime = getTimeByTimezone(first.timezone);
       first.audioPlayed = false;
-      first.timer = 60;
+      first.timer = 20;
 
 
       writetoRedisQueueData({ userId: 0, level: "", queueInfo: first, consoleType: '', queueName: '' });
@@ -185,7 +185,7 @@ const Dashboard = () => {
         const [first] = response;
         first.landingTime = getTimeByTimezone(response.timezone);
         first.audioPlayed = false;
-        first.timer = 60;
+        first.timer = 20;
         setEventData((prev) => [...prev, ...response]);
         writetoRedisQueueData({ userId: 0, level: "", queueInfo: first, consoleType: '', queueName: '' });
         const data = await getMonitoringInfo(first);
@@ -226,9 +226,10 @@ const Dashboard = () => {
   }, []);
 
 
+
   /**
    * timed-out event handling
-   */
+  */
   useEffect(() => {
     const session = getStorage('session');
 
@@ -267,7 +268,7 @@ const Dashboard = () => {
         const [first] = eventResponse;
         first.landingTime = getTimeByTimezone(first.timezone);
         first.audioPlayed = false;
-        first.timer = 60;
+        first.timer = 20;
 
         writetoRedisQueueData({ userId: 0, level: "", queueInfo: first, consoleType: '', queueName: '' });
         const updated = isFirst ? [...eventResponse, ...filtered] : [...filtered, ...eventResponse];
@@ -283,12 +284,15 @@ const Dashboard = () => {
 
 
     if (eventData.length !== 0 && session.userLevel === 1) {
+      let firstInter = null;
       const interval = setInterval(() => {
-        if(eventData[0]) {
+        if (eventData[0]) {
           eventData[0].timer--;
         }
-        if(eventData[1]) {
-          eventData[1].timer--;
+        if (eventData[1]) {
+           firstInter = setTimeout(() => {
+            eventData[1].timer--;
+          }, 2000)
         }
         if (eventData[0]?.timer === 0) {
           setStorage('custom_action', 2);
@@ -305,6 +309,7 @@ const Dashboard = () => {
 
       return () => {
         clearInterval(interval);
+        clearInterval(firstInter);
       };
     }
   }, [dummy, eventData, monitoringData]);

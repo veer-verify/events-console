@@ -117,9 +117,9 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
             const dayStr =
                 days.length > 1
                     ? `${days[0][0].toUpperCase()}${days[0].slice(1)}-${days[
-                          days.length - 1
-                      ][0]
-                          .toUpperCase()}${days[days.length - 1].slice(1)}`
+                        days.length - 1
+                    ][0]
+                        .toUpperCase()}${days[days.length - 1].slice(1)}`
                     : `${days[0][0].toUpperCase()}${days[0].slice(1)}`;
             return (
                 <span key={index}>
@@ -194,13 +194,13 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
 
     return (
         <Fragment>
-            <div className="tile">
-                <div
-                    className="camera-feeds"
-                    style={{
-                        border: currentEvent?.objectName === 'DUMMY' ? '2px solid yellow' : 'none'
-                    }}
-                >
+            <div className='tile'
+                style={{
+                    background: currentEvent?.objectName === 'DUMMY' ? '#f4efbd' : 'none',
+                    border: currentEvent?.timer < 10 ? '2px solid #ed3237' : 'none'
+                }}>
+                {currentEvent?.timer}
+                <div className="camera-feeds">
                     <div className="camera">
                         {imgSrc && <img src={imgSrc} alt={`Camera Feed ${imgindex + 1}`} />}
                     </div>
