@@ -3,7 +3,7 @@ import { useState, useEffect, Fragment } from "react";
 import { useAuth } from "../Dashboard";
 import ErrorInfo from "../../utilities/error-info/ErrorInfo";
 import { eventsGenericEmail, getAlertCategoriesForSiteId, getEmailDataForVMSEvents } from "../../utilities/ApiService";
-import { getStorage, getTimeByTimezone } from "../../utilities/StorageService";
+import { getStorage, getTimeByTimezone, timeFormat } from "../../utilities/StorageService";
 
 const Escalation = ({ closeEscalation, currentEvent, handleFalse, handleSuspicious, monitoringData }) => {
   // const data = useAuth();
@@ -39,14 +39,14 @@ const Escalation = ({ closeEscalation, currentEvent, handleFalse, handleSuspicio
     const session = getStorage('session');
     const currentTime = getTimeByTimezone(currentEvent?.timezone);
     if (type === 'escalate') {
-      handleSuspicious({ ...currentEvent, actionTagTime: currentTime, ...monitoringData,notes });
+      handleSuspicious({ ...currentEvent, actionTagTime: currentTime, ...monitoringData, notes });
       if (session?.userLevel === 2) {
         eventsGenericEmail(
           { ...currentEvent, ...{ actionTag: emaildata?.alertTagId }, ...{ alertTypeId: selectedAlertType }, ...{ alertSubTypeId: selectedSubType }, ...{ objectName: selection }, ...emaildata }
         );
       }
     } else {
-      handleFalse({ ...currentEvent, actionTagTime: currentTime,notes });
+      handleFalse({ ...currentEvent, actionTagTime: currentTime, notes });
     }
     closeEscalation();
   }
@@ -135,16 +135,16 @@ const Escalation = ({ closeEscalation, currentEvent, handleFalse, handleSuspicio
           </select>
         </div>
 
-          <div className="form-group">
+        <div className="form-group">
           <label>Notes</label>
-          <textarea rows={3} style={{width:'100%'}} value={notes} onChange={(e)=>setNotes(e.target.value)}></textarea>
+          <textarea rows={3} style={{ width: '100%' }} value={notes} onChange={(e) => setNotes(e.target.value)}></textarea>
         </div>
 
         {/* Action Buttons */}
         {emaildata &&
           <div className="button-group">
             <button className="btn-secondary" onClick={() => handle('complete')}>COMPLETE</button>
-            <button className="btn-primary" onClick={() => handle('escalate')}>ESCALATE</button>
+            {monitoringData && monitoringData.nextQueueName !== '' && <button className="btn-primary" onClick={() => handle('escalate')}>ESCALATE</button>}
           </div>
         }
       </div>
@@ -200,6 +200,14 @@ const Escalation = ({ closeEscalation, currentEvent, handleFalse, handleSuspicio
 
               <table>
                 <tbody>
+                  <tr>
+                    <td><strong>Timezone</strong></td>
+                    <td>{currentEvent?.timezone}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Monitoring</strong></td>
+                    <td>{timeFormat(monitoringData)}</td>
+                  </tr>
                   <tr>
                     <td><strong>Action Tag</strong></td>
                     <td>{emaildata?.alertTag}</td>

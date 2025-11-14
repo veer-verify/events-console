@@ -3,9 +3,8 @@ import { createContext, Fragment, useContext, useEffect, useRef, useState } from
 import Header from '../header/Header';
 import Tile from './tile/Tile';
 import { getSession, getStorage, getTimeByTimezone, setStorage } from '../utilities/StorageService';
-import { aliveUser, refreshUser, consumeConsoleEvents, getActionTagCategories, getMonitoringInfo, getVmsEventsQueueData, updateEventFullDetails, write2VmsDispatchQueue, writetoRedisQueueData } from '../utilities/ApiService';
+import { aliveUser, consumeConsoleEvents, getActionTagCategories, getMonitoringInfo, getVmsEventsQueueData, updateEventFullDetails, write2VmsDispatchQueue, writetoRedisQueueData } from '../utilities/ApiService';
 import { useDispatch, useSelector } from 'react-redux';
-import { toast } from 'react-toastify';
 import { saveAction } from './actionTagSlice';
 
 
@@ -29,6 +28,7 @@ const Dashboard = () => {
     setStorage('actionTags', actionStore.data)
   }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const dummy = [
     {
       "siteName": "Loading...",
@@ -41,7 +41,8 @@ const Dashboard = () => {
       "imageUrl": "",
       "images_for_event": 0,
       "timezone": "",
-      "image_list": []
+      "image_list": [],
+      "timer": 20
     }
   ];
 
@@ -93,11 +94,11 @@ const Dashboard = () => {
     const reordered = isFirst ? [...dummy, ...filtered] : [...filtered, ...dummy];
     setEventData(reordered);
     const eventResponse = await getVmsEventsQueueData();
-    if (eventResponse.length) {
+    if (eventResponse && eventResponse.length) {
       const [first] = eventResponse;
       first.landingTime = getTimeByTimezone(first.timezone);
       first.audioPlayed = false;
-      first.timer = 20;
+      first.timer = 120;
 
       writetoRedisQueueData({ userId: 0, level: "", queueInfo: first, consoleType: '', queueName: '' });
       const updated = isFirst ? [...eventResponse, ...filtered] : [...filtered, ...eventResponse];
@@ -115,8 +116,6 @@ const Dashboard = () => {
    * to handel suspicious activity
    */
   const handleSuspicious = async (item) => {
-    // console.log(item)
-    // const session = getStorage('session');
     const index = getStorage('index');
     const customAction = getStorage('custom_action');
     const subAction = getStorage('sub_action');
@@ -160,7 +159,7 @@ const Dashboard = () => {
       const [first] = eventResponse;
       first.landingTime = getTimeByTimezone(first.timezone);
       first.audioPlayed = false;
-      first.timer = 20;
+      first.timer = 120;
 
 
       writetoRedisQueueData({ userId: 0, level: "", queueInfo: first, consoleType: '', queueName: '' });
@@ -177,15 +176,13 @@ const Dashboard = () => {
 
   const timerRef = useRef(null);
   useEffect(() => {
-    // const session = getStorage('session');
-
     const getEvent = async () => {
       const response = await getVmsEventsQueueData();
       if (response && response.length) {
         const [first] = response;
         first.landingTime = getTimeByTimezone(response.timezone);
         first.audioPlayed = false;
-        first.timer = 20;
+        first.timer = 120;
         setEventData((prev) => [...prev, ...response]);
         writetoRedisQueueData({ userId: 0, level: "", queueInfo: first, consoleType: '', queueName: '' });
         const data = await getMonitoringInfo(first);
@@ -232,16 +229,17 @@ const Dashboard = () => {
   */
   useEffect(() => {
     const session = getStorage('session');
+    if (session.userLevel !== 1 || eventData.length === 0) return;
 
-    const handleSus = async (item) => {
+    const handle = async (item) => {
       const index = getStorage('index');
       const customAction = getStorage('custom_action');
       const subAction = getStorage('sub_action');
 
       item?.userLevelAlarmInfo?.push(
         {
-          level: getSession().userLevel,
-          user: getSession().UserId,
+          level: session?.userLevel,
+          user: session?.UserId,
           alarm: item.audio ? 'P' : 'N',
           activityDetTime: item.sirenTime ?? '',
           landingTime: item?.landingTime ?? '',
@@ -252,23 +250,24 @@ const Dashboard = () => {
           notes: item.notes ?? ''
         }
       );
-      await write2VmsDispatchQueue(
+      write2VmsDispatchQueue(
         { ...item, ...{ actionTag: customAction }, ...{ subActionTag: subAction?.subCategoryId }, ...{ queue_name: 'time-out' } }
+      );
+      consumeConsoleEvents(
+        { userId: 0, eventTime: [item.eventTime], consoleType: '' }
       );
 
       const filtered = eventData.filter((_, i) => index !== i);
-
-      consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: '' });
       const filteredMonitoring = monitoringData.filter((_, i) => index !== i);
       const isFirst = index === 0;
       const reordered = isFirst ? [...dummy, ...filtered] : [...filtered, ...dummy];
       setEventData(reordered);
       const eventResponse = await getVmsEventsQueueData();
-      if (eventResponse.length) {
+      if (eventResponse && eventResponse.length) {
         const [first] = eventResponse;
         first.landingTime = getTimeByTimezone(first.timezone);
         first.audioPlayed = false;
-        first.timer = 20;
+        first.timer = 120;
 
         writetoRedisQueueData({ userId: 0, level: "", queueInfo: first, consoleType: '', queueName: '' });
         const updated = isFirst ? [...eventResponse, ...filtered] : [...filtered, ...eventResponse];
@@ -282,8 +281,6 @@ const Dashboard = () => {
       }
     }
 
-
-    if (eventData.length !== 0 && session.userLevel === 1) {
       let firstInter = null;
       const interval = setInterval(() => {
         if (eventData[0]) {
@@ -291,27 +288,25 @@ const Dashboard = () => {
         }
         if (eventData[1]) {
            firstInter = setTimeout(() => {
-            eventData[1].timer--;
-          }, 2000)
+             eventData[1].timer--;
+          }, 3000)
         }
         if (eventData[0]?.timer === 0) {
           setStorage('custom_action', 2);
           setStorage('index', 0);
-          handleSus(eventData[0]);
+          handle(eventData[0]);
         }
         if (eventData[1]?.timer === 0) {
           setStorage('custom_action', 2);
           setStorage('index', 1);
-          handleSus(eventData[1]);
+          handle(eventData[1]);
         }
-      }, 1000)
-
+      }, 1000);
 
       return () => {
         clearInterval(interval);
         clearInterval(firstInter);
       };
-    }
   }, [dummy, eventData, monitoringData]);
 
   return (
@@ -319,8 +314,6 @@ const Dashboard = () => {
       <Header></Header>
 
       <div className='tiles'>
-        {/* {eventData.length ? eventData.map((item, i) => */}
-        {/* <EventContext.Provider value={item} key={i}> */}
         {
           eventData.length ? eventData.length >= 2 ?
             <Fragment>
@@ -372,8 +365,28 @@ const Dashboard = () => {
               <p className='no-event'>no events</p>
             </Fragment>
         }
-        {/* </EventContext.Provider> */}
       </div>
+
+
+      {/* <div className='tiles'>
+        {
+          eventData.map((item, i) => (
+            <Tile
+              key={i}
+              index={i}
+              currentEvent={item}
+              monitoringData={monitoringData[i]}
+
+              escalation={escalation}
+              openEscalation={openEscalation}
+              closeEscalation={closeEscalation}
+
+              handleFalse={handleFalse}
+              handleSuspicious={handleSuspicious}
+            />
+          ))
+        }
+      </div> */}
 
       <Reload></Reload>
     </Fragment>

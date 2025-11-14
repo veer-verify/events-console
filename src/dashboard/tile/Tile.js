@@ -4,7 +4,7 @@ import Escalation from '../escalation/Escalation';
 import Live from '../../utilities/live/Live';
 import Stream from '../../utilities/stream/Stream';
 import { toast } from 'react-toastify';
-import { getSession, getStorage, getTimeByTimezone, setStorage } from '../../utilities/StorageService';
+import { getSession, getStorage, getTimeByTimezone, setStorage, timeFormat } from '../../utilities/StorageService';
 import { playSiren } from '../../utilities/ApiService';
 import { useSelector } from 'react-redux';
 
@@ -73,63 +73,6 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
     const [imgindex, setIndex] = useState(0);
     const [imgSrc, setImgSrc] = useState(currentEvent?.image_list[0]);
 
-    const timeFormat = () => {
-        const monitoring_hours =
-            monitoringData &&
-            monitoringData?.cameras.length &&
-            monitoringData?.cameras[0].monitoringHoursDetails;
-        if (!monitoring_hours) return;
-
-        const weekdays = [
-            'monday',
-            'tuesday',
-            'wednesday',
-            'thursday',
-            'friday',
-            'saturday',
-            'sunday'
-        ];
-
-        const sortedDays = Object.keys(monitoring_hours).sort(
-            (a, b) => weekdays.indexOf(a) - weekdays.indexOf(b)
-        );
-
-        const allHours = {};
-        sortedDays.forEach((day) => {
-            const formatted = monitoring_hours[day]
-                .split(',')
-                .map((r) => {
-                    const [start, end] = r.split('-').map(Number);
-                    return `${String(start).padStart(2, '0')}:00 - ${String(end).padStart(2, '0')}:00`;
-                })
-                .join(' & ');
-            allHours[day] = formatted;
-        });
-
-        const grouped = {};
-        sortedDays.forEach((day) => {
-            const hours = allHours[day];
-            if (!grouped[hours]) grouped[hours] = [];
-            grouped[hours].push(day);
-        });
-
-        return Object.entries(grouped).map(([hours, days], index) => {
-            const dayStr =
-                days.length > 1
-                    ? `${days[0][0].toUpperCase()}${days[0].slice(1)}-${days[
-                        days.length - 1
-                    ][0]
-                        .toUpperCase()}${days[days.length - 1].slice(1)}`
-                    : `${days[0][0].toUpperCase()}${days[0].slice(1)}`;
-            return (
-                <span key={index}>
-                    {dayStr}: {hours}
-                    <br />
-                </span>
-            );
-        });
-    };
-
     const handleAction = (data) => {
         const session = getStorage('session');
         const customAction = getStorage('custom_action');
@@ -194,13 +137,9 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
 
     return (
         <Fragment>
-            <div className='tile'
-                style={{
-                    background: currentEvent?.objectName === 'DUMMY' ? '#f4efbd' : 'none',
-                    border: currentEvent?.timer < 10 ? '2px solid #ed3237' : 'none'
-                }}>
-                {currentEvent?.timer}
-                <div className="camera-feeds">
+            <div className='tile'>
+                {/* <p >{currentEvent?.timer}</p> */}
+                <div className={currentEvent?.objectName === 'DUMMY' ? 'yellow-blink camera-feeds' : currentEvent?.timer < 10 ? 'red-blink camera-feeds' : "camera-feeds"}>
                     <div className="camera">
                         {imgSrc && <img src={imgSrc} alt={`Camera Feed ${imgindex + 1}`} />}
                     </div>
@@ -219,11 +158,7 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
                             disabled={currentEvent?.siteId === 0 || !monitoringData}
                         >
                             <img
-                                src={
-                                    currentEvent?.siteId === 0 || !monitoringData
-                                        ? 'icons/three-dots.svg'
-                                        : 'icons/false.png'
-                                }
+                                src='icons/false.png'
                                 alt="icon"
                                 width={20}
                                 title="False Activity"
@@ -235,11 +170,7 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
                             disabled={currentEvent?.siteId === 0 || !monitoringData}
                         >
                             <img
-                                src={
-                                    currentEvent?.siteId === 0 || !monitoringData
-                                        ? 'icons/three-dots.svg'
-                                        : 'icons/suspicious.png'
-                                }
+                                src='icons/suspicious.png'
                                 alt="icon"
                                 width={20}
                                 title="Suspicious Activity"
@@ -251,11 +182,7 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
                             disabled={currentEvent?.siteId === 0}
                         >
                             <img
-                                src={
-                                    currentEvent?.siteId === 0
-                                        ? 'icons/three-dots.svg'
-                                        : 'icons/live.png'
-                                }
+                                src='icons/live.png'
                                 alt="icon"
                                 width={20}
                                 title="Live"
@@ -267,11 +194,7 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
                             disabled={playing}
                         >
                             <img
-                                src={
-                                    currentEvent.siteId === 0
-                                        ? 'icons/three-dots.svg'
-                                        : 'icons/siren.png'
-                                }
+                                src='icons/siren.png'
                                 alt="icon"
                                 width={20}
                                 title="Play Siren"
@@ -359,7 +282,7 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
                             </tr>
                             <tr>
                                 <td><strong>Monitoring</strong></td>
-                                <td>{timeFormat()}</td>
+                                <td>{timeFormat(monitoringData)}</td>
                             </tr>
                             <tr>
                                 <td><strong>Camera</strong></td>

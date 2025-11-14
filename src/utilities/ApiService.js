@@ -41,7 +41,7 @@ export const listActionTags = async (payload) => {
 }
 
 export const getAlertCategoriesForSiteId = async (payload) => {
-  const url = `${environment.guard_monitoring_url}/getAlertCategoriesForSiteId_1_0/`;
+  const url = `${environment.guard_monitoring_url}/getAlertCategoriesForSiteId_1_0`;
   const params = new URLSearchParams();
   params.append('siteId', payload?.siteId);
   return api.get(url, { params: params }).then((res) => res.data).catch((err) => console.log(err));
