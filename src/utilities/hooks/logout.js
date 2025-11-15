@@ -7,7 +7,7 @@ export const useLogout = () => {
     const logout = () => {
         clearStorage();
         navigate('/');
-        setTimeout(() => window.location.reload(), 1000);
+        // setTimeout(() => window.location.reload(), 1000);
     }
 
     return logout;

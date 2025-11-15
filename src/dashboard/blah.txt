@@ -1,0 +1,53 @@
+      {/* <div className='tiles'>
+        {
+          eventData.length ? eventData.length >= 2 ?
+            <Fragment>
+              <Tile
+                key={0}
+                index={0}
+                currentEvent={eventData[0]}
+                monitoringData={monitoringData[0]}
+
+                escalation={escalation}
+                openEscalation={openEscalation}
+                closeEscalation={closeEscalation}
+
+                handleFalse={handleFalse}
+                handleSuspicious={handleSuspicious}
+              />
+              <Tile
+                key={1}
+                index={1}
+                currentEvent={eventData[1]}
+                monitoringData={monitoringData[1]}
+
+                escalation={escalation}
+                openEscalation={openEscalation}
+                closeEscalation={closeEscalation}
+
+                handleFalse={handleFalse}
+                handleSuspicious={handleSuspicious}
+              />
+            </Fragment>
+            :
+            <Fragment>
+              <Tile
+                key={0}
+                index={0}
+                currentEvent={eventData[0]}
+                monitoringData={monitoringData[0]}
+
+                escalation={escalation}
+                openEscalation={openEscalation}
+                closeEscalation={closeEscalation}
+
+                handleFalse={handleFalse}
+                handleSuspicious={handleSuspicious}
+              />
+            </Fragment>
+            :
+            <Fragment>
+              <p className='no-event'>no events</p>
+            </Fragment>
+        }
+      </div> */}

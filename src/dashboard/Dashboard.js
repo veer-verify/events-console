@@ -9,7 +9,6 @@ import { saveAction } from './actionTagSlice';
 
 
 const Dashboard = () => {
-
   const { sessionStore, actionStore } = useSelector((state) => ({
     sessionStore: state.sessionStore,
     actionStore: state.actionStore
@@ -46,7 +45,7 @@ const Dashboard = () => {
     }
   ];
 
-  const EventContext = createContext();
+  // const EventContext = createContext();
   const [eventData, setEventData] = useState([]);
   const [escalation, setEscalation] = useState(false);
   const [monitoringData, setMonitoringData] = useState([]);
@@ -85,10 +84,9 @@ const Dashboard = () => {
     updateEventFullDetails(
       { ...item, ...{ actionTag: customAction }, ...{ subActionTag: subAction?.subCategoryId } }
     );
+    consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: '' });
 
     const filtered = eventData.filter((_, i) => index !== i);
-
-    consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: '' });
     const filteredMonitoring = monitoringData.filter((_, i) => index !== i);
     const isFirst = index === 0;
     const reordered = isFirst ? [...dummy, ...filtered] : [...filtered, ...dummy];
@@ -98,7 +96,7 @@ const Dashboard = () => {
       const [first] = eventResponse;
       first.landingTime = getTimeByTimezone(first.timezone);
       first.audioPlayed = false;
-      first.timer = 120;
+      first.timer = 20;
 
       writetoRedisQueueData({ userId: 0, level: "", queueInfo: first, consoleType: '', queueName: '' });
       const updated = isFirst ? [...eventResponse, ...filtered] : [...filtered, ...eventResponse];
@@ -134,22 +132,12 @@ const Dashboard = () => {
         notes: item.notes ?? ''
       }
     );
-    await write2VmsDispatchQueue(
+    write2VmsDispatchQueue(
       { ...item, ...{ actionTag: customAction }, ...{ subActionTag: subAction?.subCategoryId }, ...{ queue_name: item?.nextQueueName } }
     );
-    // if (session?.userLevel === 4) {
-    //   updateEventFullDetails(
-    //     { ...item, ...{ actionTag: customAction }, ...{ subActionTag: subAction?.subCategoryId } }
-    //   );
-    // } else {
-    //   write2VmsDispatchQueue(
-    //     { ...item, ...{ actionTag: customAction }, ...{ subActionTag: subAction?.subCategoryId }, ...{ queue_name: item?.nextQueueName } }
-    //   );
-    // }
+    consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: '' });
 
     const filtered = eventData.filter((_, i) => index !== i);
-
-    consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: '' });
     const filteredMonitoring = monitoringData.filter((_, i) => index !== i);
     const isFirst = index === 0;
     const reordered = isFirst ? [...dummy, ...filtered] : [...filtered, ...dummy];
@@ -159,7 +147,7 @@ const Dashboard = () => {
       const [first] = eventResponse;
       first.landingTime = getTimeByTimezone(first.timezone);
       first.audioPlayed = false;
-      first.timer = 120;
+      first.timer = 20;
 
 
       writetoRedisQueueData({ userId: 0, level: "", queueInfo: first, consoleType: '', queueName: '' });
@@ -182,7 +170,7 @@ const Dashboard = () => {
         const [first] = response;
         first.landingTime = getTimeByTimezone(response.timezone);
         first.audioPlayed = false;
-        first.timer = 120;
+        first.timer = 20;
         setEventData((prev) => [...prev, ...response]);
         writetoRedisQueueData({ userId: 0, level: "", queueInfo: first, consoleType: '', queueName: '' });
         const data = await getMonitoringInfo(first);
@@ -214,15 +202,11 @@ const Dashboard = () => {
     };
   }, [dispatch, eventData.length]);
 
-
   useEffect(() => {
     aliveUser();
-    // refreshUser();
     const interval = setInterval(aliveUser, 60000);
     return () => clearInterval(interval);
   }, []);
-
-
 
   /**
    * timed-out event handling
@@ -267,7 +251,7 @@ const Dashboard = () => {
         const [first] = eventResponse;
         first.landingTime = getTimeByTimezone(first.timezone);
         first.audioPlayed = false;
-        first.timer = 120;
+        first.timer = 20;
 
         writetoRedisQueueData({ userId: 0, level: "", queueInfo: first, consoleType: '', queueName: '' });
         const updated = isFirst ? [...eventResponse, ...filtered] : [...filtered, ...eventResponse];
@@ -281,32 +265,24 @@ const Dashboard = () => {
       }
     }
 
-      let firstInter = null;
-      const interval = setInterval(() => {
-        if (eventData[0]) {
-          eventData[0].timer--;
-        }
-        if (eventData[1]) {
-           firstInter = setTimeout(() => {
-             eventData[1].timer--;
-          }, 3000)
-        }
-        if (eventData[0]?.timer === 0) {
-          setStorage('custom_action', 2);
-          setStorage('index', 0);
-          handle(eventData[0]);
-        }
-        if (eventData[1]?.timer === 0) {
-          setStorage('custom_action', 2);
-          setStorage('index', 1);
-          handle(eventData[1]);
-        }
-      }, 1000);
+    let firstInter = null;
+    const interval = setInterval(() => {
+      for (let i = 0; i < eventData.length; i++) {
+        const item = eventData[i];
+        i === 0 ? item.timer-- : setTimeout(() => item.timer--, 3000)
 
-      return () => {
-        clearInterval(interval);
-        clearInterval(firstInter);
-      };
+        if (item.timer === 0) {
+          setStorage('custom_action', 2);
+          setStorage('index', i);
+          handle(item);
+        }
+      }
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+      clearInterval(firstInter);
+    };
   }, [dummy, eventData, monitoringData]);
 
   return (
@@ -314,61 +290,6 @@ const Dashboard = () => {
       <Header></Header>
 
       <div className='tiles'>
-        {
-          eventData.length ? eventData.length >= 2 ?
-            <Fragment>
-              <Tile
-                key={0}
-                index={0}
-                currentEvent={eventData[0]}
-                monitoringData={monitoringData[0]}
-
-                escalation={escalation}
-                openEscalation={openEscalation}
-                closeEscalation={closeEscalation}
-
-                handleFalse={handleFalse}
-                handleSuspicious={handleSuspicious}
-              />
-              <Tile
-                key={1}
-                index={1}
-                currentEvent={eventData[1]}
-                monitoringData={monitoringData[1]}
-
-                escalation={escalation}
-                openEscalation={openEscalation}
-                closeEscalation={closeEscalation}
-
-                handleFalse={handleFalse}
-                handleSuspicious={handleSuspicious}
-              />
-            </Fragment>
-            :
-            <Fragment>
-              <Tile
-                key={0}
-                index={0}
-                currentEvent={eventData[0]}
-                monitoringData={monitoringData[0]}
-
-                escalation={escalation}
-                openEscalation={openEscalation}
-                closeEscalation={closeEscalation}
-
-                handleFalse={handleFalse}
-                handleSuspicious={handleSuspicious}
-              />
-            </Fragment>
-            :
-            <Fragment>
-              <p className='no-event'>no events</p>
-            </Fragment>
-        }
-      </div>
-
-
-      {/* <div className='tiles'>
         {
           eventData.map((item, i) => (
             <Tile
@@ -386,9 +307,9 @@ const Dashboard = () => {
             />
           ))
         }
-      </div> */}
+      </div>
 
-      <Reload></Reload>
+      <Reload />
     </Fragment>
   )
 }

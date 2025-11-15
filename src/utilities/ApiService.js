@@ -1,6 +1,6 @@
 import api from '../interceptor';
 import { environment } from '../environment';
-import { getDay, getHour, getQueue, getSession, getStorage, getTimeByTimezone } from './StorageService';
+import { getDay, getHour, getStorage, getTimeByTimezone } from './StorageService';
 import { toast } from 'react-toastify';
 
 
@@ -47,6 +47,14 @@ export const getAlertCategoriesForSiteId = async (payload) => {
   return api.get(url, { params: params }).then((res) => res.data).catch((err) => console.log(err));
 }
 
+export const getVmsEventsQueueData = async () => {
+  const url = `${environment.events_url}/getVms_EventsQueueData_1_0/`;
+  const user = getStorage('session');
+  const params = new URLSearchParams();
+  params.append('queue_name', 'test-steelfactory');
+  return api.get(url, { params: params }).then((res) => res.data).catch((err) => console.log(err));
+}
+
 export const write2VmsDispatchQueue = async (payload) => {
   const url = `${environment.events_url}/write2Vms_EventsQueue_1_0/`;
   const user = getStorage('session');
@@ -73,18 +81,8 @@ export const write2VmsDispatchQueue = async (payload) => {
   return api.post(url, obj).then((res) => {
     // toast.success("Event Cleared Successfully");
   }).catch((err) => {
-    console.log(err);
     // toast.error('Failed to clear event!');
   });
-}
-
-
-export const getVmsEventsQueueData = async () => {
-  const url = `${environment.events_url}/getVms_EventsQueueData_1_0/`;
-  const user = getStorage('session');
-  const params = new URLSearchParams();
-  params.append('queue_name', user?.queueName);
-  return api.get(url, { params: params }).then((res) => res.data).catch((err) => console.log(err));
 }
 
 export const updateEventFullDetails = async (payload) => {
@@ -207,8 +205,7 @@ export const playSiren = async (payload) => {
 
 
 export const writetoRedisQueueData = async (payload) => {
- 
-    const url =`${environment.event_process_url}/addConsoleEvents_1_0`;
+  const url =`${environment.event_process_url}/addConsoleEvents_1_0`;
   const user = getStorage('session');
   payload.userId = user?.UserId;
   payload.level = `Level${user?.userLevel}`;
@@ -221,7 +218,6 @@ export const writetoRedisQueueData = async (payload) => {
 
 
 export const userLogin =async ()=>{
-
   const url = `${environment.event_process_url}/userLogin`;
   const user = getStorage('session');
   let payload={
@@ -235,7 +231,6 @@ export const userLogin =async ()=>{
 }
 
 export async function aliveUser(){
-
   const url = `${environment.event_process_url}/userActiveStatus_1_0`;
   const user = getStorage('session');
   let payload={

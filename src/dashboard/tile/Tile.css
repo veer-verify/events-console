@@ -323,5 +323,6 @@
   border: none;
   color: #007bff;
   cursor: pointer;
-  margin-top: 10px;
+  margin-top: 4px;
+  font-size: 12px;
 }

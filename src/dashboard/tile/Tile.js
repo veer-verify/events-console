@@ -109,9 +109,7 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
         }
 
         if (!currentEvent?.image_list || currentEvent?.image_list.length === 0) return;
-
-        if (currentEvent?.objectName === 'DUMMY')
-            return setImgSrc(currentEvent?.image_list[0]);
+        if (currentEvent?.objectName === 'DUMMY') return setImgSrc(currentEvent?.image_list[0]);
 
         let i = 0;
         const interval = setInterval(() => {
@@ -139,7 +137,16 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
         <Fragment>
             <div className='tile'>
                 {/* <p >{currentEvent?.timer}</p> */}
-                <div className={currentEvent?.objectName === 'DUMMY' ? 'yellow-blink camera-feeds' : currentEvent?.timer < 10 ? 'red-blink camera-feeds' : "camera-feeds"}>
+                <div
+                    className=
+                    {
+                        currentEvent?.objectName === 'DUMMY'
+                            ? 'yellow-blink camera-feeds'
+                            : currentEvent?.timer < 10
+                                ? 'red-blink camera-feeds'
+                                : "camera-feeds"
+                    }
+                >
                     <div className="camera">
                         {imgSrc && <img src={imgSrc} alt={`Camera Feed ${imgindex + 1}`} />}
                     </div>
@@ -287,8 +294,7 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
                             <tr>
                                 <td><strong>Camera</strong></td>
                                 <td>
-                                    {monitoringData?.cameras?.length &&
-                                        monitoringData.cameras[0].cameraName}
+                                    {monitoringData?.cameras?.length && monitoringData.cameras[0].cameraName}
                                 </td>
                             </tr>
                             <tr>

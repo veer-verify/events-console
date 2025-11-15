@@ -35,19 +35,27 @@
 .page-title .level {
   color: #ed3237;
   font-weight: bold;
-    text-transform: uppercase;
+  text-transform: uppercase;
 
 }
 
 .page-title .bar {
   color: #000000;
   opacity: 0.5;
-} 
+}
 
 .header-right {
   display: inline-flex;
   align-items: center;
   padding: 0 24px;
+}
+
+@media (max-width: 768px) {
+  .header-right {
+    display: block;
+    align-items: center;
+    padding: 0;
+  }
 }
 
 .profile-icon {

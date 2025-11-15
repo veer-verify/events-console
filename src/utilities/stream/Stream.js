@@ -41,13 +41,13 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789" }) 
         watchdogIntervalRef.current = null;
       }
 
-      if (sessionUrlRef.current) {
-        try {
-          await fetch(sessionUrlRef.current, { method: "DELETE" });
-        } catch (err) {
-          console.warn("Session cleanup failed:", err);
-        }
-      }
+      // if (sessionUrlRef.current) {
+      //   try {
+      //     await fetch(sessionUrlRef.current, { method: "DELETE" });
+      //   } catch (err) {
+      //     console.warn("Session cleanup failed:", err);
+      //   }
+      // }
       sessionUrlRef.current = "";
       queuedCandidatesRef.current = [];
     };
@@ -169,7 +169,7 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789" }) 
         onRemoteAnswer(sdp);
 
         // Start keepalive after session established
-        // startKeepalive();
+        startKeepalive();
         startWatchdog();
       });
     };
