@@ -24,6 +24,7 @@ const Escalation = ({ closeEscalation, currentEvent, handleFalse, handleSuspicio
 
   const fetchEmailData = async (val) => {
     setSelectedSubType(val)
+    setEmailData('load');
     const response = await getEmailDataForVMSEvents({ ...currentEvent, ...{ alertTypeId: selectedAlertType }, ...{ subTypeId: val } });
     setEmailData(response);
   }
@@ -144,7 +145,7 @@ const Escalation = ({ closeEscalation, currentEvent, handleFalse, handleSuspicio
         {emaildata &&
           <div className="button-group">
             <button className="btn-secondary" onClick={() => handle('complete')}>COMPLETE</button>
-            {monitoringData && monitoringData.nextQueueName !== '' && <button className="btn-primary" onClick={() => handle('escalate')}>ESCALATE</button>}
+            {monitoringData && monitoringData.nextQueueName && <button className="btn-primary" onClick={() => handle('escalate')}>ESCALATE</button>}
           </div>
         }
       </div>
@@ -153,8 +154,7 @@ const Escalation = ({ closeEscalation, currentEvent, handleFalse, handleSuspicio
       {/* Right Panel */}
       <div className="alert-preview">
         {
-          emaildata
-            ?
+          emaildata === 'load' ? <p>Loading...</p> : !emaildata ? <ErrorInfo message={'no data!'} /> :
             <Fragment>
               <div className="flex-group">
                 <p className="section-title">PREVIEW</p>
@@ -231,12 +231,6 @@ const Escalation = ({ closeEscalation, currentEvent, handleFalse, handleSuspicio
                 {emaildata?.emailFooter}
               </p>
             </Fragment>
-            :
-            !emaildata
-              ?
-              <p></p>
-              :
-              <ErrorInfo message={'no data!'} />
         }
       </div>
     </Fragment>

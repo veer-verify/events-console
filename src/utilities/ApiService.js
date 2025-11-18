@@ -51,7 +51,7 @@ export const getVmsEventsQueueData = async () => {
   const url = `${environment.events_url}/getVms_EventsQueueData_1_0/`;
   const user = getStorage('session');
   const params = new URLSearchParams();
-  params.append('queue_name', 'test-steelfactory');
+  params.append('queue_name', user?.queueName);
   return api.get(url, { params: params }).then((res) => res.data).catch((err) => console.log(err));
 }
 
@@ -143,7 +143,7 @@ export const getEmailDataForVMSEvents = async (payload) => {
   // params.append('timer', 120);
   params.append('imageName', payload?.image_list.toString());
     params.append('callingSystemDetail', 'events-console');
-  return api.get(url, { params: params }).then((res) => res.data.statusCode === 200 ? res.data.emailDetails : []).catch((err) => console.log(err));
+  return api.get(url, { params: params }).then((res) => res.data.statusCode === 200 ? res.data.emailDetails : null).catch((err) => console.log(err));
 }
 
 export const eventsGenericEmail = async (payload) => {

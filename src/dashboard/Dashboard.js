@@ -96,7 +96,7 @@ const Dashboard = () => {
       const [first] = eventResponse;
       first.landingTime = getTimeByTimezone(first.timezone);
       first.audioPlayed = false;
-      first.timer = 20;
+      first.timer = 120;
 
       writetoRedisQueueData({ userId: 0, level: "", queueInfo: first, consoleType: '', queueName: '' });
       const updated = isFirst ? [...eventResponse, ...filtered] : [...filtered, ...eventResponse];
@@ -147,7 +147,7 @@ const Dashboard = () => {
       const [first] = eventResponse;
       first.landingTime = getTimeByTimezone(first.timezone);
       first.audioPlayed = false;
-      first.timer = 20;
+      first.timer = 120;
 
 
       writetoRedisQueueData({ userId: 0, level: "", queueInfo: first, consoleType: '', queueName: '' });
@@ -170,23 +170,26 @@ const Dashboard = () => {
         const [first] = response;
         first.landingTime = getTimeByTimezone(response.timezone);
         first.audioPlayed = false;
-        first.timer = 20;
+        first.timer = 120;
         setEventData((prev) => [...prev, ...response]);
         writetoRedisQueueData({ userId: 0, level: "", queueInfo: first, consoleType: '', queueName: '' });
         const data = await getMonitoringInfo(first);
         setMonitoringData((prev) => [...prev, data]);
-      } else {
-        if (eventData.length < 2) {
-          timerRef.current = setTimeout(() => {
-            getEvent();
-          }, 2000);
-        }
       }
+      // else {
+      //   if (eventData.length < 2) {
+      //     timerRef.current = setTimeout(() => {
+      //       getEvent();
+      //     }, 2000);
+      //   }
+      // }
     };
 
     if (eventData.length < 2) {
-      getEvent();
-    } else if (timerRef.current) {
+      timerRef.current = setInterval(() => {
+        getEvent();
+      }, 2000);
+    } else {
       clearTimeout(timerRef.current);
     }
 
@@ -197,9 +200,7 @@ const Dashboard = () => {
     };
     getTags();
 
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
+    return () =>  clearTimeout(timerRef.current);
   }, [dispatch, eventData.length]);
 
   useEffect(() => {
@@ -207,6 +208,7 @@ const Dashboard = () => {
     const interval = setInterval(aliveUser, 60000);
     return () => clearInterval(interval);
   }, []);
+
 
   /**
    * timed-out event handling
@@ -251,7 +253,7 @@ const Dashboard = () => {
         const [first] = eventResponse;
         first.landingTime = getTimeByTimezone(first.timezone);
         first.audioPlayed = false;
-        first.timer = 20;
+        first.timer = 120;
 
         writetoRedisQueueData({ userId: 0, level: "", queueInfo: first, consoleType: '', queueName: '' });
         const updated = isFirst ? [...eventResponse, ...filtered] : [...filtered, ...eventResponse];
@@ -290,7 +292,8 @@ const Dashboard = () => {
       <Header></Header>
 
       <div className='tiles'>
-        {
+        { eventData.length
+        ?
           eventData.map((item, i) => (
             <Tile
               key={i}
@@ -306,6 +309,8 @@ const Dashboard = () => {
               handleSuspicious={handleSuspicious}
             />
           ))
+          :
+          <p className='no-event'>no events</p>
         }
       </div>
 
