@@ -136,7 +136,7 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
     return (
         <Fragment>
             <div className='tile'>
-                {/* <p >{currentEvent?.timer}</p> */}
+                <p >{currentEvent?.timer}</p>
                 <div
                     className=
                     {
@@ -162,7 +162,7 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
                         <button
                             className="custom-action"
                             onClick={() => handle(1)}
-                            disabled={currentEvent?.siteId === 0 || !monitoringData}
+                            disabled={currentEvent?.siteId === 0}
                         >
                             <img
                                 src='icons/false.png'
@@ -250,8 +250,8 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
                     <p>{`${currentEvent?.siteId} - ${currentEvent?.siteName}`}</p>
                     <p>Tadepally, Guntur District, Andhra Pradesh, INDIA - 500503</p>
 
-                    {plannedActivities.length > 0 && (
-                        <>
+                    {plannedActivities.length !== 0 &&
+                        <Fragment>
                             {activitiesToShow.map((item, i) => (
                                 <div className="activity-box" key={i}>
                                     <div>
@@ -275,41 +275,44 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
                                     {showAll ? 'Show Less' : 'Show More'}
                                 </button>
                             )}
-                        </>
-                    )}
+                        </Fragment>
+                    }
                 </div>
 
-                <div className="monitoring">
-                    <p className="monitoring-title">MONITORING INFO</p>
-                    <table>
-                        <tbody>
-                            <tr>
-                                <td><strong>Timezone</strong></td>
-                                <td>{currentEvent?.timezone}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Monitoring</strong></td>
-                                <td>{timeFormat(monitoringData)}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Camera</strong></td>
-                                <td>
-                                    {monitoringData?.cameras?.length && monitoringData.cameras[0].cameraName}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td><strong>Requirements</strong></td>
-                                <td>{monitoringData?.requirements}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                {
+                    monitoringData &&
+                    <div className="monitoring">
+                        <p className="monitoring-title">MONITORING INFO</p>
+                        <table>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Timezone</strong></td>
+                                    <td>{currentEvent?.timezone}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Monitoring</strong></td>
+                                    <td>{timeFormat(monitoringData)}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Camera</strong></td>
+                                    <td>
+                                        {monitoringData.cameras.length && monitoringData.cameras[0].cameraName}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Requirements</strong></td>
+                                    <td>{monitoringData.requirements}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                }
 
-                {getSession().userLevel === 2 && monitoringData?.escalation?.length !== 0 && (
+                {session?.userLevel === 2 && monitoringData.escalation.length !== 0 && (
                     <ContactInfo monitoringData={monitoringData} />
                 )}
-                {getSession().userLevel === 2 &&
-                    monitoringData?.lawEnforcement?.length !== 0 && (
+                {session?.userLevel === 2 &&
+                    monitoringData.lawEnforcement.length !== 0 && (
                         <LawInfo monitoringData={monitoringData} />
                     )}
                 {escalation && eventIndex === index && (
@@ -331,6 +334,7 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
 };
 
 export default Tile;
+
 
 // =============================
 // Contact Info Component

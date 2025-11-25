@@ -94,17 +94,20 @@ const Dashboard = () => {
     const eventResponse = await getVmsEventsQueueData();
     if (eventResponse && eventResponse.length) {
       const [first] = eventResponse;
-      first.landingTime = getTimeByTimezone(first.timezone);
-      first.audioPlayed = false;
-      first.timer = 120;
+      const event = {
+        ...first,
+        landingTime: getTimeByTimezone(first.timezone),
+        audioPlayed: false,
+        timer: 120,
+      };
 
-      writetoRedisQueueData({ userId: 0, level: "", queueInfo: first, consoleType: '', queueName: '' });
-      const updated = isFirst ? [...eventResponse, ...filtered] : [...filtered, ...eventResponse];
-      setEventData(updated);
-
-      const data = await getMonitoringInfo(first);
+      writetoRedisQueueData({ userId: 0, level: "", queueInfo: event, consoleType: '', queueName: '' });
+      const updated = isFirst ? [event, ...filtered] : [...filtered, event];
+      const data = await getMonitoringInfo(event);
       const updatedMonitoring = isFirst ? [data, ...filteredMonitoring] : [...filteredMonitoring, data];
       setMonitoringData(updatedMonitoring);
+      setEventData(updated);
+
     } else {
       setEventData(filtered);
     }
@@ -145,63 +148,88 @@ const Dashboard = () => {
     const eventResponse = await getVmsEventsQueueData();
     if (eventResponse.length) {
       const [first] = eventResponse;
-      first.landingTime = getTimeByTimezone(first.timezone);
-      first.audioPlayed = false;
-      first.timer = 120;
+      const event = {
+        ...first,
+        landingTime: getTimeByTimezone(first.timezone),
+        audioPlayed: false,
+        timer: 120,
+      };
 
 
-      writetoRedisQueueData({ userId: 0, level: "", queueInfo: first, consoleType: '', queueName: '' });
-      const updated = isFirst ? [...eventResponse, ...filtered] : [...filtered, ...eventResponse];
-      setEventData(updated);
-
-      const monitoringRes = await getMonitoringInfo(first);
+      writetoRedisQueueData({ userId: 0, level: "", queueInfo: event, consoleType: '', queueName: '' });
+      const updated = isFirst ? [event, ...filtered] : [...filtered, event];
+      const monitoringRes = await getMonitoringInfo(event);
       const latestMonitoringData = isFirst ? [monitoringRes, ...filteredMonitoring] : [...filteredMonitoring, monitoringRes];
       setMonitoringData(latestMonitoringData);
+      setEventData(updated);
+
     } else {
       setEventData(filtered);
     }
   }
 
-  const timerRef = useRef(null);
+
+  /**
+   * event
+   */
   useEffect(() => {
-    const getEvent = async () => {
+    let isMounted = true;
+    let timerId = null;
+    let isFetching = false; // prevent overlap
+
+    const fetchEvents = async () => {
+      if (!isMounted || isFetching) return;
+      if (eventData.length >= 2) return; // already have 2 events
+
+      isFetching = true;
+
       const response = await getVmsEventsQueueData();
-      if (response && response.length) {
-        const [first] = response;
-        first.landingTime = getTimeByTimezone(response.timezone);
-        first.audioPlayed = false;
-        first.timer = 120;
-        setEventData((prev) => [...prev, ...response]);
-        writetoRedisQueueData({ userId: 0, level: "", queueInfo: first, consoleType: '', queueName: '' });
-        const data = await getMonitoringInfo(first);
-        setMonitoringData((prev) => [...prev, data]);
+
+      if (!isMounted) return;
+      if (response && response.length !== 0) {
+        const [rawEvent] = response;
+        const event = {
+          ...rawEvent,
+          landingTime: getTimeByTimezone(rawEvent.timezone),
+          audioPlayed: false,
+          timer: 120,
+        };
+
+        writetoRedisQueueData({
+          userId: 0,
+          level: "",
+          queueInfo: event,
+          consoleType: "",
+          queueName: "",
+        });
+        const monitoringInfo = await getMonitoringInfo(event);
+        if (isMounted) {
+          setMonitoringData(prev => [...prev, monitoringInfo]);
+        }
+        setEventData(prev => [...prev, event]);
       }
-      // else {
-      //   if (eventData.length < 2) {
-      //     timerRef.current = setTimeout(() => {
-      //       getEvent();
-      //     }, 2000);
-      //   }
-      // }
+
+      isFetching = false;
+      if (isMounted && eventData.length < 2) {
+        timerId = setTimeout(fetchEvents, 2000);
+      }
     };
 
-    if (eventData.length < 2) {
-      timerRef.current = setInterval(() => {
-        getEvent();
-      }, 2000);
-    } else {
-      clearTimeout(timerRef.current);
-    }
+    fetchEvents();
 
-    const getTags = async () => {
-      const tagsResponse = await getActionTagCategories();
-      setStorage('actionTags', tagsResponse);
-      dispatch(saveAction(tagsResponse));
+    const fetchTags = async () => {
+      const tags = await getActionTagCategories();
+      setStorage("actionTags", tags);
+      dispatch(saveAction(tags));
     };
-    getTags();
+    fetchTags();
 
-    return () =>  clearTimeout(timerRef.current);
-  }, [dispatch, eventData.length]);
+    return () => {
+      isMounted = false;
+      clearTimeout(timerId);
+    };
+  }, [eventData.length, dispatch]);
+
 
   useEffect(() => {
     aliveUser();
@@ -251,17 +279,18 @@ const Dashboard = () => {
       const eventResponse = await getVmsEventsQueueData();
       if (eventResponse && eventResponse.length) {
         const [first] = eventResponse;
-        first.landingTime = getTimeByTimezone(first.timezone);
-        first.audioPlayed = false;
-        first.timer = 120;
-
-        writetoRedisQueueData({ userId: 0, level: "", queueInfo: first, consoleType: '', queueName: '' });
-        const updated = isFirst ? [...eventResponse, ...filtered] : [...filtered, ...eventResponse];
-        setEventData(updated);
-
-        const monitoringRes = await getMonitoringInfo(first);
+        const event = {
+          ...first,
+          landingTime: getTimeByTimezone(first.timezone),
+          audioPlayed: false,
+          timer: 120,
+        };
+        writetoRedisQueueData({ userId: 0, level: "", queueInfo: event, consoleType: '', queueName: '' });
+        const updated = isFirst ? [event, ...filtered] : [...filtered, event];
+        const monitoringRes = await getMonitoringInfo(event);
         const latestMonitoringData = isFirst ? [monitoringRes, ...filteredMonitoring] : [...filteredMonitoring, monitoringRes];
         setMonitoringData(latestMonitoringData);
+        setEventData(updated);
       } else {
         setEventData(filtered);
       }
@@ -292,8 +321,8 @@ const Dashboard = () => {
       <Header></Header>
 
       <div className='tiles'>
-        { eventData.length
-        ?
+        {eventData.length
+          ?
           eventData.map((item, i) => (
             <Tile
               key={i}
