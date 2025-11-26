@@ -86,6 +86,20 @@ export const timeFormat = (monitoringData) => {
     });
 };
 
+// export const isValid = (data) => {
+//     const temp = new Date(data.landingTime);
+//     const time = temp.setSeconds(temp.getSeconds() + 10);
+//     return new Date(time) > temp
+// }
+
+export const isValid = (data) => {
+    if(!data) return;
+    const landing = new Date(data.landingTime);
+    const landingPlus10 = landing.setSeconds(landing.getSeconds() + 10);
+    return moment(new Date(landingPlus10)).format('YYYY-MM-DD HH:mm:ss') > moment().tz(data.timezone).format('YYYY-MM-DD HH:mm:ss');
+};
+
+
 
 /**
  * method to get queue name

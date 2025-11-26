@@ -41,7 +41,7 @@ const Dashboard = () => {
       "images_for_event": 0,
       "timezone": "",
       "image_list": [],
-      "timer": 20
+      "timer": 120
     }
   ];
 
@@ -241,80 +241,136 @@ const Dashboard = () => {
   /**
    * timed-out event handling
   */
+  const isHandlingRef = useRef(false);
+  const queueRef = useRef([]);
+  
   useEffect(() => {
-    const session = getStorage('session');
+    const session = getStorage("session");
     if (session.userLevel !== 1 || eventData.length === 0) return;
 
-    const handle = async (item) => {
-      const index = getStorage('index');
-      const customAction = getStorage('custom_action');
-      const subAction = getStorage('sub_action');
 
-      item?.userLevelAlarmInfo?.push(
-        {
-          level: session?.userLevel,
-          user: session?.UserId,
-          alarm: item.audio ? 'P' : 'N',
-          activityDetTime: item.sirenTime ?? '',
-          landingTime: item?.landingTime ?? '',
-          reviewStart: item?.landingTime ?? '',
-          reviewEnd: getTimeByTimezone(item?.timezone),
-          actionTag: customAction,
-          subActionTag: subAction?.subCategoryId,
-          notes: item.notes ?? ''
-        }
-      );
-      write2VmsDispatchQueue(
-        { ...item, ...{ actionTag: customAction }, ...{ subActionTag: subAction?.subCategoryId }, ...{ queue_name: 'time-out' } }
-      );
-      consumeConsoleEvents(
-        { userId: 0, eventTime: [item.eventTime], consoleType: '' }
-      );
+    // ----------------------------
+    // QUEUE PROCESSOR (SEQUENTIAL)
+    // ----------------------------
+    const processQueue = async () => {
+      if (isHandlingRef.current) return; // already processing
+      isHandlingRef.current = true;
 
+      while (queueRef.current.length > 0) {
+        const { item, index } = queueRef.current.shift();
+        await handle(item, index);
+      }
+
+      isHandlingRef.current = false;
+    };
+
+    // ----------------------------
+    // MAIN HANDLE FUNCTION
+    // ----------------------------
+    const handle = async (item, index) => {
+      const customAction = getStorage("custom_action");
+      const subAction = getStorage("sub_action");
+
+      item?.userLevelAlarmInfo?.push({
+        level: session?.userLevel,
+        user: session?.UserId,
+        alarm: item.audio ? "P" : "N",
+        activityDetTime: item.sirenTime ?? "",
+        landingTime: item?.landingTime ?? "",
+        reviewStart: item?.landingTime ?? "",
+        reviewEnd: getTimeByTimezone(item?.timezone),
+        actionTag: customAction,
+        subActionTag: subAction?.subCategoryId,
+        notes: item.notes ?? "",
+      });
+
+      write2VmsDispatchQueue({
+        ...item,
+        actionTag: customAction,
+        subActionTag: subAction?.subCategoryId,
+        queue_name: "time-out",
+      });
+
+      consumeConsoleEvents({
+        userId: 0,
+        eventTime: [item.eventTime],
+        consoleType: "",
+      });
+
+      // remove item
       const filtered = eventData.filter((_, i) => index !== i);
       const filteredMonitoring = monitoringData.filter((_, i) => index !== i);
+
       const isFirst = index === 0;
       const reordered = isFirst ? [...dummy, ...filtered] : [...filtered, ...dummy];
       setEventData(reordered);
+
       const eventResponse = await getVmsEventsQueueData();
+
       if (eventResponse && eventResponse.length) {
         const [first] = eventResponse;
+
         const event = {
           ...first,
           landingTime: getTimeByTimezone(first.timezone),
           audioPlayed: false,
           timer: 120,
         };
-        writetoRedisQueueData({ userId: 0, level: "", queueInfo: event, consoleType: '', queueName: '' });
+
+        writetoRedisQueueData({
+          userId: 0,
+          level: "",
+          queueInfo: event,
+          consoleType: "",
+          queueName: "",
+        });
+
         const updated = isFirst ? [event, ...filtered] : [...filtered, event];
         const monitoringRes = await getMonitoringInfo(event);
-        const latestMonitoringData = isFirst ? [monitoringRes, ...filteredMonitoring] : [...filteredMonitoring, monitoringRes];
+
+        const latestMonitoringData = isFirst
+          ? [monitoringRes, ...filteredMonitoring]
+          : [...filteredMonitoring, monitoringRes];
+
         setMonitoringData(latestMonitoringData);
         setEventData(updated);
       } else {
         setEventData(filtered);
       }
-    }
+    };
 
-    let firstInter = null;
+    // ----------------------------
+    // INTERVAL
+    // ----------------------------
     const interval = setInterval(() => {
+      // ❗ STOP timers while processing
+      if (isHandlingRef.current) return;
+
       for (let i = 0; i < eventData.length; i++) {
         const item = eventData[i];
-        i === 0 ? item.timer-- : setTimeout(() => item.timer--, 3000)
+
+        // PREVENT negative values
+        if (item.timer > 0) {
+          item.timer--;
+        }
 
         if (item.timer === 0) {
-          setStorage('custom_action', 2);
-          setStorage('index', i);
-          handle(item);
+          setStorage("custom_action", 2);
+
+          queueRef.current.push({ item, index: i });
+
+          processQueue(); // safe — only runs if not already processing
         }
       }
     }, 1000);
 
     return () => {
       clearInterval(interval);
-      clearInterval(firstInter);
     };
   }, [dummy, eventData, monitoringData]);
+
+
+
 
   return (
     <Fragment>

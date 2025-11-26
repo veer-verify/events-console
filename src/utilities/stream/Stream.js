@@ -6,7 +6,9 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789" }) 
   const peerConnectionRef = useRef(null);
   const queuedCandidatesRef = useRef([]);
   const offerDataRef = useRef(null);
-  const sessionUrlRef = useRef("");
+
+  const sessionUrlRef = useRef("");                 // current session URL
+  const lastValidSessionUrlRef = useRef("");        // used for safe cleanup
   const restartTimeoutRef = useRef(null);
   const keepaliveIntervalRef = useRef(null);
   const watchdogIntervalRef = useRef(null);
@@ -20,7 +22,9 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789" }) 
   useEffect(() => {
     let isMounted = true;
 
-    // Helper for showing a loading spinner during async calls
+    // ------------------------------------
+    // GENERIC LOADER
+    // ------------------------------------
     const withLoader = async (fn) => {
       setShowLoader(true);
       try {
@@ -30,8 +34,29 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789" }) 
       }
     };
 
-    // Clean up everything
-    const cleanupSession = async () => {
+    // ------------------------------------
+    // SAFE DELETE (404 OK)
+    // ------------------------------------
+    const safeDelete = async (url) => {
+      if (!url) return;
+      try {
+        const res = await fetch(url, { method: "DELETE" });
+        if (res.status === 404) return true;
+        if (!res.ok) console.warn("DELETE returned:", res.status);
+        return res.ok;
+      } catch (err) {
+        console.warn("DELETE error:", err);
+        return false;
+      }
+    };
+
+    // ------------------------------------
+    // CLEANUP SESSION (SYNCHRONOUS)
+    // ------------------------------------
+    const cleanupSession = () => {
+      console.log("Running cleanup…");
+
+      // 1. Clear all intervals/timeouts immediately
       if (keepaliveIntervalRef.current) {
         clearInterval(keepaliveIntervalRef.current);
         keepaliveIntervalRef.current = null;
@@ -40,39 +65,30 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789" }) 
         clearInterval(watchdogIntervalRef.current);
         watchdogIntervalRef.current = null;
       }
+      if (restartTimeoutRef.current) {
+        clearTimeout(restartTimeoutRef.current);
+        restartTimeoutRef.current = null;
+      }
 
-      // if (sessionUrlRef.current) {
-      //   try {
-      //     await fetch(sessionUrlRef.current, { method: "DELETE" });
-      //   } catch (err) {
-      //     console.warn("Session cleanup failed:", err);
-      //   }
-      // }
+      const sessionUrl = lastValidSessionUrlRef.current;
+      lastValidSessionUrlRef.current = "";
       sessionUrlRef.current = "";
+
       queuedCandidatesRef.current = [];
+
+      // 2. DELETE session asynchronously (won't block unmount)
+      if (sessionUrl) {
+        setTimeout(() => {
+          safeDelete(sessionUrl).catch(() =>
+            console.warn("DELETE failed during cleanup:", sessionUrl)
+          );
+        }, 0);
+      }
     };
 
-    // const cleanupSession = async () => {
-    //   if (!sessionUrlRef.current) return;
-
-    //   try {
-    //     console.log("Cleaning up WHEP session:", sessionUrlRef.current);
-    //     const res = await fetch(sessionUrlRef.current, { method: "DELETE" });
-
-    //     if (res.ok || res.status === 404) {
-    //       console.log("Session cleanup completed or already gone:", res.status);
-    //     } else {
-    //       console.warn("Unexpected cleanup response:", res.status, res.statusText);
-    //     }
-    //   } catch (err) {
-    //     console.warn("Session cleanup failed:", err);
-    //   } finally {
-    //     sessionUrlRef.current = "";
-    //     queuedCandidatesRef.current = [];
-    //   }
-    // };
-
-
+    // ------------------------------------
+    // ERROR HANDLER
+    // ------------------------------------
     const onError = (err) => {
       console.error("WebRTC Error:", err);
       setError(err);
@@ -80,6 +96,9 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789" }) 
       cleanupSession();
     };
 
+    // ------------------------------------
+    // REQUEST ICE SERVERS
+    // ------------------------------------
     const requestICEServers = async () => {
       setError(null);
       try {
@@ -107,25 +126,33 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789" }) 
       }
     };
 
+    // ------------------------------------
+    // LINK HEADER → ICE SERVERS
+    // ------------------------------------
     const linkToIceServers = (links) => {
-      const ics = [];
-      if (!links) return ics;
+      const arr = [];
+      if (!links) return arr;
+
       links.split(", ").forEach((link) => {
         const m = link.match(
           /^<(.+?)>; rel="ice-server"(; username="(.*?)"; credential="(.*?)"; credential-type="password")?/i
         );
         if (m) {
-          const ice = { urls: [m[1]] };
+          const server = { urls: [m[1]] };
           if (m[3]) {
-            ice.username = JSON.parse(`"${m[3]}"`);
-            ice.credential = JSON.parse(`"${m[4]}"`);
+            server.username = JSON.parse(`"${m[3]}"`);
+            server.credential = JSON.parse(`"${m[4]}"`);
           }
-          ics.push(ice);
+          arr.push(server);
         }
       });
-      return ics;
+
+      return arr;
     };
 
+    // ------------------------------------
+    // CREATE OFFER
+    // ------------------------------------
     const createOffer = async (pc) => {
       await withLoader(async () => {
         const offer = await pc.createOffer();
@@ -136,17 +163,18 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789" }) 
     };
 
     const parseOffer = (sdp) => {
-      const ret = { iceUfrag: "", icePwd: "", medias: [] };
+      const o = { iceUfrag: "", icePwd: "", medias: [] };
       sdp.split("\r\n").forEach((line) => {
-        if (line.startsWith("m=")) ret.medias.push(line.slice(2));
-        if (line.startsWith("a=ice-ufrag:") && !ret.iceUfrag)
-          ret.iceUfrag = line.slice(12);
-        if (line.startsWith("a=ice-pwd:") && !ret.icePwd)
-          ret.icePwd = line.slice(10);
+        if (line.startsWith("m=")) o.medias.push(line.slice(2));
+        if (line.startsWith("a=ice-ufrag:") && !o.iceUfrag) o.iceUfrag = line.slice(12);
+        if (line.startsWith("a=ice-pwd:") && !o.icePwd) o.icePwd = line.slice(10);
       });
-      return ret;
+      return o;
     };
 
+    // ------------------------------------
+    // SEND OFFER
+    // ------------------------------------
     const sendOffer = async (offer) => {
       await withLoader(async () => {
         const res = await fetch(`${streamUrl}whep`, {
@@ -158,30 +186,35 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789" }) 
           body: offer.sdp,
         });
 
-        if (res.status !== 201) console.log("Unexpected response:", res);
+        const loc = res.headers.get("location");
+        const finalUrl = buildSessionUrl(loc);
 
-        sessionUrlRef.current = new URL(
-          res.headers.get("location"),
-          streamUrl
-        ).toString();
+        sessionUrlRef.current = finalUrl;
+        lastValidSessionUrlRef.current = finalUrl;
 
         const sdp = await res.text();
         onRemoteAnswer(sdp);
 
-        // Start keepalive after session established
         startKeepalive();
         startWatchdog();
       });
+    };
+
+    const buildSessionUrl = (location) => {
+      const base = new URL(streamUrl);
+      if (!location) return "";
+      if (location.startsWith("http")) return location;
+      if (location.startsWith("/")) return `${base.origin}${location}`;
+      return `${base.origin}/${location}`;
     };
 
     const onRemoteAnswer = async (sdp) => {
       setError(null);
       const pc = peerConnectionRef.current;
       if (!pc || pc.signalingState !== "have-local-offer") return;
-
       try {
         await pc.setRemoteDescription({ type: "answer", sdp });
-        if (queuedCandidatesRef.current.length > 0) {
+        if (queuedCandidatesRef.current.length) {
           await sendLocalCandidates(queuedCandidatesRef.current);
           queuedCandidatesRef.current = [];
         }
@@ -202,9 +235,8 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789" }) 
     const sendLocalCandidates = async (candidates) => {
       const url = sessionUrlRef.current;
       const offerData = offerDataRef.current;
-
       await withLoader(async () => {
-        const res = await fetch(url, {
+        await fetch(url, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/trickle-ice-sdpfrag",
@@ -212,18 +244,16 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789" }) 
           },
           body: generateSdpFragment(offerData, candidates),
         });
-
-        if (res.status !== 204) console.log("Candidate PATCH failed:", res);
       });
     };
 
     const generateSdpFragment = (od, candidates) => {
       const grouped = {};
-      for (const c of candidates) {
+      candidates.forEach((c) => {
         const mid = c.sdpMLineIndex;
         if (!grouped[mid]) grouped[mid] = [];
         grouped[mid].push(c);
-      }
+      });
 
       let frag = `a=ice-ufrag:${od.iceUfrag}\r\na=ice-pwd:${od.icePwd}\r\n`;
       od.medias.forEach((media, i) => {
@@ -236,9 +266,7 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789" }) 
     };
 
     const onTrack = (evt) => {
-      if (videoRef.current) {
-        videoRef.current.srcObject = evt.streams[0];
-      }
+      if (videoRef.current) videoRef.current.srcObject = evt.streams[0];
     };
 
     const onConnectionState = () => {
@@ -246,9 +274,8 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789" }) 
       const state = peerConnectionRef.current?.iceConnectionState;
       console.log("ICE State:", state);
       if (restartTimeoutRef.current) return;
-
       if (state === "disconnected" || state === "failed") {
-        onError("Peer connection lost. Restarting...");
+        onError("Peer connection lost. Restarting…");
         restartTimeoutRef.current = setTimeout(() => {
           restartTimeoutRef.current = null;
           restartStream();
@@ -257,8 +284,8 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789" }) 
     };
 
     const restartStream = async () => {
-      console.warn("Restarting WebRTC stream...");
-      await cleanupSession();
+      console.warn("Restarting WebRTC stream…");
+      cleanupSession();
       peerConnectionRef.current?.close();
       peerConnectionRef.current = null;
       requestICEServers();
@@ -270,40 +297,35 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789" }) 
         if (sessionUrlRef.current) {
           fetch(sessionUrlRef.current, {
             method: "PATCH",
-            headers: {
-              "Content-Type": "application/trickle-ice-sdpfrag",
-              "If-Match": "*",
-            },
+            headers: { "Content-Type": "application/trickle-ice-sdpfrag", "If-Match": "*" },
             body: "",
-          }).catch(() => { });
-
+          }).catch(() => {});
         }
-      }, 15000); // every 15s
+      }, 15000);
     };
 
     const startWatchdog = () => {
       if (watchdogIntervalRef.current) clearInterval(watchdogIntervalRef.current);
       watchdogIntervalRef.current = setInterval(() => {
-        console.log("Watchdog: restarting stream...");
+        console.log("Watchdog: restarting stream…");
         restartStream();
-      }, 5 * 60 * 1000); // every 5 minutes
+      }, 5 * 60 * 1000);
     };
 
-    // Start stream connection
+    // START STREAM
     requestICEServers();
 
-    // Cleanup on unmount
+    // CLEANUP ON UNMOUNT / LOGOUT
     return () => {
       isMounted = false;
       peerConnectionRef.current?.close();
       cleanupSession();
-      if (restartTimeoutRef.current) {
-        clearTimeout(restartTimeoutRef.current);
-      }
     };
   }, [encoded, streamUrl]);
 
-  // Screenshot capture
+  // -------------------------------
+  // SCREENSHOT
+  // -------------------------------
   const handleClick = () => {
     const video = videoRef.current;
     if (!video) return;

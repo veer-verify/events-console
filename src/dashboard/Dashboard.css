@@ -1,13 +1,10 @@
 .tiles {
     position: relative;
-    /* background-color: #EEEEEE; */
     display: flex;
     flex-direction: row;
     margin: 4px;
     gap: 4px;
     height: calc(100vh - 82px);
-    /* display: grid;
-    grid-template-columns: repeat(2, 1fr); */
 }
 
 @media (max-width: 1080px) {

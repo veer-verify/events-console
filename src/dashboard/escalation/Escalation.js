@@ -41,13 +41,13 @@ const Escalation = ({ closeEscalation, currentEvent, handleFalse, handleSuspicio
     const currentTime = getTimeByTimezone(currentEvent?.timezone);
     if (type === 'escalate') {
       handleSuspicious({ ...currentEvent, actionTagTime: currentTime, ...monitoringData, notes });
-      if (session?.userLevel === 2) {
-        eventsGenericEmail(
-          { ...currentEvent, ...{ actionTag: emaildata?.alertTagId }, ...{ alertTypeId: selectedAlertType }, ...{ alertSubTypeId: selectedSubType }, ...{ objectName: selection }, ...emaildata }
-        );
-      }
     } else {
       handleFalse({ ...currentEvent, actionTagTime: currentTime, notes });
+    }
+    if (session?.userLevel === 2) {
+      eventsGenericEmail(
+        { ...currentEvent, ...{ actionTag: emaildata?.alertTagId }, ...{ alertTypeId: selectedAlertType }, ...{ alertSubTypeId: selectedSubType }, ...{ objectName: selection }, ...emaildata }
+      );
     }
     closeEscalation();
   }

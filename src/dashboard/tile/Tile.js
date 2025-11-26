@@ -4,7 +4,7 @@ import Escalation from '../escalation/Escalation';
 import Live from '../../utilities/live/Live';
 import Stream from '../../utilities/stream/Stream';
 import { toast } from 'react-toastify';
-import { getSession, getStorage, getTimeByTimezone, setStorage, timeFormat } from '../../utilities/StorageService';
+import { getSession, getStorage, getTimeByTimezone, isValid, setStorage, timeFormat } from '../../utilities/StorageService';
 import { playSiren } from '../../utilities/ApiService';
 import { useSelector } from 'react-redux';
 
@@ -109,12 +109,16 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
         }
 
         if (!currentEvent?.image_list || currentEvent?.image_list.length === 0) return;
-        if (currentEvent?.objectName === 'DUMMY') return setImgSrc(currentEvent?.image_list[0]);
+        // if (currentEvent?.objectName === 'DUMMY') return setImgSrc(currentEvent?.image_list[0]);
 
         let i = 0;
         const interval = setInterval(() => {
             setIndex(i);
-            setImgSrc(currentEvent?.image_list[i]);
+            if(currentEvent?.objectName === 'DUMMY') {
+                setImgSrc(currentEvent?.image_list[1]);
+            } else {
+                setImgSrc(currentEvent?.image_list[i]);
+            }
             if (i === 5) {
                 i = 0;
             } else {
@@ -136,14 +140,14 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
     return (
         <Fragment>
             <div className='tile'>
-                <p >{currentEvent?.timer}</p>
+                {/* <p >{currentEvent?.timer}</p> */}
                 <div
                     className=
                     {
-                        currentEvent?.objectName === 'DUMMY'
-                            ? 'yellow-blink camera-feeds'
-                            : currentEvent?.timer < 10
-                                ? 'red-blink camera-feeds'
+                        currentEvent?.timer < 10
+                            ? 'red-blink camera-feeds'
+                            : currentEvent?.objectName === 'DUMMY'
+                                ? 'yellow-blink camera-feeds'
                                 : "camera-feeds"
                     }
                 >
@@ -162,7 +166,7 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
                         <button
                             className="custom-action"
                             onClick={() => handle(1)}
-                            disabled={currentEvent?.siteId === 0}
+                            disabled={currentEvent?.siteId === 0 || isValid(currentEvent)}
                         >
                             <img
                                 src='icons/false.png'
@@ -198,7 +202,7 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
                         <button
                             className={playing ? 'custom-action blink' : 'custom-action'}
                             onClick={play}
-                            disabled={playing}
+                            disabled={currentEvent?.siteId === 0 || playing}
                         >
                             <img
                                 src='icons/siren.png'
