@@ -26,7 +26,7 @@
   border: 5px solid transparent;
 }
 
-.red-blink {
+/* .red-blink {
   border: 12px solid #ef103f ;
   animation-name: blinking;
   animation-duration: 1s;
@@ -44,6 +44,28 @@
   50% {
     border-color: transparent;
   }
+} */
+
+
+.red-blink {
+  animation: redBlink 1s infinite;
+  border-width: 12px;
+}
+
+@keyframes redBlink {
+  0%,100% { border-color: #ef103f; }
+  50% { border-color: transparent; }
+}
+
+/* ----- YELLOW BLINK ----- */
+.yellow-blink {
+  animation: yellowBlink 1s infinite;
+  border-width: 12px;
+}
+
+@keyframes yellowBlink {
+  0%,100% { border-color: #0c9a43; }
+  50% { border-color: transparent; }
 }
 
 .camera {
