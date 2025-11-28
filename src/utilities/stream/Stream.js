@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import "./Stream.css";
 
-const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789" }) => {
+const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789",currentCamera }) => {
   const videoRef = useRef(null);
   const peerConnectionRef = useRef(null);
   const queuedCandidatesRef = useRef([]);
@@ -367,6 +367,10 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789" }) 
 
       {showOverlay && screenshot && (
         <div className="hover-overlay">
+
+        <div className="displayicon">
+
+        <p style={{color:"white"}}>{currentCamera?.cameraId}</p>
           <img
             src="icons/screenshot.svg"
             alt="overlay"
@@ -374,6 +378,7 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789" }) 
             onClick={handleClick}
             title="Screenshot"
           />
+        </div>
         </div>
       )}
     </div>
