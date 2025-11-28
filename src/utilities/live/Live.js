@@ -60,7 +60,7 @@ const Live = ({ currentEvent, closeLiveDialog }) => {
                 <button  onClick={() => { closeLiveDialog()}}>x</button>
             </div>
                 <div className='cameras'>
-                    { cameras && cameras.map((item, i) => <Stream key={i} streamUrl={`${item.httpUrl}/`} screenshot={true}/>     )}
+                    { cameras && cameras.map((item, i) => <Stream key={i} streamUrl={`${item.httpUrl}/`} screenshot={true} currentCamera={item}/>     )}
                 </div>
             </div>
         </Fragment>
