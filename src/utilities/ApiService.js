@@ -165,7 +165,8 @@ export const eventsGenericEmail = async (payload) => {
   formData.append('alertSubTypeId', payload?.alertSubTypeId);
   formData.append('objectName', payload?.objectName);
   formData.append('eventTag', 'Camera-Event');
-  formData.append('eventFromTime', getTimeByTimezone(payload?.timezone));
+  // formData.append('eventFromTime', getTimeByTimezone(payload?.timezone));
+   formData.append('eventFromTime', formatTimestamp(payload?.eventTime));
   formData.append('eventToTime', getTimeByTimezone(payload?.timezone));
   formData.append('actionTag', payload?.actionTag);
   formData.append('createdBy', getStorage('session').UserId);
