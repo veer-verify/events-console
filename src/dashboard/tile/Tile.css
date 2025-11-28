@@ -23,7 +23,7 @@
   overflow: hidden;
   justify-content: space-between;
   box-sizing: border-box;
-  border: 5px solid transparent;
+  border: 8px solid transparent;
 }
 
 /* .red-blink {
@@ -49,7 +49,7 @@
 
 .red-blink {
   animation: redBlink 1s infinite;
-  border-width: 12px;
+  border-width: 8px;
 }
 
 @keyframes redBlink {
@@ -60,7 +60,7 @@
 /* ----- YELLOW BLINK ----- */
 .yellow-blink {
   animation: yellowBlink 1s infinite;
-  border-width: 12px;
+  border-width: 8px;
 }
 
 @keyframes yellowBlink {

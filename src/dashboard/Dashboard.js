@@ -27,24 +27,6 @@ const Dashboard = () => {
     setStorage('actionTags', actionStore.data)
   }
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const dummy = [
-    {
-      "siteName": "Loading...",
-      "siteId": 0,
-      "cameraId": "Loading...",
-      "objectName": "Loading...",
-      "eventTag": "",
-      "eventTime": "",
-      "httpUrl": "",
-      "imageUrl": "",
-      "images_for_event": 0,
-      "timezone": "",
-      "image_list": [],
-      "timer": 120
-    }
-  ];
-
   // const EventContext = createContext();
   const [eventData, setEventData] = useState([]);
   const [escalation, setEscalation] = useState(false);
@@ -58,14 +40,17 @@ const Dashboard = () => {
   const closeEscalation = () => {
     setEscalation(false);
   }
+  
 
   /**
    * to handle false activity
    */
   const handleFalse = async (item) => {
-    const index = getStorage('index');
+    // console.log(item)
+    // const index = getStorage('index');
     const subAction = getStorage('sub_action');
     const customAction = getStorage('custom_action');
+
 
     item?.userLevelAlarmInfo?.push(
       {
@@ -82,15 +67,20 @@ const Dashboard = () => {
       }
     );
     updateEventFullDetails(
-      { ...item, ...{ actionTag: customAction }, ...{ subActionTag: subAction?.subCategoryId } }
+      { ...item, actionTag: customAction, subActionTag: subAction?.subCategoryId }
     );
     consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: '' });
 
-    const filtered = eventData.filter((_, i) => index !== i);
-    const filteredMonitoring = monitoringData.filter((_, i) => index !== i);
-    const isFirst = index === 0;
-    const reordered = isFirst ? [...dummy, ...filtered] : [...filtered, ...dummy];
+    const isFirst = item?.index === 0;
+
+    const filteredMonitoring = monitoringData.filter((_, i) => item?.index !== i);
+    const x = isFirst ? [null, ...filteredMonitoring] : [...filteredMonitoring, null];
+    setMonitoringData(x);
+
+    const filtered = eventData.filter((_, i) => item?.index !== i);
+    const reordered = isFirst ? [null, ...filtered] : [...filtered, null];
     setEventData(reordered);
+
     const eventResponse = await getVmsEventsQueueData();
     if (eventResponse && eventResponse.length) {
       const [first] = eventResponse;
@@ -98,16 +88,16 @@ const Dashboard = () => {
         ...first,
         landingTime: getTimeByTimezone(first.timezone),
         audioPlayed: false,
-        timer: 120,
+        timer: 60,
       };
 
       writetoRedisQueueData({ userId: 0, level: "", queueInfo: event, consoleType: '', queueName: '' });
       const updated = isFirst ? [event, ...filtered] : [...filtered, event];
+
       const data = await getMonitoringInfo(event);
       const updatedMonitoring = isFirst ? [data, ...filteredMonitoring] : [...filteredMonitoring, data];
       setMonitoringData(updatedMonitoring);
       setEventData(updated);
-
     } else {
       setEventData(filtered);
     }
@@ -137,14 +127,17 @@ const Dashboard = () => {
       }
     );
     write2VmsDispatchQueue(
-      { ...item, ...{ actionTag: customAction }, ...{ subActionTag: subAction?.subCategoryId }, ...{ queue_name: item?.nextQueueName } }
+      { ...item, actionTag: customAction, subActionTag: subAction?.subCategoryId, queue_name: item?.nextQueueName }
     );
     consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: '' });
 
-    const filtered = eventData.filter((_, i) => index !== i);
-    const filteredMonitoring = monitoringData.filter((_, i) => index !== i);
     const isFirst = index === 0;
-    const reordered = isFirst ? [...dummy, ...filtered] : [...filtered, ...dummy];
+    const filteredMonitoring = monitoringData.filter((_, i) => item?.index !== i);
+    const x = isFirst ? [null, ...filteredMonitoring] : [...filteredMonitoring, null];
+    setMonitoringData(x);
+
+    const filtered = eventData.filter((_, i) => item?.index !== i);
+    const reordered = isFirst ? [null, ...filtered] : [...filtered, null];
     setEventData(reordered);
     const eventResponse = await getVmsEventsQueueData();
     if (eventResponse.length) {
@@ -153,7 +146,7 @@ const Dashboard = () => {
         ...first,
         landingTime: getTimeByTimezone(first.timezone),
         audioPlayed: false,
-        timer: 120,
+        timer: 60,
       };
 
 
@@ -193,7 +186,7 @@ const Dashboard = () => {
           ...rawEvent,
           landingTime: getTimeByTimezone(rawEvent.timezone),
           audioPlayed: false,
-          timer: 120,
+          timer: 60,
         };
 
         writetoRedisQueueData({
@@ -244,7 +237,7 @@ const Dashboard = () => {
   */
   const isHandlingRef = useRef(false);
   const queueRef = useRef([]);
-  
+
   useEffect(() => {
     const session = getStorage("session");
     if (session.userLevel !== 1 || eventData.length === 0) return;
@@ -275,14 +268,14 @@ const Dashboard = () => {
       item?.userLevelAlarmInfo?.push({
         level: session?.userLevel,
         user: session?.UserId,
-        alarm: item.audio ? "P" : "N",
-        activityDetTime: item.sirenTime ?? "",
+        alarm: item?.audio ? "P" : "N",
+        activityDetTime: item?.sirenTime ?? "",
         landingTime: item?.landingTime ?? "",
         reviewStart: item?.landingTime ?? "",
         reviewEnd: getTimeByTimezone(item?.timezone),
         actionTag: customAction,
         subActionTag: subAction?.subCategoryId,
-        notes: item.notes ?? "",
+        notes: item?.notes ?? "",
       });
 
       write2VmsDispatchQueue({
@@ -299,23 +292,25 @@ const Dashboard = () => {
       });
 
       // remove item
-      const filtered = eventData.filter((_, i) => index !== i);
-      const filteredMonitoring = monitoringData.filter((_, i) => index !== i);
-
       const isFirst = index === 0;
-      const reordered = isFirst ? [...dummy, ...filtered] : [...filtered, ...dummy];
+
+
+      const filteredMonitoring = monitoringData.filter((_, i) => index !== i);
+      const x = isFirst ? [null, ...filteredMonitoring] : [...filteredMonitoring, null];
+      setMonitoringData(x);
+
+      const filtered = eventData.filter((_, i) => index !== i);
+      const reordered = isFirst ? [null, ...filtered] : [...filtered, null];
       setEventData(reordered);
 
       const eventResponse = await getVmsEventsQueueData();
-
       if (eventResponse && eventResponse.length) {
         const [first] = eventResponse;
-
         const event = {
           ...first,
           landingTime: getTimeByTimezone(first.timezone),
           audioPlayed: false,
-          timer: 120,
+          timer: 60,
         };
 
         writetoRedisQueueData({
@@ -326,14 +321,11 @@ const Dashboard = () => {
           queueName: "",
         });
 
-        const updated = isFirst ? [event, ...filtered] : [...filtered, event];
         const monitoringRes = await getMonitoringInfo(event);
-
-        const latestMonitoringData = isFirst
-          ? [monitoringRes, ...filteredMonitoring]
-          : [...filteredMonitoring, monitoringRes];
-
+        const latestMonitoringData = isFirst ? [monitoringRes, ...filteredMonitoring] : [...filteredMonitoring, monitoringRes];
         setMonitoringData(latestMonitoringData);
+
+        const updated = isFirst ? [event, ...filtered] : [...filtered, event];
         setEventData(updated);
       } else {
         setEventData(filtered);
@@ -344,18 +336,17 @@ const Dashboard = () => {
     // INTERVAL
     // ----------------------------
     const interval = setInterval(() => {
-      // ❗ STOP timers while processing
       if (isHandlingRef.current) return;
 
       for (let i = 0; i < eventData.length; i++) {
         const item = eventData[i];
 
         // PREVENT negative values
-        if (item.timer > 0) {
+        if (item?.timer > 0) {
           item.timer--;
         }
 
-        if (item.timer === 0) {
+        if (item?.timer === 0) {
           setStorage("custom_action", 2);
 
           queueRef.current.push({ item, index: i });
@@ -368,7 +359,7 @@ const Dashboard = () => {
     return () => {
       clearInterval(interval);
     };
-  }, [dummy, eventData, monitoringData]);
+  }, [eventData, monitoringData]);
 
 
 
