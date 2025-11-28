@@ -117,6 +117,7 @@ const Dashboard = () => {
    * to handel suspicious activity
    */
   const handleSuspicious = async (item) => {
+
     const index = getStorage('index');
     const customAction = getStorage('custom_action');
     const subAction = getStorage('sub_action');

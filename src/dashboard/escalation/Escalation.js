@@ -5,6 +5,7 @@ import ErrorInfo from "../../utilities/error-info/ErrorInfo";
 import { eventsGenericEmail, getAlertCategoriesForSiteId, getEmailDataForVMSEvents } from "../../utilities/ApiService";
 import { getStorage, getTimeByTimezone, timeFormat } from "../../utilities/StorageService";
 
+
 const Escalation = ({ closeEscalation, currentEvent, handleFalse, handleSuspicious, monitoringData }) => {
   // const data = useAuth();
 
@@ -27,6 +28,7 @@ const Escalation = ({ closeEscalation, currentEvent, handleFalse, handleSuspicio
     setEmailData('load');
     const response = await getEmailDataForVMSEvents({ ...currentEvent, ...{ alertTypeId: selectedAlertType }, ...{ subTypeId: val } });
     setEmailData(response);
+
   }
 
   const getSubAlerts = (val) => {
@@ -219,10 +221,12 @@ const Escalation = ({ closeEscalation, currentEvent, handleFalse, handleSuspicio
                   <tr>
                     <td><strong>Date</strong></td>
                     <td>{emaildata?.emailFields?.DATE}</td>
+                  
                   </tr>
                   <tr>
                     <td><strong>Time</strong></td>
                     <td>{emaildata?.emailFields?.TIME}</td>
+                     
                   </tr>
                 </tbody>
               </table>

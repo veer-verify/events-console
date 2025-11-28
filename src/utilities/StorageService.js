@@ -117,3 +117,31 @@ export const isValid = (data) => {
 //         return 'staging-screener';
 //     }
 // }
+
+
+
+export function formatTimestamp(input) {
+  // Split date and time
+  const [date, time] = input.split("_");
+
+  // Convert time format 02-10-18 → 02:10:18
+  const formattedTime = time.replace(/-/g, ":");
+
+  // Create proper ISO string -> YYYY-MM-DDTHH:mm:ss
+  const iso = `${date}T${formattedTime}`;
+
+  const dateObj = new Date(iso);
+
+  if (isNaN(dateObj)) return "Invalid Date";
+
+  // Convert back to required format: YYYY-MM-DD HH:mm:ss
+  const YYYY = dateObj.getFullYear();
+  const MM = String(dateObj.getMonth() + 1).padStart(2, "0");
+  const DD = String(dateObj.getDate()).padStart(2, "0");
+
+  const hh = String(dateObj.getHours()).padStart(2, "0");
+  const mm = String(dateObj.getMinutes()).padStart(2, "0");
+  const ss = String(dateObj.getSeconds()).padStart(2, "0");
+
+  return `${YYYY}-${MM}-${DD} ${hh}:${mm}:${ss}`;
+}

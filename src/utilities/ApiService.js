@@ -1,6 +1,6 @@
 import api from '../interceptor';
 import { environment } from '../environment';
-import { getDay, getHour, getStorage, getTimeByTimezone } from './StorageService';
+import { getDay, getHour, getStorage, getTimeByTimezone,formatTimestamp } from './StorageService';
 import { toast } from 'react-toastify';
 
 
@@ -131,6 +131,7 @@ const weekdays = [
   'Saturday',
 ];
 export const getEmailDataForVMSEvents = async (payload) => {
+
   const url = `${environment.guard_monitoring_url}/getEmailDataForVMSEvents_1_0`;
   const params = new URLSearchParams();
   params.append('siteId', payload?.siteId);
@@ -139,7 +140,8 @@ export const getEmailDataForVMSEvents = async (payload) => {
   params.append('subTypeId', payload?.subTypeId);
   params.append('day', weekdays[getDay(payload?.timezone)]);
   params.append('hour', getHour(payload?.timezone));
-  params.append('currentTime', getTimeByTimezone(payload?.timezone));
+  // params.append('currentTime', getTimeByTimezone(payload?.timezone));
+  params.append('currentTime', formatTimestamp(payload?.eventTime));
   // params.append('timer', 120);
   params.append('imageName', payload?.image_list.toString());
     params.append('callingSystemDetail', 'events-console');
@@ -147,12 +149,14 @@ export const getEmailDataForVMSEvents = async (payload) => {
 }
 
 export const eventsGenericEmail = async (payload) => {
+  console.log(payload)
   const url = `${environment.guard_monitoring_url}/eventsGenericEmail_1_0`;
   const params = new URLSearchParams();
   params.append('siteId', payload?.siteId);
   params.append('day', weekdays[getDay(payload?.timezone)]);
   params.append('hour', getHour(payload?.timezone));
   params.append('currentTime', getTimeByTimezone(payload?.timezone));
+ 
 
   const formData = new FormData();
   formData.append('siteId', payload?.siteId);

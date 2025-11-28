@@ -45,6 +45,7 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
                 .flatMap((item) => item.actionTagSubCategories)
         );
         setShowTags(true);
+        closeEscalation();
     };
 
     const openLiveDialog = () => {
@@ -95,6 +96,7 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
             }
         }
         closeTags();
+      
     };
 
     useEffect(() => {
