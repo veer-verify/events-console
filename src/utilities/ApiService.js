@@ -149,7 +149,7 @@ export const getEmailDataForVMSEvents = async (payload) => {
 }
 
 export const eventsGenericEmail = async (payload) => {
-  console.log(payload)
+
   const url = `${environment.guard_monitoring_url}/eventsGenericEmail_1_0`;
   const params = new URLSearchParams();
   params.append('siteId', payload?.siteId);
