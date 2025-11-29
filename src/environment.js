@@ -8,7 +8,7 @@ export const environment = {
     site_url: `${dev}/vipsites`,
     common_url: `${dev}/metadata`,
     download_url: `${dev}/common`,
-    guard_monitoring_url: `${local}/guard_monitoring`,
+    guard_monitoring_url: `${dev}/guard_monitoring`,
     escalation_url: `${dev}/monitoring`,
     event_image_url: `${dev}/dotimages/`,
     event_process_url: `${dev}/events_data`,

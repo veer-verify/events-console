@@ -1,5 +1,5 @@
 import './Dashboard.css';
-import { createContext, Fragment, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, Fragment, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import Header from '../header/Header';
 import Tile from './tile/Tile';
 import { getSession, getStorage, getTimeByTimezone, setStorage } from '../utilities/StorageService';
@@ -40,11 +40,36 @@ const Dashboard = () => {
   const closeEscalation = () => {
     setEscalation(false);
   }
-  
+
 
   /**
    * to handle false activity
    */
+  const [falseQueue, setFalseQueue] = useState([]);
+  const isFalseProcessing = useRef(false);
+
+  /** child calls this */
+  const falseHandler = useCallback((item) => {
+    setFalseQueue(prev => [...prev, item]);
+  }, []);
+
+  /** PROCESS QUEUE ONE BY ONE */
+  useEffect(() => {
+    const runQueue = async () => {
+      if (isFalseProcessing.current) return;
+      if (falseQueue.length === 0) return;
+      isFalseProcessing.current = true;
+      const nextItem = falseQueue[0];
+
+      await handleFalse(nextItem);
+
+      setFalseQueue(prev => prev.slice(1));
+      isFalseProcessing.current = false;
+    };
+
+    runQueue();
+  }, [falseQueue]);
+
   const handleFalse = async (item) => {
     // console.log(item)
     // const index = getStorage('index');
@@ -106,6 +131,33 @@ const Dashboard = () => {
   /**
    * to handel suspicious activity
    */
+
+  const [suspiciousQueue, setSuspiciousQueue] = useState([]);
+  const isSuspiciousProcessing = useRef(false);
+
+  /** child calls this */
+  const suspiciousHandler = useCallback((item) => {
+    setSuspiciousQueue(prev => [...prev, item]);
+  }, []);
+
+  /** PROCESS QUEUE ONE BY ONE */
+  useEffect(() => {
+    const runQueue = async () => {
+      if (isSuspiciousProcessing.current) return;
+      if (suspiciousQueue.length === 0) return;
+
+      isSuspiciousProcessing.current = true;
+      const nextItem = suspiciousQueue[0];
+
+      await handleSuspicious(nextItem);
+
+      setSuspiciousQueue(prev => prev.slice(1));
+      isSuspiciousProcessing.current = false;
+    };
+
+    runQueue();
+  }, [suspiciousQueue]);
+
   const handleSuspicious = async (item) => {
 
     const index = getStorage('index');
@@ -161,7 +213,6 @@ const Dashboard = () => {
       setEventData(filtered);
     }
   }
-
 
   /**
    * event
@@ -231,13 +282,11 @@ const Dashboard = () => {
     return () => clearInterval(interval);
   }, []);
 
-
   /**
    * timed-out event handling
   */
   const isHandlingRef = useRef(false);
   const queueRef = useRef([]);
-
   useEffect(() => {
     const session = getStorage("session");
     if (session.userLevel !== 1 || eventData.length === 0) return;
@@ -382,8 +431,8 @@ const Dashboard = () => {
               openEscalation={openEscalation}
               closeEscalation={closeEscalation}
 
-              handleFalse={handleFalse}
-              handleSuspicious={handleSuspicious}
+              handleFalse={falseHandler}
+              handleSuspicious={suspiciousHandler}
             />
           ))
           :

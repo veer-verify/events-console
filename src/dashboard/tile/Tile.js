@@ -198,7 +198,7 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
                                     <button
                                         className="custom-action"
                                         onClick={() => handle(1)}
-                                        disabled={isValid(currentEvent)}                                    >
+                                    >
                                         <img
                                             src='icons/false.png'
                                             alt="icon"
