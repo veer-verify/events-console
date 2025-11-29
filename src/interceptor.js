@@ -1,6 +1,6 @@
 import axios from "axios";
 import { getAccessforRefreshToken } from "./utilities/ApiService";
-import { clearStorage, getStorage, setStorage } from "./utilities/StorageService";
+import { clearStorage, getStorage, setStorage, show_loader } from "./utilities/StorageService";
 import { useLogout } from "./utilities/hooks/logout";
 
 
@@ -83,8 +83,8 @@ api.interceptors.response.use((response) => response, async (error) => {
 
         // Optional logout if refresh fails
         // logout();
-        clearStorage();
-        window.location.href = "/";
+        // clearStorage();
+        // window.location.href = "/";
         return Promise.reject(err);
       }
     }

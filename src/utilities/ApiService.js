@@ -2,6 +2,7 @@ import api from '../interceptor';
 import { environment } from '../environment';
 import { getDay, getHour, getStorage, getTimeByTimezone,formatTimestamp } from './StorageService';
 import { toast } from 'react-toastify';
+import axios from 'axios';
 
 
 export const getAccessforRefreshToken = async () => {
@@ -144,11 +145,12 @@ export const getEmailDataForVMSEvents = async (payload) => {
   params.append('currentTime', formatTimestamp(payload?.eventTime));
   // params.append('timer', 120);
   params.append('imageName', payload?.image_list.toString());
-    params.append('callingSystemDetail', 'events-console');
-  return api.get(url, { params: params }).then((res) => res.data.statusCode === 200 ? res.data.emailDetails : null).catch((err) => console.log(err));
+  params.append('callingSystemDetail', 'events-console');
+  return api.get(url, { params: params }).then((res) => res.data.statusCode === 200 ? {...res.data.emailDetails, ...{smsDetails: res.data.smsDetails}} : null).catch((err) => console.log(err));
 }
 
 export const eventsGenericEmail = async (payload) => {
+  console.log(payload);
 
   const url = `${environment.guard_monitoring_url}/eventsGenericEmail_1_0`;
   const params = new URLSearchParams();
@@ -182,6 +184,14 @@ export const eventsGenericEmail = async (payload) => {
   for (var i = 0; i < payload?.screenshots?.length; i++) {
     formData.append("files", payload?.screenshots[i]);
   }
+    //   payload?.smsDetails?.forEach((obj, index) => {
+    //   for (const key in obj) {
+    //     if (obj.hasOwnProperty(key)) {
+    //       formData.append(`textData[${index}].${key}`, obj[key]);
+    //     }
+    //   }
+    // });
+    formData.append("textDetails", JSON.stringify(payload?.smsDetails));
   return api.post(url, formData, { params: params }).then((res) => res).catch((err) => console.log(err));
 }
 
@@ -279,3 +289,27 @@ export async function consumeConsoleEvents(payload){
     return console.log(err);
   }
 }
+
+export const login = async (payload) => {
+  const url = `${environment.login_url}/user_login_1_0`;
+  return axios.post(url, payload).then((res) => res.data);
+}
+
+  export const manageUserSession = async (type) => {
+    const url = `${environment.login_url}/manageUserSession_1_0`;
+    const session = getStorage('session');
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    let obj = new Map();
+    obj.set('userName', session?.UserName);
+    obj.set('UidToken', session?.UidToken);
+    obj.set('type', type);
+    obj.set('time', getTimeByTimezone(timezone));
+    obj.set('timeZone', timezone);
+    obj.set('createdBy', session?.UserId);
+    obj.set('callingSystemDetail', 'events-console');
+    if (type === 'logOut') obj.set('sessionId', session?.sessionId);
+
+    let payload = Object.fromEntries(obj);
+    return api.post(url, payload).then((res) => res.data);
+  }

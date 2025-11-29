@@ -51,3 +51,20 @@
             </Fragment>
         }
       </div> */}
+
+
+                      {/* <div className="button-group1">
+              <button
+                className={`toggle-button ${selectedButton === "mail" ? "active" : ""
+                  }`}
+                onClick={() => selectButton("mail")}>
+                Mail
+              </button>
+              <button
+                className={`toggle-button ${selectedButton === "message" ? "activerej" : ""
+                  }`}
+                style={{ position: "relative", left: "-30px" }}
+                onClick={() => selectButton("message")}>
+                Message
+              </button>
+            </div> */}

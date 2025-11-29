@@ -3,6 +3,8 @@ import moment from 'moment-timezone';
 
 const key = 'verifai';
 
+export const show_loader = false;
+
 /**
  * methods to encrypt and decrypt data
  * @param data data to be encrypted
@@ -96,7 +98,7 @@ export const isValid = (data) => {
     if(!data) return;
     const landing = new Date(data.landingTime);
     const landingPlus10 = landing.setSeconds(landing.getSeconds() + 10);
-    return moment(new Date(landingPlus10)).format('YYYY-MM-DD HH:mm:ss') > moment().tz(data.timezone).format('YYYY-MM-DD HH:mm:ss');
+    return moment(new Date(landingPlus10))?.format('YYYY-MM-DD HH:mm:ss') > moment().tz(data.timezone)?.format('YYYY-MM-DD HH:mm:ss');
 };
 
 

@@ -198,6 +198,7 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
                                     <button
                                         className="custom-action"
                                         onClick={() => handle(1)}
+                                        disabled={isValid(currentEvent)}
                                     >
                                         <img
                                             src='icons/false.png'
@@ -281,7 +282,8 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
 
                             <div className="store-info">
                                 <p>{`${currentEvent?.siteId} - ${currentEvent?.siteName}`}</p>
-                                <p>Tadepally, Guntur District, Andhra Pradesh, INDIA - 500503</p>
+                                {/* <p>Tadepally, Guntur District, Andhra Pradesh, INDIA - 500503</p> */}
+                                <p>{monitoringData && `${monitoringData?.address?.area}, ${monitoringData?.address?.district}, ${monitoringData?.address?.state} - ${monitoringData?.address?.pin}`}</p>
 
                                 {plannedActivities.length !== 0 &&
                                     <Fragment>
@@ -290,12 +292,12 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
                                                 <div>
                                                     <strong>PLANNED SITE ACTIVITY</strong>
                                                     <br />
-                                                    <span>{`${item?.fromdatetime} - ${item?.todatetime}`}</span>
+                                                    <span>{`${item?.plannedActivityStart} - ${item?.plannedActivityEnd}`}</span>
                                                 </div>
                                                 <div>
                                                     <strong>{item?.activityName}</strong>
                                                     <br />
-                                                    <span>{item?.description}</span>
+                                                    <span>{item?.plannedActivityDescription}</span>
                                                 </div>
                                             </div>
                                         ))}
@@ -329,7 +331,7 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
                                             <tr>
                                                 <td><strong>Camera</strong></td>
                                                 <td>
-                                                    {monitoringData.cameras.length && monitoringData.cameras[0].cameraName}
+                                                    {monitoringData.cameras?.length && monitoringData.cameras[0]?.cameraName}
                                                 </td>
                                             </tr>
                                             <tr>
@@ -348,12 +350,16 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
                 }
 
                 {session?.userLevel === 2 &&
-                    monitoringData && monitoringData.contactDetails.length !== 0 && (
+                    monitoringData && monitoringData.contactDetails?.length !== 0 && (
                     <ContactInfo monitoringData={monitoringData} />
                 )}
                 {session?.userLevel === 2 &&
-                    monitoringData && monitoringData.lawEnforcement.length !== 0 && (
+                    monitoringData && monitoringData.lawEnforcement?.length !== 0 && (
                         <LawInfo monitoringData={monitoringData} />
+                    )}
+                                    {session?.userLevel === 2 &&
+                    monitoringData && monitoringData.lawEnforcement?.length !== 0 && (
+                        <DotCom monitoringData={monitoringData} />
                     )}
                 {escalation && eventIndex === index && (
                     <div className="escalation-container">
@@ -419,10 +425,36 @@ export const LawInfo = ({ monitoringData }) => {
                 {monitoringData && monitoringData.lawEnforcement?.map((item, index) => (
                     <div className="contact-card" key={index}>
                         <div className="law-card">
-                            <p>📞</p>
+                            <p>🗨️</p>
                             <div>
                                 <p>{item.lawEnforcementDescription}</p>
                                 <p>{item.lawEnforcementContact}</p>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
+// =============================
+// Law Info Component
+// =============================
+export const DotCom = ({ monitoringData }) => {
+    return (
+        <div className="contacts-container">
+            <p className="monitoring-title">
+                800.COM
+            </p>
+            <div className="cards-wrapper">
+                {monitoringData && monitoringData.smsDetails?.map((item, index) => (
+                    <div className="contact-card" key={index}>
+                        <div className="law-card">
+                            <p>📞</p>
+                            <div>
+                                <p>{item.smsCameras}</p>
+                                <p>{item.sms800dotComNo}</p>
                             </div>
                         </div>
                     </div>

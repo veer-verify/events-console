@@ -38,8 +38,8 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
     setSubAlerts(x);
   };
 
+  const session = getStorage('session');
   const handle = (type) => {
-    const session = getStorage('session');
     const currentTime = getTimeByTimezone(currentEvent?.timezone);
     if (type === 'escalate') {
       handleSuspicious({ ...currentEvent, index, actionTagTime: currentTime, ...monitoringData, notes });
@@ -78,20 +78,22 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
       <div className="alert-input">
         <p className="section-title">SUSPICIOUS INPUT</p>
 
-        {/* Person / Vehicle radio buttons */}
-        <div className="radio-group">
-          <label>
-            <input type="radio" name="selection" checked={selection === "person"} onChange={() => setSelection("person")} />
-            Person
-          </label>
-          <label>
-            <input type="radio" name="selection" checked={selection === "vehicle"} onChange={() => setSelection("vehicle")} />
-            Vehicle
-          </label>
-        </div>
+        {session?.userLevel === 2 &&
+          <Fragment>
+            {/* Person / Vehicle radio buttons */}
+            <div className="radio-group">
+              <label>
+                <input type="radio" name="selection" checked={selection === "person"} onChange={() => setSelection("person")} />
+                Person
+              </label>
+              <label>
+                <input type="radio" name="selection" checked={selection === "vehicle"} onChange={() => setSelection("vehicle")} />
+                Vehicle
+              </label>
+            </div>
 
-        {/* Alert Type Dropdown */}
-        {/* <div className="form-group">
+            {/* Alert Type Dropdown */}
+            {/* <div className="form-group">
           <label>Action Tag</label>
           <select
             value={selectedActionTag}
@@ -106,37 +108,39 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
           </select>
         </div> */}
 
-        {/* Alert Type Dropdown */}
-        <div className="form-group">
-          <label>Alert Type</label>
-          <select
-            value={selectedAlertType}
-            onChange={(e) => getSubAlerts(e.target.value)}
-          >
-            <option value="" disabled>Select Alert Type</option>
-            {alerts?.map((item) => (
-              <option key={item.guardAlertTypeId} value={item.guardAlertTypeId}>
-                {item.guardAlertType}
-              </option>
-            ))}
-          </select>
-        </div>
+            {/* Alert Type Dropdown */}
+            <div className="form-group">
+              <label>Alert Type</label>
+              <select
+                value={selectedAlertType}
+                onChange={(e) => getSubAlerts(e.target.value)}
+              >
+                <option value="" disabled>Select Alert Type</option>
+                {alerts?.map((item) => (
+                  <option key={item.guardAlertTypeId} value={item.guardAlertTypeId}>
+                    {item.guardAlertType}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-        {/* Alert Sub Type Dropdown */}
-        <div className="form-group">
-          <label>Alert Sub Type</label>
-          <select
-            value={selectedSubType}
-            onChange={(e) => fetchEmailData(e.target.value)}
-          >
-            <option value="" disabled>Select Alert Sub Type</option>
-            {subAlerts?.map((item) => (
-              <option key={item.guardSubAlertTypeId} value={item.guardSubAlertTypeId}>
-                {item.guardSubAlertType}
-              </option>
-            ))}
-          </select>
-        </div>
+            {/* Alert Sub Type Dropdown */}
+            <div className="form-group">
+              <label>Alert Sub Type</label>
+              <select
+                value={selectedSubType}
+                onChange={(e) => fetchEmailData(e.target.value)}
+              >
+                <option value="" disabled>Select Alert Sub Type</option>
+                {subAlerts?.map((item) => (
+                  <option key={item.guardSubAlertTypeId} value={item.guardSubAlertTypeId}>
+                    {item.guardSubAlertType}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </Fragment>
+        }
 
         <div className="form-group">
           <label>Notes</label>
@@ -144,7 +148,7 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
         </div>
 
         {/* Action Buttons */}
-        {emaildata &&
+        {
           <div className="button-group">
             <button className="btn-secondary" onClick={() => handle('complete')}>COMPLETE</button>
             {monitoringData && monitoringData.nextQueueName && <button className="btn-primary" onClick={() => handle('escalate')}>ESCALATE</button>}
@@ -154,43 +158,30 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
 
 
       {/* Right Panel */}
-      <div className="alert-preview">
-        {
-          emaildata === 'load' ? <p>Loading...</p> : !emaildata ? <ErrorInfo message={'no data!'} /> :
-            <Fragment>
-              <div className="flex-group">
-                <p className="section-title">PREVIEW</p>
+      {session?.userLevel === 2 &&
+        <div className="alert-preview">
+          {
+            emaildata === 'load' ? <p>Loading...</p> : !emaildata ? <ErrorInfo message={'no data!'} /> :
+              <Fragment>
+                <div className="flex-group">
+                  <p className="section-title">PREVIEW</p>
 
-                {/* <div className="button-group1">
-              <button
-                className={`toggle-button ${selectedButton === "mail" ? "active" : ""
-                  }`}
-                onClick={() => selectButton("mail")}>
-                Mail
-              </button>
-              <button
-                className={`toggle-button ${selectedButton === "message" ? "activerej" : ""
-                  }`}
-                style={{ position: "relative", left: "-30px" }}
-                onClick={() => selectButton("message")}>
-                Message
-              </button>
-            </div> */}
-              </div>
 
-              <div className="preview-card">
-                <div className="alert-header">
-                  <span>
-                    {emaildata?.emailSubject}
-                  </span>
                 </div>
-              </div>
 
-              <p className="alert-message">
-                {emaildata?.emailBody}
-              </p>
+                <div className="preview-card">
+                  <div className="alert-header">
+                    <span>
+                      {emaildata?.emailSubject}
+                    </span>
+                  </div>
+                </div>
 
-              {/* {
+                <p className="alert-message">
+                  {emaildata?.emailBody}
+                </p>
+
+                {/* {
                 emaildata?.screenshots?.map((item, i) =>
                   <img
                     src={item}
@@ -200,43 +191,55 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
                 )
               } */}
 
-              <table>
-                <tbody>
-                  <tr>
-                    <td><strong>Timezone</strong></td>
-                    <td>{currentEvent?.timezone}</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Monitoring</strong></td>
-                    <td>{timeFormat(monitoringData)}</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Action Tag</strong></td>
-                    <td>{emaildata?.alertTag}</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Location</strong></td>
-                    <td>{emaildata?.emailFields?.LOCATION}</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Date</strong></td>
-                    <td>{emaildata?.emailFields?.DATE}</td>
-                  
-                  </tr>
-                  <tr>
-                    <td><strong>Time</strong></td>
-                    <td>{emaildata?.emailFields?.TIME}</td>
-                     
-                  </tr>
-                </tbody>
-              </table>
+                <table>
+                  <tbody>
+                    <tr>
+                      <td><strong>Timezone</strong></td>
+                      <td>{currentEvent?.timezone}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Monitoring</strong></td>
+                      <td>{timeFormat(monitoringData)}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Action Tag</strong></td>
+                      <td>{emaildata?.alertTag}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>To</strong></td>
+                      <td>{monitoringData?.emailDetails?.toEmails?.join(', ')}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>BCC</strong></td>
+                      <td>{monitoringData?.emailDetails?.bccEmails?.join(', ')}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>CC</strong></td>
+                      <td>{monitoringData?.emailDetails?.ccEmails?.join(', ')}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Location</strong></td>
+                      <td>{emaildata?.emailFields?.LOCATION}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Date</strong></td>
+                      <td>{emaildata?.emailFields?.DATE}</td>
 
-              <p className="alert-note">
-                {emaildata?.emailFooter}
-              </p>
-            </Fragment>
-        }
-      </div>
+                    </tr>
+                    <tr>
+                      <td><strong>Time</strong></td>
+                      <td>{emaildata?.emailFields?.TIME}</td>
+
+                    </tr>
+                  </tbody>
+                </table>
+
+                <p className="alert-note">
+                  {emaildata?.emailFooter}
+                </p>
+              </Fragment>
+          }
+        </div>}
     </Fragment>
   );
 }

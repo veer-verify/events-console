@@ -5,11 +5,12 @@ import { useNavigate } from 'react-router-dom';
 import PageLoader from '../../utilities/page-loader/PageLoader';
 import { environment } from '../../environment';
 import { toast } from 'react-toastify';
-import { clearStorage, Encrypt, setStorage } from '../../utilities/StorageService';
+import { clearStorage, Encrypt, getStorage, setStorage } from '../../utilities/StorageService';
 import { useDispatch } from 'react-redux';
 import { save, saveSession } from '../sessionSlice';
-import { userLogin } from '../../utilities/ApiService';
-
+import { login, manageUserSession, userLogin } from '../../utilities/ApiService';
+import Swal from 'sweetalert2'
+import { useLogout } from '../../utilities/hooks/logout';
 
 const SignIn = () => {
   const navigate = useNavigate('');
@@ -21,28 +22,52 @@ const SignIn = () => {
 
   const dispatch = useDispatch();
   const handleSignIn = async () => {
-    const url = `${environment.login_url}/user_login_1_0`;
     const encryptedPassword = Encrypt(password);
     const requestBody = { userName, ...{ password: encryptedPassword, callingSystemDetail: 'events-console' } };
     if (!userName || !password) return toast.error("Please Fill Username & Password");
 
     setLoader(true);
-    axios.post(url, requestBody).then((res) => {
-      setLoader(false);
-      if (res.data.Status === 'Success') {
-        if (!res.data.queueName) return toast.warn('Queue is not assigned!');
-        setStorage('session', res.data);
-        dispatch(saveSession(res.data));
+    const loginData = await login(requestBody).catch(() => setLoader(false));
+    setStorage('session', loginData);
+    dispatch(saveSession(loginData));
 
-        // userLogin();
-        
-        navigate('/dashboard');
+    const activeSession = await manageUserSession('logIn').catch(() => setLoader(false));
+    const temp = getStorage('session');
+    setStorage('session', { ...temp, sessionId: activeSession?.sessionId });
+    dispatch(saveSession({ ...temp, sessionId: activeSession?.sessionId }));
+
+
+    if (activeSession.statusCode === 409) {
+      return Swal.fire({
+        title: "Are you sure?",
+        text: activeSession?.message,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes"
+      }).then(async (result) => {
+        setLoader(false);
+        if (result.isConfirmed) {
+          const data = await manageUserSession('logOut');
+          Swal.fire({
+            title: "Done!",
+            text: data.message,
+            icon: "success"
+          });
+        }
+      });
+    }
+
+
+    if (loginData.Status === 'Success') {
+      if (!loginData.userLevel) {
+
       } else {
-        toast.error(res.data.message);
+        navigate('/dashboard');
       }
-    }).catch((err) => {
-      setLoader(false);
-    });
+    }
+    setLoader(false);
   }
 
   useEffect(() => {
