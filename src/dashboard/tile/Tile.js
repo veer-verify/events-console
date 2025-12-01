@@ -9,7 +9,9 @@ import { playSiren } from '../../utilities/ApiService';
 import { useSelector } from 'react-redux';
 import ErrorInfo from '../../utilities/error-info/ErrorInfo';
 
-const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicious, escalation, openEscalation, closeEscalation }) => {
+const Tile = ({ currentEvent, index, handleFalse, handleSuspicious, escalation, openEscalation, closeEscalation }) => {
+    // console.log(currentEvent)
+    const monitoringData = currentEvent?.monitoringInfo
     const session = getStorage('session');
     const eventIndex = getStorage('index');
     const customAction = getStorage('custom_action');
@@ -336,7 +338,7 @@ const Tile = ({ currentEvent, index, monitoringData, handleFalse, handleSuspicio
                                             </tr>
                                             <tr>
                                                 <td><strong>Requirements</strong></td>
-                                                <td>{monitoringData.requirements}</td>
+                                                <td>{monitoringData.requirements.join(",   ")}</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -425,7 +427,8 @@ export const LawInfo = ({ monitoringData }) => {
                 {monitoringData && monitoringData.lawEnforcement?.map((item, index) => (
                     <div className="contact-card" key={index}>
                         <div className="law-card">
-                            <p>🗨️</p>
+                            
+                            <p>📞</p>
                             <div>
                                 <p>{item.lawEnforcementDescription}</p>
                                 <p>{item.lawEnforcementContact}</p>
@@ -451,7 +454,7 @@ export const DotCom = ({ monitoringData }) => {
                 {monitoringData && monitoringData.smsDetails?.map((item, index) => (
                     <div className="contact-card" key={index}>
                         <div className="law-card">
-                            <p>📞</p>
+                         <p>🗨️</p>
                             <div>
                                 <p>{item.smsCameras}</p>
                                 <p>{item.sms800dotComNo}</p>
