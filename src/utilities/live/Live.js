@@ -12,7 +12,7 @@ const Live = ({ currentEvent, closeLiveDialog }) => {
     useEffect(() => {
         const getLive = async () => {
             const response = await getLiveInfoForSiteAndCamera(currentEvent);
-            if(response) {
+            if (response) {
                 setCameras(response);
             }
         }
@@ -23,11 +23,8 @@ const Live = ({ currentEvent, closeLiveDialog }) => {
         };
     }, [currentEvent]);
 
-    // normalCapture(item,i){
 
-    // }
-
-     const handleMouseDown = (e) => {
+    const handleMouseDown = (e) => {
         const element = liveRef.current;
         if (!element) return;
 
@@ -55,12 +52,13 @@ const Live = ({ currentEvent, closeLiveDialog }) => {
         <Fragment>
             <div className="cam-container" ref={liveRef}
                 onMouseDown={handleMouseDown}>
-            <div className="header">
-                <p>{currentEvent?.siteName}</p>
-                <button  onClick={() => { closeLiveDialog()}}>x</button>
-            </div>
+
+                <div className="header">
+                    <p>{currentEvent?.siteName}</p>
+                    <button onClick={() => { closeLiveDialog() }}>x</button>
+                </div>
                 <div className='cameras'>
-                    { cameras && cameras.map((item, i) => <Stream key={i} streamUrl={`${item.httpUrl}/`} screenshot={true} currentCamera={item}/>     )}
+                    {cameras && cameras.map((item, i) => <Stream key={i} streamUrl={`${item.httpUrl}/`} screenshot={true} currentCamera={item} />)}
                 </div>
             </div>
         </Fragment>

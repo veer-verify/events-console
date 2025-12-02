@@ -1,5 +1,4 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { setStorage } from "../utilities/StorageService";
 
 const sessionSlice = createSlice({
   name: 'session',
@@ -7,7 +6,6 @@ const sessionSlice = createSlice({
   reducers: {
     saveSession: (state, action) => {
       state.data = action.payload;
-      // setStorage('session', state.data);
     },
   },
 });

@@ -1,6 +1,6 @@
 import api from '../interceptor';
 import { environment } from '../environment';
-import { getDay, getHour, getStorage, getTimeByTimezone,formatTimestamp } from './StorageService';
+import { getDay, getHour, getStorage, getTimeByTimezone, formatTimestamp } from './StorageService';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 
@@ -146,19 +146,17 @@ export const getEmailDataForVMSEvents = async (payload) => {
   // params.append('timer', 120);
   params.append('imageName', payload?.image_list.toString());
   params.append('callingSystemDetail', 'events-console');
-  return api.get(url, { params: params }).then((res) => res.data.statusCode === 200 ? {...res.data.emailDetails, ...{smsDetails: res.data.smsDetails}} : null).catch((err) => console.log(err));
+  return api.get(url, { params: params }).then((res) => res.data.statusCode === 200 ? { ...res.data.emailDetails, ...{ smsDetails: res.data.smsDetails } } : null).catch((err) => console.log(err));
 }
 
 export const eventsGenericEmail = async (payload) => {
-  console.log(payload);
-
   const url = `${environment.guard_monitoring_url}/eventsGenericEmail_1_0`;
   const params = new URLSearchParams();
   params.append('siteId', payload?.siteId);
   params.append('day', weekdays[getDay(payload?.timezone)]);
   params.append('hour', getHour(payload?.timezone));
   params.append('currentTime', getTimeByTimezone(payload?.timezone));
- 
+
 
   const formData = new FormData();
   formData.append('siteId', payload?.siteId);
@@ -168,7 +166,7 @@ export const eventsGenericEmail = async (payload) => {
   formData.append('objectName', payload?.objectName);
   formData.append('eventTag', 'Camera-Event');
   // formData.append('eventFromTime', getTimeByTimezone(payload?.timezone));
-   formData.append('eventFromTime', formatTimestamp(payload?.eventTime));
+  formData.append('eventFromTime', formatTimestamp(payload?.eventTime));
   formData.append('eventToTime', getTimeByTimezone(payload?.timezone));
   formData.append('actionTag', payload?.actionTag);
   formData.append('createdBy', getStorage('session').UserId);
@@ -184,14 +182,14 @@ export const eventsGenericEmail = async (payload) => {
   for (var i = 0; i < payload?.screenshots?.length; i++) {
     formData.append("files", payload?.screenshots[i]);
   }
-    //   payload?.smsDetails?.forEach((obj, index) => {
-    //   for (const key in obj) {
-    //     if (obj.hasOwnProperty(key)) {
-    //       formData.append(`textData[${index}].${key}`, obj[key]);
-    //     }
-    //   }
-    // });
-    formData.append("textDetails", JSON.stringify(payload?.smsDetails));
+  //   payload?.smsDetails?.forEach((obj, index) => {
+  //   for (const key in obj) {
+  //     if (obj.hasOwnProperty(key)) {
+  //       formData.append(`textData[${index}].${key}`, obj[key]);
+  //     }
+  //   }
+  // });
+  formData.append("textDetails", JSON.stringify(payload?.smsDetails));
   return api.post(url, formData, { params: params }).then((res) => res).catch((err) => console.log(err));
 }
 
@@ -214,42 +212,49 @@ export const getLiveInfoForSiteAndCamera = async (payload) => {
 
 export const playSiren = async (payload) => {
   // const url = `${environment.site_url}/play_1_0/${payload?.cameraId}`;
-  const url =  payload?.audioUrl;
+  const url = payload?.audioUrl;
   return api.get(url).then((res) => res.data).catch((err) => console.log(err));
 }
 
 
 export const writetoRedisQueueData = async (payload) => {
-  const url =`${environment.event_process_url}/addConsoleEvents_1_0`;
+  const url = `${environment.event_process_url}/addConsoleEvents_1_0`;
   const user = getStorage('session');
-  payload.userId = user?.UserId;
-  payload.level = `Level${user?.userLevel}`;
-  payload.consoleType='events-console';
-  payload.queueName=user?.queueName;
-  return api.post(url,payload).then((res) => {
+
+  const temp = JSON.parse(JSON.stringify(payload));
+  delete temp?.monitoringInfo;
+  const obj = {
+    userId: user?.UserId,
+    level: `Level${user?.userLevel}`,
+    consoleType: 'events-console',
+    queueName: user?.queueName,
+    queueInfo: temp
+  };
+
+  return api.post(url, obj).then((res) => {
     return res.data
   }).catch((err) => console.log(err));
 }
 
 
-export const userLogin =async ()=>{
+export const userLogin = async () => {
   const url = `${environment.event_process_url}/userLogin`;
   const user = getStorage('session');
-  let payload={
-    userId:0,
-    userLevel:0
+  let payload = {
+    userId: 0,
+    userLevel: 0
   }
   payload.userId = user?.UserId;
   payload.userLevel = `Level${user?.userLevel}`;
-  return api.post(url,payload).then((res) => res.data).catch((err) => console.log(err));
+  return api.post(url, payload).then((res) => res.data).catch((err) => console.log(err));
 
 }
 
-export async function aliveUser(){
+export async function aliveUser() {
   const url = `${environment.event_process_url}/userActiveStatus_1_0`;
   const user = getStorage('session');
-  let payload={
-    userId:0
+  let payload = {
+    userId: 0
   }
   payload.userId = user?.UserId;
   try {
@@ -261,11 +266,11 @@ export async function aliveUser(){
 
 }
 
-export async function refreshUser(){
+export async function refreshUser() {
   const url = `${environment.event_process_url}/refresh`;
   const user = getStorage('session');
-  let payload={
-    userId:0
+  let payload = {
+    userId: 0
   }
   payload.userId = user?.UserId;
   try {
@@ -276,12 +281,13 @@ export async function refreshUser(){
   }
 }
 
-export async function consumeConsoleEvents(payload){
+export async function consumeConsoleEvents(payload) {
   const url = `${environment.event_process_url}/consumeConsoleEvents_1_0`;
-   const user = getStorage('session');
+  const user = getStorage('session');
 
   payload.userId = user?.UserId;
-  payload.consoleType='events-console';
+  payload.consoleType = 'events-console';
+
   try {
     const res = await api.put(url, payload);
     return res.data;
@@ -295,21 +301,21 @@ export const login = async (payload) => {
   return axios.post(url, payload).then((res) => res.data);
 }
 
-  export const manageUserSession = async (type) => {
-    const url = `${environment.login_url}/manageUserSession_1_0`;
-    const session = getStorage('session');
-    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+export const manageUserSession = async (type) => {
+  const url = `${environment.login_url}/manageUserSession_1_0`;
+  const session = getStorage('session');
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-    let obj = new Map();
-    obj.set('userName', session?.UserName);
-    obj.set('UidToken', session?.UidToken);
-    obj.set('type', type);
-    obj.set('time', getTimeByTimezone(timezone));
-    obj.set('timeZone', timezone);
-    obj.set('createdBy', session?.UserId);
-    obj.set('callingSystemDetail', 'events-console');
-    if (type === 'logOut') obj.set('sessionId', session?.sessionId);
+  let obj = new Map();
+  obj.set('userName', session?.UserName);
+  obj.set('UidToken', session?.UidToken);
+  obj.set('type', type);
+  obj.set('time', getTimeByTimezone(timezone));
+  obj.set('timeZone', timezone);
+  obj.set('createdBy', session?.UserId);
+  obj.set('callingSystemDetail', 'events-console');
+  if (type === 'logOut') obj.set('sessionId', session?.sessionId);
 
-    let payload = Object.fromEntries(obj);
-    return api.post(url, payload).then((res) => res.data);
-  }
+  let payload = Object.fromEntries(obj);
+  return api.post(url, payload).then((res) => res.data);
+}

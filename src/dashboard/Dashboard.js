@@ -5,14 +5,16 @@ import Tile from './tile/Tile';
 import { getSession, getStorage, getTimeByTimezone, setStorage } from '../utilities/StorageService';
 import { aliveUser, consumeConsoleEvents, getActionTagCategories, getMonitoringInfo, getVmsEventsQueueData, updateEventFullDetails, write2VmsDispatchQueue, writetoRedisQueueData } from '../utilities/ApiService';
 import { useDispatch, useSelector } from 'react-redux';
-import { saveAction } from './actionTagSlice';
+import { saveAction } from '../../src/utilities/slices/actionTagSlice';
+import { setLoader } from '../utilities/slices/loaderSlice';
 
 
 const Dashboard = () => {
   const { sessionStore, actionStore } = useSelector((state) => ({
     sessionStore: state.sessionStore,
-    actionStore: state.actionStore
+    actionStore: state.actionStore,
   }));
+
   const dispatch = useDispatch();
 
   const session = getStorage('session');
@@ -30,8 +32,8 @@ const Dashboard = () => {
   // const EventContext = createContext();
   const [eventData, setEventData] = useState([]);
   const [escalation, setEscalation] = useState(false);
+  // const [loader, setLoader] = useState(false);
   // const [monitoringData, setMonitoringData] = useState([]);
-  // const [poolEvent, setPoolEvent] = useState(false);
 
   const openEscalation = () => {
     setEscalation(true);
@@ -54,16 +56,16 @@ const Dashboard = () => {
 
   useEffect(() => {
     const handleFalse = async (item) => {
-      // console.log(item)
+      
       // const index = getStorage('index');
       const subAction = getStorage('sub_action');
       const customAction = getStorage('custom_action');
-
-
+      
+      
       item?.userLevelAlarmInfo?.push(
         {
-          level: getSession().userLevel,
-          user: getSession().UserId,
+          level: getSession()?.userLevel,
+          user: getSession()?.UserId,
           alarm: item.audio ? 'P' : 'N',
           activityDetTime: item.sirenTime ?? '',
           landingTime: item?.landingTime ?? '',
@@ -78,17 +80,14 @@ const Dashboard = () => {
         { ...item, actionTag: customAction, subActionTag: subAction?.subCategoryId }
       );
       consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: '' });
-
+      
       const isFirst = item?.index === 0;
-
-      // const filteredMonitoring = monitoringData.filter((_, i) => item?.index !== i);
-      // const x = isFirst ? [null, ...filteredMonitoring] : [...filteredMonitoring, null];
-      // setMonitoringData(x);
-
+      
       const filtered = eventData.filter((_, i) => item?.index !== i);
       const reordered = isFirst ? [null, ...filtered] : [...filtered, null];
       setEventData(reordered);
-
+      
+      dispatch(setLoader(true))
       const eventResponse = await getVmsEventsQueueData();
       if (eventResponse && eventResponse.length) {
         const [first] = eventResponse;
@@ -101,18 +100,13 @@ const Dashboard = () => {
           timer: 60,
         };
 
-        writetoRedisQueueData({ userId: 0, level: "", queueInfo: event, consoleType: '', queueName: '' });
+        writetoRedisQueueData(event);
         const updated = isFirst ? [event, ...filtered] : [...filtered, event];
-        // const merged = { ...updated, monitoringInfo }
-
-        // const data = await getMonitoringInfo(event);
-        // const updatedMonitoring = isFirst ? [data, ...filteredMonitoring] : [...filteredMonitoring, data];
-        // setMonitoringData(updatedMonitoring);
-
-        // Merge results
         setEventData(updated);
+        dispatch(setLoader(false))
       } else {
         setEventData(filtered);
+        dispatch(setLoader(false))
       }
     };
 
@@ -129,7 +123,7 @@ const Dashboard = () => {
     };
 
     runQueue();
-  }, [eventData, falseQueue]);
+  }, [dispatch, eventData, falseQueue]);
 
 
   /**
@@ -145,14 +139,14 @@ const Dashboard = () => {
   useEffect(() => {
     const handleSuspicious = async (item) => {
 
-      const index = getStorage('index');
+      // const index = getStorage('index');
       const customAction = getStorage('custom_action');
       const subAction = getStorage('sub_action');
 
       item?.userLevelAlarmInfo?.push(
         {
-          level: getSession().userLevel,
-          user: getSession().UserId,
+          level: getSession()?.userLevel,
+          user: getSession()?.UserId,
           alarm: item.audio ? 'P' : 'N',
           activityDetTime: item.sirenTime ?? '',
           landingTime: item?.landingTime ?? '',
@@ -168,14 +162,12 @@ const Dashboard = () => {
       );
       consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: '' });
 
-      const isFirst = index === 0;
-      // const filteredMonitoring = monitoringData.filter((_, i) => item?.index !== i);
-      // const x = isFirst ? [null, ...filteredMonitoring] : [...filteredMonitoring, null];
-      // setMonitoringData(x);
+      const isFirst = item?.index === 0;
 
       const filtered = eventData.filter((_, i) => item?.index !== i);
       const reordered = isFirst ? [null, ...filtered] : [...filtered, null];
       setEventData(reordered);
+      dispatch(setLoader(true))
       const eventResponse = await getVmsEventsQueueData();
       if (eventResponse.length) {
         const [first] = eventResponse;
@@ -188,18 +180,13 @@ const Dashboard = () => {
           timer: 60,
         };
 
-
-        writetoRedisQueueData({ userId: 0, level: "", queueInfo: event, consoleType: '', queueName: '' });
+        writetoRedisQueueData(event);
         const updated = isFirst ? [event, ...filtered] : [...filtered, event];
-        // const monitoringRes = await getMonitoringInfo(event);
-        // const latestMonitoringData = isFirst ? [monitoringRes, ...filteredMonitoring] : [...filteredMonitoring, monitoringRes];
-        // setMonitoringData(latestMonitoringData);
-        // Merge results
-        // const merged = { ...updated, monitoringInfo }
         setEventData(updated);
-
+        dispatch(setLoader(false))
       } else {
         setEventData(filtered);
+        dispatch(setLoader(false))
       }
     }
 
@@ -217,7 +204,7 @@ const Dashboard = () => {
     };
 
     runQueue();
-  }, [eventData, suspiciousQueue]);
+  }, [dispatch, eventData, suspiciousQueue]);
 
 
   /**
@@ -234,8 +221,10 @@ const Dashboard = () => {
 
       isFetching = true;
 
+      dispatch(setLoader(true))
       const response = await getVmsEventsQueueData();
-
+      dispatch(setLoader(false))
+      
       if (!isMounted) return;
       if (response && response.length !== 0) {
         const [rawEvent] = response;
@@ -246,22 +235,12 @@ const Dashboard = () => {
           timer: 60,
         };
         
-        writetoRedisQueueData({
-          userId: 0,
-          level: "",
-          queueInfo: event,
-          consoleType: "",
-          queueName: "",
-        });
+        writetoRedisQueueData(event);
 
+        
         const monitoringInfo = await getMonitoringInfo(event);
-        // Merge results
-        const merged = { ...event, monitoringInfo }
+        const merged = { ...event, monitoringInfo };
         setEventData(prev => [...prev, merged]);
-
-        // if (isMounted) {
-        //   setMonitoringData(prev => [...prev, monitoringInfo]);
-        // }
       }
 
       isFetching = false;
@@ -269,7 +248,7 @@ const Dashboard = () => {
         timerId = setTimeout(fetchEvents, 2000);
       }
     };
-
+    
     fetchEvents();
 
     const fetchTags = async () => {
@@ -277,6 +256,7 @@ const Dashboard = () => {
       setStorage("actionTags", tags);
       dispatch(saveAction(tags));
     };
+
     fetchTags();
 
     return () => {
@@ -346,14 +326,11 @@ const Dashboard = () => {
 
       const isFirst = index === 0;
 
-      // const filteredMonitoring = monitoringData.filter((_, i) => index !== i);
-      // const x = isFirst ? [null, ...filteredMonitoring] : [...filteredMonitoring, null];
-      // setMonitoringData(x);
-
       const filtered = eventData.filter((_, i) => index !== i);
       const reordered = isFirst ? [null, ...filtered] : [...filtered, null];
       setEventData(reordered);
 
+      dispatch(setLoader(true))
       const eventResponse = await getVmsEventsQueueData();
       if (eventResponse && eventResponse.length) {
         const [first] = eventResponse;
@@ -366,24 +343,13 @@ const Dashboard = () => {
           timer: 60,
         };
 
-        writetoRedisQueueData({
-          userId: 0,
-          level: "",
-          queueInfo: event,
-          consoleType: "",
-          queueName: "",
-        });
-
-        // const monitoringRes = await getMonitoringInfo(event);
-        // const latestMonitoringData = isFirst ? [monitoringRes, ...filteredMonitoring] : [...filteredMonitoring, monitoringRes];
-        // setMonitoringData(latestMonitoringData);
-
+        writetoRedisQueueData(event);
         const updated = isFirst ? [event, ...filtered] : [...filtered, event];
-        // Merge results
-        // const merged = { ...updated, monitoringInfo }
         setEventData(updated);
+        dispatch(setLoader(false))
       } else {
         setEventData(filtered);
+        dispatch(setLoader(false))
       }
     };
 
@@ -408,7 +374,7 @@ const Dashboard = () => {
     return () => {
       clearInterval(interval);
     };
-  }, [eventData]);
+  }, [dispatch, eventData]);
 
 
 

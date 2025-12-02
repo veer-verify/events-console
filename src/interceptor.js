@@ -62,7 +62,7 @@ api.interceptors.response.use((response) => response, async (error) => {
         // Extract new token safely
         // const newToken = response?.access_token;
         // if (!response.access_token) throw new Error("No access token returned from refresh API");
-        if (!response.access_token) console.log("No access token returned from refresh API");
+        if (!response) console.log("No access token returned from refresh API");
 
         // Save new access token
         tempSession.AccessToken = response?.access_token;
@@ -83,8 +83,8 @@ api.interceptors.response.use((response) => response, async (error) => {
 
         // Optional logout if refresh fails
         // logout();
-        // clearStorage();
-        // window.location.href = "/";
+        clearStorage();
+        window.location.href = "/";
         return Promise.reject(err);
       }
     }

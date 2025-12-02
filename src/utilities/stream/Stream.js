@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import "./Stream.css";
 
-const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789",currentCamera }) => {
+const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789", currentCamera }) => {
   const videoRef = useRef(null);
   const peerConnectionRef = useRef(null);
   const queuedCandidatesRef = useRef([]);
@@ -299,7 +299,7 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789",cur
             method: "PATCH",
             headers: { "Content-Type": "application/trickle-ice-sdpfrag", "If-Match": "*" },
             body: "",
-          }).catch(() => {});
+          }).catch(() => { });
         }
       }, 15000);
     };
@@ -368,17 +368,16 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789",cur
       {showOverlay && screenshot && (
         <div className="hover-overlay">
 
-        <div className="displayicon">
-
-        <p style={{color:"white"}}>{currentCamera?.cameraId}</p>
-          <img
-            src="icons/screenshot.svg"
-            alt="overlay"
-            style={{ width: "20px", height: "20px", cursor: "pointer" }}
-            onClick={handleClick}
-            title="Screenshot"
-          />
-        </div>
+          <div className="displayicon">
+            <p style={{ color: "white", fontSize: '12px' }}>{currentCamera?.cameraId}</p>
+            <img
+              src="icons/screenshot.svg"
+              alt="overlay"
+              style={{ width: "20px", height: "20px", cursor: "pointer" }}
+              onClick={handleClick}
+              title="Screenshot"
+            />
+          </div>
         </div>
       )}
     </div>

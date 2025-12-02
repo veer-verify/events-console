@@ -1,73 +1,83 @@
 import './SignIn.css';
-import axios from 'axios';
 import { Fragment, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageLoader from '../../utilities/page-loader/PageLoader';
-import { environment } from '../../environment';
 import { toast } from 'react-toastify';
 import { clearStorage, Encrypt, getStorage, setStorage } from '../../utilities/StorageService';
 import { useDispatch } from 'react-redux';
-import { save, saveSession } from '../sessionSlice';
-import { login, manageUserSession, userLogin } from '../../utilities/ApiService';
+import { saveSession } from '../../../src/utilities/slices/sessionSlice';
+import { login, manageUserSession } from '../../utilities/ApiService';
 import Swal from 'sweetalert2'
-import { useLogout } from '../../utilities/hooks/logout';
+import { setMainLoader } from '../../utilities/slices/loaderSlice';
 
 const SignIn = () => {
   const navigate = useNavigate('');
 
-  const [loader, setLoader] = useState(false);
+  // const [loader, setLoader] = useState(false);
   const [userName, setUserName] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const dispatch = useDispatch();
+
   const handleSignIn = async () => {
     const encryptedPassword = Encrypt(password);
     const requestBody = { userName, ...{ password: encryptedPassword, callingSystemDetail: 'events-console' } };
     if (!userName || !password) return toast.error("Please Fill Username & Password");
 
-    setLoader(true);
-    const loginData = await login(requestBody).catch(() => setLoader(false));
-    setStorage('session', loginData);
-    dispatch(saveSession(loginData));
-
-    const activeSession = await manageUserSession('logIn').catch(() => setLoader(false));
-    const temp = getStorage('session');
-    setStorage('session', { ...temp, sessionId: activeSession?.sessionId });
-    dispatch(saveSession({ ...temp, sessionId: activeSession?.sessionId }));
-
-
-    if (activeSession.statusCode === 409) {
-      return Swal.fire({
-        title: "Are you sure?",
-        text: activeSession?.message,
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "Yes"
-      }).then(async (result) => {
-        setLoader(false);
-        if (result.isConfirmed) {
-          const data = await manageUserSession('logOut');
-          Swal.fire({
-            title: "Done!",
-            text: data.message,
-            icon: "success"
-          });
-        }
-      });
-    }
+    dispatch(setMainLoader(true));
+    const loginData = await login(requestBody).catch(() => dispatch(setMainLoader(false)));
 
 
     if (loginData.Status === 'Success') {
-      if (!loginData.userLevel) {
+      setStorage('session', loginData);
+      dispatch(saveSession(loginData));
 
-      } else {
-        navigate('/dashboard');
+      const activeSession = await manageUserSession('logIn').catch(() => dispatch(setMainLoader(false)));
+      const temp = getStorage('session');
+      setStorage('session', { ...temp, sessionId: activeSession?.sessionId });
+      dispatch(saveSession({ ...temp, sessionId: activeSession?.sessionId }));
+
+
+      if (activeSession?.statusCode === 409) {
+        return Swal.fire({
+          title: "Are you sure?",
+          text: activeSession?.message,
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Yes"
+        }).then(async (result) => {
+          dispatch(setMainLoader(false));
+          if (result.isConfirmed) {
+            const data = await manageUserSession('logOut');
+            Swal.fire({
+              title: "Done!",
+              text: data.message,
+              icon: "success"
+            });
+          }
+        });
       }
+
+      if (loginData.userLevel) {
+        navigate('/dashboard');
+      } else {
+        Swal.fire({
+          title: "Failed!",
+          text: 'Queue was not assigned!',
+          icon: "warning",
+        })
+      }
+    } else {
+      Swal.fire({
+        title: "Failed!",
+        text: loginData?.message,
+        icon: "warning",
+      })
     }
-    setLoader(false);
+    dispatch(setMainLoader(false));
   }
 
   useEffect(() => {
@@ -77,7 +87,7 @@ const SignIn = () => {
 
   return (
     <Fragment>
-      {loader && <PageLoader />}
+      {/* {loader && <PageLoader />} */}
 
       <div className="app-container">
         <div className="left-panel"></div>

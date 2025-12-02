@@ -1,5 +1,4 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { setStorage } from "../utilities/StorageService";
 
 const actionTagSlice = createSlice({
     name: 'action',
@@ -7,7 +6,6 @@ const actionTagSlice = createSlice({
     reducers: {
         saveAction: (state, action) => {
             state.data = action.payload;
-            // setStorage('actionTags', state.data);
         }
     }
 })

@@ -11,15 +11,16 @@ import ErrorInfo from '../../utilities/error-info/ErrorInfo';
 
 const Tile = ({ currentEvent, index, handleFalse, handleSuspicious, escalation, openEscalation, closeEscalation }) => {
     // console.log(currentEvent)
-    const monitoringData = currentEvent?.monitoringInfo
+    const monitoringData = currentEvent?.monitoringInfo;
     const session = getStorage('session');
     const eventIndex = getStorage('index');
     const customAction = getStorage('custom_action');
     const actionTags = getStorage('actionTags');
 
-    const { sessionStore, actionStore } = useSelector((state) => ({
+    const { sessionStore, actionStore, loaderStore } = useSelector((state) => ({
         sessionStore: state.sessionStore,
-        actionStore: state.actionStore
+        actionStore: state.actionStore,
+        loaderStore: state.loaderStore
     }));
 
     if (!sessionStore.data) {
@@ -167,6 +168,9 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious, escalation, 
     const plannedActivities = monitoringData?.plannedSiteActivities || [];
     const activitiesToShow = showAll ? plannedActivities : plannedActivities.slice(0, 1);
 
+    const address = monitoringData?.address;
+    const addressParts = [address?.area, address?.district, address?.state, address?.pin].filter(Boolean);
+
     return (
         <Fragment>
             <div className='tile'>
@@ -200,7 +204,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious, escalation, 
                                     <button
                                         className="custom-action"
                                         onClick={() => handle(1)}
-                                        disabled={isValid(currentEvent)}
+                                        disabled={isValid(currentEvent) || loaderStore.eventLoader}
                                     >
                                         <img
                                             src='icons/false.png'
@@ -212,6 +216,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious, escalation, 
                                     <button
                                         className="custom-action"
                                         onClick={() => handle(2)}
+                                        disabled={loaderStore.eventLoader}
                                     >
                                         <img
                                             src='icons/suspicious.png'
@@ -284,8 +289,9 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious, escalation, 
 
                             <div className="store-info">
                                 <p>{`${currentEvent?.siteId} - ${currentEvent?.siteName}`}</p>
-                                {/* <p>Tadepally, Guntur District, Andhra Pradesh, INDIA - 500503</p> */}
-                                <p>{monitoringData && `${monitoringData?.address?.area}, ${monitoringData?.address?.district}, ${monitoringData?.address?.state} - ${monitoringData?.address?.pin}`}</p>
+                                <p>
+                                    {addressParts.join(', ')}
+                                </p>
 
                                 {plannedActivities.length !== 0 &&
                                     <Fragment>
@@ -338,7 +344,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious, escalation, 
                                             </tr>
                                             <tr>
                                                 <td><strong>Requirements</strong></td>
-                                                <td>{monitoringData.requirements.join(",   ")}</td>
+                                                <td>{monitoringData.requirements.join(", ")}</td>
                                             </tr>
                                         </tbody>
                                     </table>

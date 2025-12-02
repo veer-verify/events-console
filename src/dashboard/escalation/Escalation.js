@@ -10,7 +10,7 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
   // const data = useAuth();
 
   const [alerts, setAlerts] = useState([]);
-  const [actionTags, setActionTags] = useState([]);
+  // const [actionTags, setActionTags] = useState([]);
   const [subAlerts, setSubAlerts] = useState([]);
 
   // const [selectedActionTag, setSelectedActionTag] = useState("");
@@ -215,15 +215,15 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
                     </tr>
                     <tr>
                       <td><strong>To</strong></td>
-                      <td>{monitoringData?.emailDetails?.toEmails?.join(', ')}</td>
+                      <td>{emaildata?.recipientEmails?.join(', ')}</td>
                     </tr>
                     <tr>
                       <td><strong>BCC</strong></td>
-                      <td>{monitoringData?.emailDetails?.bccEmails?.join(', ')}</td>
+                      <td>{emaildata?.BCC?.join(', ')}</td>
                     </tr>
                     <tr>
                       <td><strong>CC</strong></td>
-                      <td>{monitoringData?.emailDetails?.ccEmails?.join(', ')}</td>
+                      <td>{emaildata?.Cc?.join(', ')}</td>
                     </tr>
                     <tr>
                       <td><strong>Location</strong></td>

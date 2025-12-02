@@ -5,13 +5,15 @@ import Dashboard from './dashboard/Dashboard';
 import { ToastContainer } from 'react-toastify';
 import { Fragment } from 'react/jsx-runtime';
 import PageLoader from './utilities/page-loader/PageLoader';
-import { show_loader } from './utilities/StorageService';
+import { useSelector } from 'react-redux';
 
 
 function App() {
+  const loaderStore = useSelector((state) => state.loaderStore);
+
   return (
     <Fragment>
-      {/* {show_loader && <PageLoader />} */}
+      {loaderStore.mainLoader && <PageLoader />}
       <ToastContainer />
       <Routes>
         <Route path='/' Component={SignIn}></Route>
