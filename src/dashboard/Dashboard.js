@@ -31,17 +31,7 @@ const Dashboard = () => {
 
   // const EventContext = createContext();
   const [eventData, setEventData] = useState([]);
-  const [escalation, setEscalation] = useState(false);
-  // const [loader, setLoader] = useState(false);
-  // const [monitoringData, setMonitoringData] = useState([]);
 
-  const openEscalation = () => {
-    setEscalation(true);
-  }
-
-  const closeEscalation = () => {
-    setEscalation(false);
-  }
 
 
   /**
@@ -56,8 +46,6 @@ const Dashboard = () => {
 
   useEffect(() => {
     const handleFalse = async (item) => {
-      
-      // const index = getStorage('index');
       const subAction = getStorage('sub_action');
       const customAction = getStorage('custom_action');
       
@@ -138,8 +126,6 @@ const Dashboard = () => {
 
   useEffect(() => {
     const handleSuspicious = async (item) => {
-
-      // const index = getStorage('index');
       const customAction = getStorage('custom_action');
       const subAction = getStorage('sub_action');
 
@@ -306,15 +292,15 @@ const Dashboard = () => {
         landingTime: item?.landingTime ?? "",
         reviewStart: item?.landingTime ?? "",
         reviewEnd: getTimeByTimezone(item?.timezone),
-        actionTag: customAction,
-        subActionTag: subAction?.subCategoryId,
+        actionTag: 0,
+        subActionTag: 0,
         notes: item?.notes ?? "",
       });
 
       write2VmsDispatchQueue({
         ...item,
-        actionTag: customAction,
-        subActionTag: subAction?.subCategoryId,
+        actionTag: 0,
+        subActionTag: 0,
         queue_name: "time-out",
       });
 
@@ -391,10 +377,6 @@ const Dashboard = () => {
               key={i}
               index={i}
               currentEvent={item}
-
-              escalation={escalation}
-              openEscalation={openEscalation}
-              closeEscalation={closeEscalation}
 
               handleFalse={falseHandler}
               handleSuspicious={suspiciousHandler}

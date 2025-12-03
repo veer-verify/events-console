@@ -9,11 +9,10 @@ import { playSiren } from '../../utilities/ApiService';
 import { useSelector } from 'react-redux';
 import ErrorInfo from '../../utilities/error-info/ErrorInfo';
 
-const Tile = ({ currentEvent, index, handleFalse, handleSuspicious, escalation, openEscalation, closeEscalation }) => {
+const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
     // console.log(currentEvent)
     const monitoringData = currentEvent?.monitoringInfo;
     const session = getStorage('session');
-    const eventIndex = getStorage('index');
     const customAction = getStorage('custom_action');
     const actionTags = getStorage('actionTags');
 
@@ -39,16 +38,25 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious, escalation, 
     const [hoverIndex, setHoverIndex] = useState(null);
     const dialogRef = useRef(null);
 
+    const [escalation, setEscalation] = useState(false);
+
+    const openEscalation = () => {
+        setEscalation(true);
+    }
+
+    const closeEscalation = () => {
+        setEscalation(false);
+    }
+
     const handle = (id) => {
         setStorage('custom_action', id);
-        setStorage('index', index);
-        setShowTags(false);
+        setShowTags((prev) => !prev);
         setCategories(
             actionTags.actionTagCategories
                 .filter((item) => item.categoryId === id)
                 .flatMap((item) => item.actionTagSubCategories)
         );
-        setShowTags(true);
+        // setShowTags(true);
         closeEscalation();
     };
 
@@ -171,6 +179,9 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious, escalation, 
     const address = monitoringData?.address;
     const addressParts = [address?.area, address?.district, address?.state, address?.pin].filter(Boolean);
 
+
+    const userFlow = currentEvent?.userLevelAlarmInfo?.map(item => item.user).join(" => ");
+
     return (
         <Fragment>
             <div className='tile'>
@@ -190,7 +201,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious, escalation, 
                                 }
                             >
                                 <div className="camera">
-                                    {imgSrc && <img src={imgSrc} alt={`Camera Feed ${imgindex + 1}`} />}
+                                    {imgSrc && <img src={imgSrc} loading='lazy' alt={`Camera Feed ${imgindex + 1}`} />}
                                 </div>
                                 <div className="camera">
                                     {currentEvent?.httpUrl && (
@@ -274,6 +285,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious, escalation, 
                                                         onMouseEnter={() => setHoverIndex(i)}
                                                         onMouseLeave={() => setHoverIndex(null)}
                                                         onClick={() => handleAction(tag)}
+                                                        disabled={loaderStore.eventLoader}
                                                     >
                                                         {tag.subCategoryName}
                                                     </button>
@@ -346,6 +358,10 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious, escalation, 
                                                 <td><strong>Requirements</strong></td>
                                                 <td>{monitoringData.requirements.join(", ")}</td>
                                             </tr>
+                                            <tr>
+                                                <td><strong>Flow</strong></td>
+                                                <td>{userFlow}</td>
+                                            </tr>
                                         </tbody>
                                     </table>
                                 </div>
@@ -359,17 +375,17 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious, escalation, 
 
                 {session?.userLevel === 2 &&
                     monitoringData && monitoringData.contactDetails?.length !== 0 && (
-                    <ContactInfo monitoringData={monitoringData} />
-                )}
+                        <ContactInfo monitoringData={monitoringData} />
+                    )}
                 {session?.userLevel === 2 &&
                     monitoringData && monitoringData.lawEnforcement?.length !== 0 && (
                         <LawInfo monitoringData={monitoringData} />
                     )}
-                                    {session?.userLevel === 2 &&
+                {session?.userLevel === 2 &&
                     monitoringData && monitoringData.lawEnforcement?.length !== 0 && (
                         <DotCom monitoringData={monitoringData} />
                     )}
-                {escalation && eventIndex === index && (
+                {escalation && (
                     <div className="escalation-container">
                         <Escalation
                             closeEscalation={closeEscalation}
@@ -433,7 +449,7 @@ export const LawInfo = ({ monitoringData }) => {
                 {monitoringData && monitoringData.lawEnforcement?.map((item, index) => (
                     <div className="contact-card" key={index}>
                         <div className="law-card">
-                            
+
                             <p>📞</p>
                             <div>
                                 <p>{item.lawEnforcementDescription}</p>
@@ -460,7 +476,7 @@ export const DotCom = ({ monitoringData }) => {
                 {monitoringData && monitoringData.smsDetails?.map((item, index) => (
                     <div className="contact-card" key={index}>
                         <div className="law-card">
-                         <p>🗨️</p>
+                            <p>🗨️</p>
                             <div>
                                 <p>{item.smsCameras}</p>
                                 <p>{item.sms800dotComNo}</p>
