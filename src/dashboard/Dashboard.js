@@ -10,12 +10,11 @@ import { setLoader } from '../utilities/slices/loaderSlice';
 
 
 const Dashboard = () => {
+  const dispatch = useDispatch();
   const { sessionStore, actionStore } = useSelector((state) => ({
     sessionStore: state.sessionStore,
     actionStore: state.actionStore,
   }));
-
-  const dispatch = useDispatch();
 
   const session = getStorage('session');
   const tempAction = getStorage('actionTags');
@@ -33,7 +32,6 @@ const Dashboard = () => {
   const [eventData, setEventData] = useState([]);
 
 
-
   /**
    * to handle false activity
    */
@@ -48,12 +46,13 @@ const Dashboard = () => {
     const handleFalse = async (item) => {
       const subAction = getStorage('sub_action');
       const customAction = getStorage('custom_action');
-      
-      
+
+
       item?.userLevelAlarmInfo?.push(
         {
           level: getSession()?.userLevel,
           user: getSession()?.UserId,
+          userName: getSession()?.UserName,
           alarm: item.audio ? 'P' : 'N',
           activityDetTime: item.sirenTime ?? '',
           landingTime: item?.landingTime ?? '',
@@ -68,13 +67,13 @@ const Dashboard = () => {
         { ...item, actionTag: customAction, subActionTag: subAction?.subCategoryId }
       );
       consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: '' });
-      
+
       const isFirst = item?.index === 0;
-      
+
       const filtered = eventData.filter((_, i) => item?.index !== i);
       const reordered = isFirst ? [null, ...filtered] : [...filtered, null];
       setEventData(reordered);
-      
+
       dispatch(setLoader(true))
       const eventResponse = await getVmsEventsQueueData();
       if (eventResponse && eventResponse.length) {
@@ -133,6 +132,7 @@ const Dashboard = () => {
         {
           level: getSession()?.userLevel,
           user: getSession()?.UserId,
+          userName: getSession()?.UserName,
           alarm: item.audio ? 'P' : 'N',
           activityDetTime: item.sirenTime ?? '',
           landingTime: item?.landingTime ?? '',
@@ -210,7 +210,7 @@ const Dashboard = () => {
       dispatch(setLoader(true))
       const response = await getVmsEventsQueueData();
       dispatch(setLoader(false))
-      
+
       if (!isMounted) return;
       if (response && response.length !== 0) {
         const [rawEvent] = response;
@@ -220,10 +220,10 @@ const Dashboard = () => {
           audioPlayed: false,
           timer: 60,
         };
-        
+
         writetoRedisQueueData(event);
 
-        
+
         const monitoringInfo = await getMonitoringInfo(event);
         const merged = { ...event, monitoringInfo };
         setEventData(prev => [...prev, merged]);
@@ -234,16 +234,10 @@ const Dashboard = () => {
         timerId = setTimeout(fetchEvents, 2000);
       }
     };
-    
+
     fetchEvents();
 
-    const fetchTags = async () => {
-      const tags = await getActionTagCategories();
-      setStorage("actionTags", tags);
-      dispatch(saveAction(tags));
-    };
 
-    fetchTags();
 
     return () => {
       isMounted = false;
@@ -252,11 +246,22 @@ const Dashboard = () => {
   }, [eventData.length, dispatch]);
 
 
+
   useEffect(() => {
+    const fetchTags = async () => {
+      const tags = await getActionTagCategories();
+      if(tags && tags.statusCode === 200) {
+        setStorage("actionTags", tags);
+        dispatch(saveAction(tags));
+      }
+    };
+
+    fetchTags();
+
     aliveUser();
     const interval = setInterval(aliveUser, 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [dispatch]);
 
 
   /**
@@ -265,8 +270,7 @@ const Dashboard = () => {
   const isHandlingRef = useRef(false);
   const queueRef = useRef([]);
   useEffect(() => {
-    const session = getStorage("session");
-    if (session.userLevel !== 1 || eventData.length === 0) return;
+    if (session?.userLevel !== 1 || eventData.length === 0) return;
 
     const processQueue = async () => {
       if (isHandlingRef.current) return; // already processing
@@ -281,12 +285,10 @@ const Dashboard = () => {
     };
 
     const handle = async (item, index) => {
-      const customAction = getStorage("custom_action");
-      const subAction = getStorage("sub_action");
-
       item?.userLevelAlarmInfo?.push({
         level: session?.userLevel,
         user: session?.UserId,
+        userName: getSession()?.UserName,
         alarm: item?.audio ? "P" : "N",
         activityDetTime: item?.sirenTime ?? "",
         landingTime: item?.landingTime ?? "",
@@ -304,14 +306,9 @@ const Dashboard = () => {
         queue_name: "time-out",
       });
 
-      consumeConsoleEvents({
-        userId: 0,
-        eventTime: [item.eventTime],
-        consoleType: "",
-      });
+      consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: "", });
 
       const isFirst = index === 0;
-
       const filtered = eventData.filter((_, i) => index !== i);
       const reordered = isFirst ? [null, ...filtered] : [...filtered, null];
       setEventData(reordered);
@@ -360,7 +357,7 @@ const Dashboard = () => {
     return () => {
       clearInterval(interval);
     };
-  }, [dispatch, eventData]);
+  }, [dispatch, eventData, session?.UserId, session?.userLevel]);
 
 
 

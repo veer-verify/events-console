@@ -96,26 +96,6 @@ export const isValid = (data) => {
 };
 
 
-
-/**
- * method to get queue name
- * @param {*} level current queue name
- * @returns queue name to which level user nee to write
- */
-// export const getQueue = (level) => {
-//     if(level === 1) {
-//         return '2nd-level';
-//     }
-//     else if(level === 2) {
-//         return 'staging-dispatch';
-//     }
-//     else {
-//         return 'staging-screener';
-//     }
-// }
-
-
-
 export function formatTimestamp(input) {
   // Split date and time
   const [date, time] = input.split("_");

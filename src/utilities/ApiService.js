@@ -64,13 +64,13 @@ export const write2VmsDispatchQueue = async (payload) => {
     siteId: payload?.siteId,
     siteName: payload?.siteName,
     cameraId: payload?.cameraId,
-    objectName: 'person',
+    objectName: payload?.objectName,
     eventTag: '',
     eventTime: payload?.eventTime,
     actionTag: payload?.actionTag,
     subActionTag: payload?.subActionTag,
     actionTime: currentTime,
-    userLevels: 0,
+    userLevels: user?.userLevel,
     httpUrl: payload?.httpUrl,
     imageUrl: payload?.image_list?.toString(),
     queue_name: payload?.queue_name,
@@ -217,26 +217,6 @@ export const playSiren = async (payload) => {
 }
 
 
-export const writetoRedisQueueData = async (payload) => {
-  const url = `${environment.event_process_url}/addConsoleEvents_1_0`;
-  const user = getStorage('session');
-
-  const temp = JSON.parse(JSON.stringify(payload));
-  delete temp?.monitoringInfo;
-  const obj = {
-    userId: user?.UserId,
-    level: `Level${user?.userLevel}`,
-    consoleType: 'events-console',
-    queueName: user?.queueName,
-    queueInfo: temp
-  };
-
-  return api.post(url, obj).then((res) => {
-    return res.data
-  }).catch((err) => console.log(err));
-}
-
-
 export const userLogin = async () => {
   const url = `${environment.event_process_url}/userLogin`;
   const user = getStorage('session');
@@ -254,9 +234,9 @@ export async function aliveUser() {
   const url = `${environment.event_process_url}/userActiveStatus_1_0`;
   const user = getStorage('session');
   let payload = {
-    userId: 0
+    userId: user?.UserId,
+    sessionId: user?.sessionId
   }
-  payload.userId = user?.UserId;
   try {
     const res = await api.post(url, payload);
     return res.data;
@@ -264,6 +244,42 @@ export async function aliveUser() {
     return console.log(err);
   }
 
+}
+
+export const writetoRedisQueueData = async (payload) => {
+  const url = `${environment.event_process_url}/addConsoleEvents_1_0`;
+  const user = getStorage('session');
+
+  const temp = JSON.parse(JSON.stringify(payload));
+  delete temp?.monitoringInfo;
+  const obj = {
+    userId: user?.UserId,
+        sessionId: user?.sessionId,
+    level: `Level${user?.userLevel}`,
+    consoleType: 'events-console',
+    queueName: user?.queueName,
+    queueInfo: temp
+  };
+
+  return api.post(url, obj).then((res) => {
+    return res.data
+  }).catch((err) => console.log(err));
+}
+
+export async function consumeConsoleEvents(payload) {
+  const url = `${environment.event_process_url}/consumeConsoleEvents_1_0`;
+  const user = getStorage('session');
+
+  payload.userId = user?.UserId;
+  payload.sessionId = user?.sessionId;
+  payload.consoleType = 'events-console';
+
+  try {
+    const res = await api.put(url, payload);
+    return res.data;
+  } catch (err) {
+    return console.log(err);
+  }
 }
 
 export async function refreshUser() {
@@ -275,21 +291,6 @@ export async function refreshUser() {
   payload.userId = user?.UserId;
   try {
     const res = await api.post(url, payload);
-    return res.data;
-  } catch (err) {
-    return console.log(err);
-  }
-}
-
-export async function consumeConsoleEvents(payload) {
-  const url = `${environment.event_process_url}/consumeConsoleEvents_1_0`;
-  const user = getStorage('session');
-
-  payload.userId = user?.UserId;
-  payload.consoleType = 'events-console';
-
-  try {
-    const res = await api.put(url, payload);
     return res.data;
   } catch (err) {
     return console.log(err);

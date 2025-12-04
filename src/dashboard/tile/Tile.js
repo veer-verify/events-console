@@ -36,37 +36,29 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
     const [live, setLive] = useState(false);
     const [playing, setPlaying] = useState(false);
     const [hoverIndex, setHoverIndex] = useState(null);
+    const [showEscalation, setShowEscalation] = useState(false);
     const dialogRef = useRef(null);
-
-    const [escalation, setEscalation] = useState(false);
-
-    const openEscalation = () => {
-        setEscalation(true);
-    }
-
-    const closeEscalation = () => {
-        setEscalation(false);
-    }
-
+    
     const handle = (id) => {
         setStorage('custom_action', id);
         setShowTags((prev) => !prev);
         setCategories(
-            actionTags.actionTagCategories
-                .filter((item) => item.categoryId === id)
-                .flatMap((item) => item.actionTagSubCategories)
+            actionTags?.actionTagCategories
+            .filter((item) => item.categoryId === id)
+            .flatMap((item) => item.actionTagSubCategories)
         );
         // setShowTags(true);
         closeEscalation();
     };
-
+    
     const openLiveDialog = () => {
         setShowTags(false);
         setLive(true);
     };
-
+    
     const closeLiveDialog = () => setLive(false);
     const closeTags = () => setShowTags(false);
+    const closeEscalation = () => setShowEscalation(false);
 
     const play = async () => {
         if (monitoringData?.audioUrl === '') return toast.warn('No URL Found!');
@@ -121,7 +113,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
             // processQueue();
         } else {
             if (session?.userLevel !== 1) {
-                openEscalation();
+               setShowEscalation(true);
             } else {
                 setImgSrc(null);
                 handleSuspicious({
@@ -179,8 +171,11 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
     const address = monitoringData?.address;
     const addressParts = [address?.area, address?.district, address?.state, address?.pin].filter(Boolean);
 
+    const contactDetails = monitoringData?.contactDetails || [];
+    const lawEnforcement = monitoringData?.lawEnforcement || [];
+    const smsDetails = monitoringData?.smsDetails || [];
+    const userFlow = currentEvent?.userLevelAlarmInfo?.map(item => item.userName).join(" => ");
 
-    const userFlow = currentEvent?.userLevelAlarmInfo?.map(item => item.user).join(" => ");
 
     return (
         <Fragment>
@@ -264,7 +259,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
                                         <div className="tag-grid">
                                             <p>{customAction === 1 ? 'false' : 'suspicious'}</p>
                                             <div className="tag-items">
-                                                {categories.map((tag, i) => (
+                                                {categories?.map((tag, i) => (
                                                     <button
                                                         key={i}
                                                         className="tag-button"
@@ -359,7 +354,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
                                                 <td>{monitoringData.requirements.join(", ")}</td>
                                             </tr>
                                             <tr>
-                                                <td><strong>Flow</strong></td>
+                                                <td><strong>Info</strong></td>
                                                 <td>{userFlow}</td>
                                             </tr>
                                         </tbody>
@@ -374,18 +369,19 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
                 }
 
                 {session?.userLevel === 2 &&
-                    monitoringData && monitoringData.contactDetails?.length !== 0 && (
-                        <ContactInfo monitoringData={monitoringData} />
+                    contactDetails?.length !== 0 && (
+                        <ContactInfo contactDetails={contactDetails} />
                     )}
                 {session?.userLevel === 2 &&
-                    monitoringData && monitoringData.lawEnforcement?.length !== 0 && (
-                        <LawInfo monitoringData={monitoringData} />
+                    lawEnforcement?.length !== 0 && (
+                        <LawInfo lawEnforcement={lawEnforcement} />
                     )}
                 {session?.userLevel === 2 &&
-                    monitoringData && monitoringData.lawEnforcement?.length !== 0 && (
-                        <DotCom monitoringData={monitoringData} />
+                    smsDetails?.length !== 0 && (
+                        <DotCom smsDetails={smsDetails} />
                     )}
-                {escalation && (
+
+                {showEscalation && (
                     <div className="escalation-container">
                         <Escalation
                             closeEscalation={closeEscalation}
@@ -406,16 +402,45 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
 
 export default Tile;
 
+// =============================
+// Monitoring Info Component
+// =============================
+// export const MonitoringInfo = ({ monitoringData }) => {
+//     return (
+//         <div className="contacts-container">
+//             <p className="monitoring-title">ESCALATION CONTACT</p>
+//             <div className="cards-wrapper">
+//                 {contactDetails?.map((item, index) => (
+//                     <div className="contact-card" key={index}>
+//                         <div className="card-header">
+//                             <strong>{item.name}</strong>
+//                             <div className="icons">
+//                                 <span title="Call">📞</span>
+//                                 <span title="Message">🗨️</span>
+//                                 <span title="Email">📧</span>
+//                             </div>
+//                         </div>
+//                         <div className="card-body">
+//                             <p>{item.emailId}</p>
+//                             <p>{item.contactNo}</p>
+//                         </div>
+//                     </div>
+//                 ))}
+//             </div>
+//         </div>
+//     );
+// };
+
 
 // =============================
 // Contact Info Component
 // =============================
-export const ContactInfo = ({ monitoringData }) => {
+export const ContactInfo = ({ contactDetails }) => {
     return (
         <div className="contacts-container">
             <p className="monitoring-title">ESCALATION CONTACT</p>
             <div className="cards-wrapper">
-                {monitoringData && monitoringData.escalation?.map((item, index) => (
+                {contactDetails?.map((item, index) => (
                     <div className="contact-card" key={index}>
                         <div className="card-header">
                             <strong>{item.name}</strong>
@@ -439,14 +464,14 @@ export const ContactInfo = ({ monitoringData }) => {
 // =============================
 // Law Info Component
 // =============================
-export const LawInfo = ({ monitoringData }) => {
+export const LawInfo = ({ lawEnforcement }) => {
     return (
         <div className="contacts-container">
             <p className="monitoring-title">
                 CONTACT LAW ENFORCEMENT IN THE EVENT OF AN EMERGENCY?
             </p>
             <div className="cards-wrapper">
-                {monitoringData && monitoringData.lawEnforcement?.map((item, index) => (
+                {lawEnforcement?.map((item, index) => (
                     <div className="contact-card" key={index}>
                         <div className="law-card">
 
@@ -464,16 +489,17 @@ export const LawInfo = ({ monitoringData }) => {
 };
 
 // =============================
-// Law Info Component
+// Dot Com Component
 // =============================
-export const DotCom = ({ monitoringData }) => {
+export const DotCom = ({ smsDetails }) => {
     return (
         <div className="contacts-container">
+
             <p className="monitoring-title">
                 800.COM
             </p>
             <div className="cards-wrapper">
-                {monitoringData && monitoringData.smsDetails?.map((item, index) => (
+                {smsDetails?.map((item, index) => (
                     <div className="contact-card" key={index}>
                         <div className="law-card">
                             <p>🗨️</p>
@@ -485,6 +511,7 @@ export const DotCom = ({ monitoringData }) => {
                     </div>
                 ))}
             </div>
+
         </div>
     );
 };

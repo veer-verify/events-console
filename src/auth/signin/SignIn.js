@@ -1,7 +1,6 @@
 import './SignIn.css';
 import { Fragment, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import PageLoader from '../../utilities/page-loader/PageLoader';
 import { toast } from 'react-toastify';
 import { clearStorage, Encrypt, getStorage, setStorage } from '../../utilities/StorageService';
 import { useDispatch } from 'react-redux';
@@ -39,27 +38,27 @@ const SignIn = () => {
       dispatch(saveSession({ ...temp, sessionId: activeSession?.sessionId }));
 
 
-      if (activeSession?.statusCode === 409) {
-        return Swal.fire({
-          title: "Are you sure?",
-          text: activeSession?.message,
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonColor: "#3085d6",
-          cancelButtonColor: "#d33",
-          confirmButtonText: "Yes"
-        }).then(async (result) => {
-          dispatch(setMainLoader(false));
-          if (result.isConfirmed) {
-            const data = await manageUserSession('logOut');
-            Swal.fire({
-              title: "Done!",
-              text: data.message,
-              icon: "success"
-            });
-          }
-        });
-      }
+      // if (activeSession?.statusCode === 409) {
+      //   return Swal.fire({
+      //     title: "Are you sure?",
+      //     text: activeSession?.message,
+      //     icon: "warning",
+      //     showCancelButton: true,
+      //     confirmButtonColor: "#3085d6",
+      //     cancelButtonColor: "#d33",
+      //     confirmButtonText: "Yes"
+      //   }).then(async (result) => {
+      //     dispatch(setMainLoader(false));
+      //     if (result.isConfirmed) {
+      //       const data = await manageUserSession('logOut');
+      //       Swal.fire({
+      //         title: "Done!",
+      //         text: data.message,
+      //         icon: "success"
+      //       });
+      //     }
+      //   });
+      // }
 
       if (loginData.userLevel) {
         navigate('/dashboard');
