@@ -8,7 +8,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { saveAction } from '../../src/utilities/slices/actionTagSlice';
 import { setLoader } from '../utilities/slices/loaderSlice';
 
-
 const Dashboard = () => {
   const dispatch = useDispatch();
   const { sessionStore, actionStore } = useSelector((state) => ({
@@ -47,14 +46,13 @@ const Dashboard = () => {
       const subAction = getStorage('sub_action');
       const customAction = getStorage('custom_action');
 
-
       item?.userLevelAlarmInfo?.push(
         {
           level: getSession()?.userLevel,
           user: getSession()?.UserId,
           userName: getSession()?.UserName,
-          alarm: item.audio ? 'P' : 'N',
-          activityDetTime: item.sirenTime ?? '',
+          alarm: item.audioPlayed ? 'P' : 'N',
+          activityDetTime: item.activityDetTime ?? '',
           landingTime: item?.landingTime ?? '',
           reviewStart: item?.landingTime ?? '',
           reviewEnd: getTimeByTimezone(item?.timezone),
@@ -104,7 +102,6 @@ const Dashboard = () => {
       const nextItem = falseQueue[0];
 
       await handleFalse(nextItem);
-
       setFalseQueue(prev => prev.slice(1));
       isFalseProcessing.current = false;
     };
@@ -133,8 +130,8 @@ const Dashboard = () => {
           level: getSession()?.userLevel,
           user: getSession()?.UserId,
           userName: getSession()?.UserName,
-          alarm: item.audio ? 'P' : 'N',
-          activityDetTime: item.sirenTime ?? '',
+          alarm: item.audioPlayed ? 'P' : 'N',
+          activityDetTime: item.activityDetTime ?? '',
           landingTime: item?.landingTime ?? '',
           reviewStart: item?.landingTime ?? '',
           reviewEnd: getTimeByTimezone(item?.timezone),
@@ -144,7 +141,7 @@ const Dashboard = () => {
         }
       );
       write2VmsDispatchQueue(
-        { ...item, actionTag: customAction, subActionTag: subAction?.subCategoryId, queue_name: item?.nextQueueName }
+        { ...item, actionTag: customAction, subActionTag: subAction?.subCategoryId, queu_name: item?.nextQueueName }
       );
       consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: '' });
 
@@ -153,6 +150,7 @@ const Dashboard = () => {
       const filtered = eventData.filter((_, i) => item?.index !== i);
       const reordered = isFirst ? [null, ...filtered] : [...filtered, null];
       setEventData(reordered);
+      // setEventData(eventData.splice(item.index, 1, event));
       dispatch(setLoader(true))
       const eventResponse = await getVmsEventsQueueData();
       if (eventResponse.length) {
@@ -184,7 +182,6 @@ const Dashboard = () => {
       const nextItem = suspiciousQueue[0];
 
       await handleSuspicious(nextItem);
-
       setSuspiciousQueue(prev => prev.slice(1));
       isSuspiciousProcessing.current = false;
     };
@@ -223,7 +220,6 @@ const Dashboard = () => {
 
         writetoRedisQueueData(event);
 
-
         const monitoringInfo = await getMonitoringInfo(event);
         const merged = { ...event, monitoringInfo };
         setEventData(prev => [...prev, merged]);
@@ -237,8 +233,6 @@ const Dashboard = () => {
 
     fetchEvents();
 
-
-
     return () => {
       isMounted = false;
       clearTimeout(timerId);
@@ -250,7 +244,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchTags = async () => {
       const tags = await getActionTagCategories();
-      if(tags && tags.statusCode === 200) {
+      if(tags?.statusCode === 200) {
         setStorage("actionTags", tags);
         dispatch(saveAction(tags));
       }
@@ -289,8 +283,8 @@ const Dashboard = () => {
         level: session?.userLevel,
         user: session?.UserId,
         userName: getSession()?.UserName,
-        alarm: item?.audio ? "P" : "N",
-        activityDetTime: item?.sirenTime ?? "",
+        alarm: "N",
+        activityDetTime: "",
         landingTime: item?.landingTime ?? "",
         reviewStart: item?.landingTime ?? "",
         reviewEnd: getTimeByTimezone(item?.timezone),

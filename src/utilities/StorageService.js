@@ -27,7 +27,7 @@ export const getSession = () => getStorage('session');
  * @param {*} timezone 
  * @returns 
  */
-export const getTimeByTimezone = (timezone) => timezone ? moment().tz(timezone).format('YYYY-MM-DD HH:mm:ss') : moment().format('YYYY-MM-DD HH:mm:ss');
+export const getTimeByTimezone = (timezone) => timezone ? moment().tz(timezone)?.format('YYYY-MM-DD HH:mm:ss') : '';
 export const getHour = (timezone) => moment().tz(timezone).hours();
 export const getDay = (timezone) => moment().tz(timezone).day();
 
@@ -97,20 +97,12 @@ export const isValid = (data) => {
 
 
 export function formatTimestamp(input) {
-  // Split date and time
   const [date, time] = input.split("_");
-
-  // Convert time format 02-10-18 → 02:10:18
   const formattedTime = time.replace(/-/g, ":");
-
-  // Create proper ISO string -> YYYY-MM-DDTHH:mm:ss
   const iso = `${date}T${formattedTime}`;
-
   const dateObj = new Date(iso);
-
   if (isNaN(dateObj)) return "Invalid Date";
 
-  // Convert back to required format: YYYY-MM-DD HH:mm:ss
   const YYYY = dateObj.getFullYear();
   const MM = String(dateObj.getMonth() + 1).padStart(2, "0");
   const DD = String(dateObj.getDate()).padStart(2, "0");

@@ -3,6 +3,7 @@ import { environment } from '../environment';
 import { getDay, getHour, getStorage, getTimeByTimezone, formatTimestamp } from './StorageService';
 import { toast } from 'react-toastify';
 import axios from 'axios';
+import { Navigate } from 'react-router-dom';
 
 
 export const getAccessforRefreshToken = async () => {
@@ -249,21 +250,18 @@ export async function aliveUser() {
 export const writetoRedisQueueData = async (payload) => {
   const url = `${environment.event_process_url}/addConsoleEvents_1_0`;
   const user = getStorage('session');
-
   const temp = JSON.parse(JSON.stringify(payload));
   delete temp?.monitoringInfo;
   const obj = {
     userId: user?.UserId,
-        sessionId: user?.sessionId,
+    userName: user?.UserName,
+    sessionId: user?.sessionId,
     level: `Level${user?.userLevel}`,
     consoleType: 'events-console',
     queueName: user?.queueName,
     queueInfo: temp
   };
-
-  return api.post(url, obj).then((res) => {
-    return res.data
-  }).catch((err) => console.log(err));
+  return api.post(url, obj).then((res) => res.data).catch((err) => console.log(err));
 }
 
 export async function consumeConsoleEvents(payload) {
@@ -299,7 +297,7 @@ export async function refreshUser() {
 
 export const login = async (payload) => {
   const url = `${environment.login_url}/user_login_1_0`;
-  return axios.post(url, payload).then((res) => res.data);
+  return axios.post(url, payload).then((res) => res.data).catch((err) => console.log(err));
 }
 
 export const manageUserSession = async (type) => {
@@ -318,5 +316,5 @@ export const manageUserSession = async (type) => {
   if (type === 'logOut') obj.set('sessionId', session?.sessionId);
 
   let payload = Object.fromEntries(obj);
-  return api.post(url, payload).then((res) => res.data);
+  return api.post(url, payload).then((res) => res.data).catch(() => window.location.href = "/");
 }

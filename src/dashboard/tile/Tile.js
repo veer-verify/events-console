@@ -65,12 +65,10 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
         setShowTags(false);
         setPlaying(true);
 
-        const obj = {
-            ...currentEvent,
-            audio: true,
-            sirenTime: getTimeByTimezone(currentEvent?.timezone),
-        };
-        currentEvent = obj;
+        if(currentEvent) {
+            currentEvent.audioPlayed = true;
+            currentEvent.activityDetTime = getTimeByTimezone(currentEvent?.timezone);
+        }
         const res = await playSiren(monitoringData);
         if (res) {
             toast.success(res.message);
@@ -83,22 +81,6 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
     const [imgindex, setIndex] = useState(0);
     const [imgSrc, setImgSrc] = useState(currentEvent?.image_list[0]);
 
-    // const isHandlingRef = useRef(false);
-    // const queueRef = useRef([]);
-    // const processQueue = async () => {
-    //     const currentTime = getTimeByTimezone(currentEvent?.timezone);
-
-    //     if (isHandlingRef.current) return; // already processing
-    //     isHandlingRef.current = true;
-
-    //     while (queueRef.current.length > 0) {
-    //         const { currentEvent, index } = queueRef.current.shift();
-    //         await handleFalse({ ...currentEvent, index, actionTagTime: currentTime });
-    //     }
-
-    //     isHandlingRef.current = false;
-    // };
-
     const handleAction = (data) => {
         const session = getStorage('session');
         const customAction = getStorage('custom_action');
@@ -108,9 +90,6 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
         if (customAction === 1) {
             setImgSrc(null);
             handleFalse({ ...currentEvent, index, actionTagTime: currentTime });
-
-            // queueRef.current.push({ ...currentEvent, index});
-            // processQueue();
         } else {
             if (session?.userLevel !== 1) {
                setShowEscalation(true);
@@ -118,9 +97,9 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
                 setImgSrc(null);
                 handleSuspicious({
                     ...currentEvent,
+                    index,
                     actionTagTime: currentTime,
                     ...monitoringData,
-                    index,
                 });
             }
         }
@@ -163,25 +142,22 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
         };
     }, [currentEvent, showTags]);
 
-    // Show More / Show Less logic
     const [showAll, setShowAll] = useState(false);
+
     const plannedActivities = monitoringData?.plannedSiteActivities || [];
     const activitiesToShow = showAll ? plannedActivities : plannedActivities.slice(0, 1);
-
     const address = monitoringData?.address;
     const addressParts = [address?.area, address?.district, address?.state, address?.pin].filter(Boolean);
-
     const contactDetails = monitoringData?.contactDetails || [];
     const lawEnforcement = monitoringData?.lawEnforcement || [];
     const smsDetails = monitoringData?.smsDetails || [];
-    const userFlow = currentEvent?.userLevelAlarmInfo?.map(item => item.userName).join(" => ");
+    const userFlow = currentEvent?.userLevelAlarmInfo?.map(item => item?.userName ? item?.userName : 'Dummy').join(" => ");
 
 
     return (
         <Fragment>
             <div className='tile'>
                 {/* <p >{currentEvent?.timer}</p> */}
-
                 {
                     currentEvent ?
                         <Fragment>

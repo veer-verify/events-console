@@ -1,4 +1,5 @@
 import axios from "axios";
+import { Navigate } from 'react-router-dom';
 import { getAccessforRefreshToken } from "./utilities/ApiService";
 import { clearStorage, getStorage, setStorage, show_loader } from "./utilities/StorageService";
 import { useLogout } from "./utilities/hooks/logout";
@@ -56,7 +57,7 @@ api.interceptors.response.use((response) => response, async (error) => {
       try {
         const tempSession = getStorage("session");
         // if (!tempSession) throw new Error("No user data found");
-        if (!tempSession) console.log("No user data found");
+        if (!tempSession) return console.log("No user data found");
         const response = await getAccessforRefreshToken();
 
         // Extract new token safely
@@ -85,6 +86,7 @@ api.interceptors.response.use((response) => response, async (error) => {
         // logout();
         clearStorage();
         window.location.href = "/";
+        // <Navigate to="/" replace />
         return Promise.reject(err);
       }
     }
