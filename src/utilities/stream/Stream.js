@@ -7,8 +7,8 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789", cu
   const queuedCandidatesRef = useRef([]);
   const offerDataRef = useRef(null);
 
-  const sessionUrlRef = useRef("");                 // current session URL
-  const lastValidSessionUrlRef = useRef("");        // used for safe cleanup
+  const sessionUrlRef = useRef("");
+  const lastValidSessionUrlRef = useRef("");
   const restartTimeoutRef = useRef(null);
   const keepaliveIntervalRef = useRef(null);
   const watchdogIntervalRef = useRef(null);
@@ -341,45 +341,42 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789", cu
     link.click();
   };
 
+  const max = (e) => {
+    console.log(e.target.parentNode);
+    const el = e.target.parentNode;
+    el.position = 'absolute';
+    el.width = '100%';
+    el.height = '100%';
+  }
+
   return (
     <div
       style={{ position: "relative", height: "100%" }}
       onMouseEnter={() => setShowOverlay(true)}
       onMouseLeave={() => setShowOverlay(false)}
     >
-      {showLoader && <div className="loader"></div>}
-      {error && (
+      <video ref={videoRef} autoPlay playsInline muted controls={false} width="100%" height="100%" style={{ objectFit: "fill" }} />
+      
+      {
+        showLoader && <div className="loader"></div>
+      }
+
+      {
+        showOverlay && screenshot &&
+        <div className="hover-overlay">
+          <div className="displayicon">
+            <p style={{ color: "white", fontSize: '12px' }}>{currentCamera?.cameraId}</p>
+            <img src="icons/screenshot.svg" alt="overlay" style={{ width: "20px", height: "20px", cursor: "pointer" }} onClick={handleClick} title="Screenshot" />
+          </div>
+        </div>
+      }
+
+      {
+        error &&
         <div className="error-banner">
           <img src="icons/eyedisabled.svg" alt="" width={50} />
         </div>
-      )}
-
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        muted
-        controls={false}
-        width="100%"
-        height="100%"
-        style={{ objectFit: "fill" }}
-      />
-
-      {showOverlay && screenshot && (
-        <div className="hover-overlay">
-
-          <div className="displayicon">
-            <p style={{ color: "white", fontSize: '12px' }}>{currentCamera?.cameraId}</p>
-            <img
-              src="icons/screenshot.svg"
-              alt="overlay"
-              style={{ width: "20px", height: "20px", cursor: "pointer" }}
-              onClick={handleClick}
-              title="Screenshot"
-            />
-          </div>
-        </div>
-      )}
+      }
     </div>
   );
 };

@@ -50,9 +50,7 @@ const Live = ({ currentEvent, closeLiveDialog }) => {
 
     return (
         <Fragment>
-            <div className="cam-container" ref={liveRef}
-                onMouseDown={handleMouseDown}>
-
+            <div className="cam-container" ref={liveRef} onMouseDown={handleMouseDown}>
                 <div className="header">
                     <p>{currentEvent?.siteName}</p>
                     <button onClick={() => { closeLiveDialog() }}>x</button>

@@ -141,7 +141,7 @@ const Dashboard = () => {
         }
       );
       write2VmsDispatchQueue(
-        { ...item, actionTag: customAction, subActionTag: subAction?.subCategoryId, queu_name: item?.nextQueueName }
+        { ...item, actionTag: customAction, subActionTag: subAction?.subCategoryId, queue_name: item?.nextQueueName }
       );
       consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: '' });
 

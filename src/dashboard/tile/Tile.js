@@ -61,7 +61,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
     const closeEscalation = () => setShowEscalation(false);
 
     const play = async () => {
-        if (monitoringData?.audioUrl === '') return toast.warn('No URL Found!');
+        // if (monitoringData?.audioUrl === '') return toast.warn('No URL Found!');
         setShowTags(false);
         setPlaying(true);
 
@@ -70,12 +70,12 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
             currentEvent.activityDetTime = getTimeByTimezone(currentEvent?.timezone);
         }
         const res = await playSiren(monitoringData);
+        setPlaying(false);
         if (res) {
             toast.success(res.message);
         } else {
             toast.error('Failed!');
         }
-        setPlaying(false);
     };
 
     const [imgindex, setIndex] = useState(0);
@@ -221,10 +221,10 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
                                     <button
                                         className={playing ? 'custom-action blink' : 'custom-action'}
                                         onClick={play}
-                                        disabled={playing}
+                                        disabled={playing || !monitoringData?.audioUrl}
                                     >
                                         <img
-                                            src='icons/siren.png'
+                                            src={monitoringData?.audioUrl ? 'icons/siren.png' : 'icons/siren-disabled.png'}
                                             alt="icon"
                                             width={20}
                                             title="Play Siren"
