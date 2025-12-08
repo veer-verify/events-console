@@ -264,6 +264,7 @@ const Dashboard = () => {
   const isHandlingRef = useRef(false);
   const queueRef = useRef([]);
   useEffect(() => {
+    if(session.queueName === 'timed-out') return;
     if (session?.userLevel !== 1 || eventData.length === 0) return;
 
     const processQueue = async () => {
@@ -297,7 +298,7 @@ const Dashboard = () => {
         ...item,
         actionTag: 0,
         subActionTag: 0,
-        queue_name: "time-out",
+        queue_name: "timed-out",
       });
 
       consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: "", });

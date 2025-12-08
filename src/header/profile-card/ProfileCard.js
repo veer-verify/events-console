@@ -14,9 +14,9 @@ const ProfileCard = () => {
             <div className="profile-email">{user.email}</div>
             <div className="profile-phone">+91 99999 99999</div>
 
-            <div className="profile-link">
+            {/* <div className="profile-link">
                 <button className="terms-btn">Terms & Conditions</button>
-            </div>
+            </div> */}
 
             <div className="logout-section">
                 <span className="version">Version : V1.01</span>

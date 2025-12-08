@@ -95,6 +95,14 @@ export const isValid = (data) => {
     return moment(new Date(landingPlus10))?.format('YYYY-MM-DD HH:mm:ss') > moment().tz(data.timezone)?.format('YYYY-MM-DD HH:mm:ss');
 };
 
+export const getTagNameById = (id) => {
+    if(!id) return;
+    const tags = getStorage('actionTags');
+    const temp = tags.actionTagCategories.flatMap((item) => item.actionTagSubCategories);
+    return temp.find((item) => item.subCategoryId === id);
+    // return temp.filter((item) => item.subCategoryId === id)?.subCategoryName
+}
+
 
 export function formatTimestamp(input) {
   const [date, time] = input.split("_");

@@ -4,7 +4,7 @@ import Escalation from '../escalation/Escalation';
 import Live from '../../utilities/live/Live';
 import Stream from '../../utilities/stream/Stream';
 import { toast } from 'react-toastify';
-import { getSession, getStorage, getTimeByTimezone, isValid, setStorage, timeFormat } from '../../utilities/StorageService';
+import { getSession, getStorage, getTagNameById, getTimeByTimezone, isValid, setStorage, timeFormat } from '../../utilities/StorageService';
 import { playSiren } from '../../utilities/ApiService';
 import { useSelector } from 'react-redux';
 import ErrorInfo from '../../utilities/error-info/ErrorInfo';
@@ -34,28 +34,28 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
     const [showTags, setShowTags] = useState(false);
     const [categories, setCategories] = useState([]);
     const [live, setLive] = useState(false);
-    const [playing, setPlaying] = useState(false);
+    // const [playing, setPlaying] = useState(false);
     const [hoverIndex, setHoverIndex] = useState(null);
     const [showEscalation, setShowEscalation] = useState(false);
     const dialogRef = useRef(null);
-    
+
     const handle = (id) => {
         setStorage('custom_action', id);
         setShowTags((prev) => !prev);
         setCategories(
             actionTags?.actionTagCategories
-            .filter((item) => item.categoryId === id)
-            .flatMap((item) => item.actionTagSubCategories)
+                .filter((item) => item.categoryId === id)
+                .flatMap((item) => item.actionTagSubCategories)
         );
         // setShowTags(true);
         closeEscalation();
     };
-    
+
     const openLiveDialog = () => {
         setShowTags(false);
         setLive(true);
     };
-    
+
     const closeLiveDialog = () => setLive(false);
     const closeTags = () => setShowTags(false);
     const closeEscalation = () => setShowEscalation(false);
@@ -63,14 +63,20 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
     const play = async () => {
         // if (monitoringData?.audioUrl === '') return toast.warn('No URL Found!');
         setShowTags(false);
-        setPlaying(true);
-
-        if(currentEvent) {
+        if (currentEvent) {
+            currentEvent.playing = true;
             currentEvent.audioPlayed = true;
             currentEvent.activityDetTime = getTimeByTimezone(currentEvent?.timezone);
         }
+
+        // setPlaying(true);
         const res = await playSiren(monitoringData);
-        setPlaying(false);
+        // setPlaying(false);
+
+        if(currentEvent) {
+            currentEvent.playing = false;
+        }
+
         if (res) {
             toast.success(res.message);
         } else {
@@ -92,7 +98,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
             handleFalse({ ...currentEvent, index, actionTagTime: currentTime });
         } else {
             if (session?.userLevel !== 1) {
-               setShowEscalation(true);
+                setShowEscalation(true);
             } else {
                 setImgSrc(null);
                 handleSuspicious({
@@ -219,9 +225,9 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
                                         />
                                     </button>
                                     <button
-                                        className={playing ? 'custom-action blink' : 'custom-action'}
+                                        className={currentEvent?.playing ? 'custom-action blink' : 'custom-action'}
                                         onClick={play}
-                                        disabled={playing || !monitoringData?.audioUrl}
+                                        disabled={currentEvent?.playing || !monitoringData?.audioUrl}
                                     >
                                         <img
                                             src={monitoringData?.audioUrl ? 'icons/siren.png' : 'icons/siren-disabled.png'}
@@ -333,6 +339,10 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
                                                 <td><strong>Info</strong></td>
                                                 <td>{userFlow}</td>
                                             </tr>
+                                            {/* <tr>
+                                                <td><strong>History</strong></td>
+                                                { currentEvent?.userLevelAlarmInfo.map((item, i) => getTagNameById(item?.subActionTag)?.subCategoryName && <td key={i}>{ getTagNameById(item?.subActionTag)?.subCategoryName }</td>) }
+                                            </tr> */}
                                         </tbody>
                                     </table>
                                 </div>

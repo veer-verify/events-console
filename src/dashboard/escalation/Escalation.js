@@ -32,7 +32,7 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
   }
 
   const getSubAlerts = (val) => {
-    setSelectedSubType("");
+    clearFields()
     setSelectedAlertType(val)
     const x = alerts.filter((item) => item.guardAlertTypeId === parseInt(val)).flatMap((el) => el.subAlerts);
     setSubAlerts(x);
@@ -52,6 +52,11 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
       );
     }
     closeEscalation();
+  }
+
+  const clearFields = () => {
+    setSelectedSubType("");
+    setEmailData(null);
   }
 
   useEffect(() => {
@@ -91,11 +96,11 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
             {/* Person / Vehicle radio buttons */}
             <div className="radio-group">
               <label>
-                <input type="radio" name="selection" checked={selection === "person"} onChange={() => setSelection("person")} />
+                <input type="radio" name="selection" checked={selection === "person"} onChange={() => {setSelection("person"); clearFields()}} />
                 Person
               </label>
               <label>
-                <input type="radio" name="selection" checked={selection === "vehicle"} onChange={() => setSelection("vehicle")} />
+                <input type="radio" name="selection" checked={selection === "vehicle"} onChange={() => {setSelection("vehicle"); clearFields()}} />
                 Vehicle
               </label>
             </div>
@@ -124,8 +129,8 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
                 onChange={(e) => getSubAlerts(e.target.value)}
               >
                 <option value="" disabled>Select Alert Type</option>
-                {alerts?.map((item) => (
-                  <option key={item.guardAlertTypeId} value={item.guardAlertTypeId}>
+                {alerts?.map((item, i) => (
+                  <option key={i} value={item.guardAlertTypeId}>
                     {item.guardAlertType}
                   </option>
                 ))}
@@ -140,8 +145,8 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
                 onChange={(e) => fetchEmailData(e.target.value)}
               >
                 <option value="" disabled>Select Alert Sub Type</option>
-                {subAlerts?.map((item) => (
-                  <option key={item.guardSubAlertTypeId} value={item.guardSubAlertTypeId}>
+                {subAlerts?.map((item, i) => (
+                  <option key={i} value={item.guardSubAlertTypeId}>
                     {item.guardSubAlertType}
                   </option>
                 ))}
