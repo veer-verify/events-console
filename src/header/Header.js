@@ -43,7 +43,7 @@ const Header = () => {
                 </div>
                 <div className="profile-info" >
                     <div className="username">{user?.UserName}</div>
-                    <div className="role">Screener</div>
+                    {/* <div className="role">Screener</div> */}
                 </div>
 
                 <div ref={profileRef}>

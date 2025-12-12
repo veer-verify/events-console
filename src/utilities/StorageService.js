@@ -121,3 +121,8 @@ export function formatTimestamp(input) {
 
   return `${YYYY}-${MM}-${DD} ${hh}:${mm}:${ss}`;
 }
+
+export const getRole = () => {
+    const session = getStorage('session');
+    return session?.userLevel === 1 ? 'screener' : session?.userLevel === 2 ? '' : session?.userLevel === 3 ? '' : session?.userLevel === 4 ? '' : '';
+}

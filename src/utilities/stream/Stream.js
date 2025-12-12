@@ -342,20 +342,18 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789", cu
   };
 
   const max = (e) => {
-    console.log(e.target.parentNode);
     const el = e.target.parentNode;
-    el.position = 'absolute';
-    el.width = '100%';
-    el.height = '100%';
+    el.classList.toggle('fullscreen');
   }
 
   return (
     <div
-      style={{ position: "relative", height: "100%" }}
+      className="minscreen"
       onMouseEnter={() => setShowOverlay(true)}
       onMouseLeave={() => setShowOverlay(false)}
+      onDoubleClick={(e) => screenshot && max(e)}
     >
-      <video ref={videoRef} autoPlay playsInline muted controls={false} width="100%" height="100%" style={{ objectFit: "fill" }} />
+      <video ref={videoRef} autoPlay playsInline muted controls={false} />
       
       {
         showLoader && <div className="loader"></div>
@@ -364,8 +362,8 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789", cu
       {
         showOverlay && screenshot &&
         <div className="hover-overlay">
-          <div className="displayicon">
-            <p style={{ color: "white", fontSize: '12px' }}>{currentCamera?.cameraId}</p>
+          <div className="display-icon">
+            <p>{currentCamera?.cameraId}</p>
             <img src="icons/screenshot.svg" alt="overlay" style={{ width: "20px", height: "20px", cursor: "pointer" }} onClick={handleClick} title="Screenshot" />
           </div>
         </div>

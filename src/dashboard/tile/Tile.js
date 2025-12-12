@@ -70,7 +70,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
         }
 
         // setPlaying(true);
-        const res = await playSiren(monitoringData);
+        const res = await playSiren(currentEvent);
         // setPlaying(false);
 
         if(currentEvent) {
@@ -159,6 +159,12 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
     const smsDetails = monitoringData?.smsDetails || [];
     const userFlow = currentEvent?.userLevelAlarmInfo?.map(item => item?.userName ? item?.userName : 'Dummy').join(" => ");
 
+    // const iframe = useRef(null);
+
+    // useEffect(() => {
+    //     console.log(iframe.current)
+    // })
+
 
     return (
         <Fragment>
@@ -183,6 +189,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
                                 <div className="camera">
                                     {currentEvent?.httpUrl && (
                                         <Stream key={index} streamUrl={`${currentEvent?.httpUrl}/`} />
+                                        // <iframe ref={iframe} src={currentEvent?.httpUrl} title={currentEvent?.httpUrl}></iframe>
                                     )}
                                 </div>
                             </div>
@@ -278,9 +285,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
 
                             <div className="store-info">
                                 <p>{`${currentEvent?.siteId} - ${currentEvent?.siteName}`}</p>
-                                <p>
-                                    {addressParts.join(', ')}
-                                </p>
+                                <p>{addressParts.join(', ')}</p>
 
                                 {plannedActivities.length !== 0 &&
                                     <Fragment>
@@ -349,9 +354,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
                             }
                         </Fragment>
                         :
-                        <Fragment>
-                            <ErrorInfo message={'waiting for event...'} />
-                        </Fragment>
+                        <ErrorInfo message={'waiting for event...'} />
                 }
 
                 {session?.userLevel === 2 &&

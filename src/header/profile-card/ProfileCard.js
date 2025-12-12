@@ -10,9 +10,9 @@ const ProfileCard = () => {
         <div className="profile-card">
             <img className="profile-pic" src='icons/user.svg' alt="User" />
             <div className="profile-name">{`${user.FirstName} ${user.LastName}`}</div>
-            <div className="profile-role">{`Screener | ${user.UserId}`}</div>
+            <div className="profile-role">{`${user.UserId}`}</div>
             <div className="profile-email">{user.email}</div>
-            <div className="profile-phone">+91 99999 99999</div>
+            {/* <div className="profile-phone">+91 99999 99999</div> */}
 
             {/* <div className="profile-link">
                 <button className="terms-btn">Terms & Conditions</button>

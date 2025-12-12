@@ -1,5 +1,11 @@
 /* camera feeds */
 
+iframe {
+  height: 350px;
+  width: 100%;
+  pointer-events: none;
+}
+
 .tile {
   width: 50%;
   height: calc(100vh - 75px);

@@ -212,8 +212,8 @@ export const getLiveInfoForSiteAndCamera = async (payload) => {
 }
 
 export const playSiren = async (payload) => {
-  // const url = `${environment.site_url}/play_1_0/${payload?.cameraId}`;
-  const url = payload?.audioUrl;
+  const url = `${environment.site_url}/play_1_0/${payload?.cameraId}`;
+  // const url = payload?.audioUrl;
   return api.get(url).then((res) => res.data).catch((err) => console.log(err));
 }
 
