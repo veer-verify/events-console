@@ -182,13 +182,32 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
 
                 </div>
 
-                <div className="preview-card">
+                 <div className="preview-card">
                   <div className="alert-header">
                     <span>
                       {emaildata?.emailSubject}
                     </span>
                   </div>
                 </div>
+
+                <table>
+                  <tbody>
+                     <tr>
+                      <td><strong>To</strong></td>
+                      <td>{emaildata?.recipientEmails?.join(', ')}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>CC</strong></td>
+                      <td>{emaildata?.Cc?.join(', ')}</td>
+                    </tr>
+                    <tr>
+                      <td><strong>BCC</strong></td>
+                      <td>{emaildata?.BCC?.join(', ')}</td>
+                    </tr>
+                  </tbody>
+                </table>
+
+               
 
                 <p className="alert-message">
                   {emaildata?.emailBody}
@@ -206,30 +225,19 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
 
                 <table>
                   <tbody>
-                    <tr>
+                    {/* <tr>
                       <td><strong>Timezone</strong></td>
                       <td>{currentEvent?.timezone}</td>
-                    </tr>
-                    <tr>
+                    </tr> */}
+                    {/* <tr>
                       <td><strong>Monitoring</strong></td>
                       <td>{timeFormat(monitoringData)}</td>
-                    </tr>
-                    <tr>
+                    </tr> */}
+                    {/* <tr>
                       <td><strong>Action Tag</strong></td>
                       <td>{emaildata?.alertTag}</td>
-                    </tr>
-                    <tr>
-                      <td><strong>To</strong></td>
-                      <td>{emaildata?.recipientEmails?.join(', ')}</td>
-                    </tr>
-                    <tr>
-                      <td><strong>BCC</strong></td>
-                      <td>{emaildata?.BCC?.join(', ')}</td>
-                    </tr>
-                    <tr>
-                      <td><strong>CC</strong></td>
-                      <td>{emaildata?.Cc?.join(', ')}</td>
-                    </tr>
+                    </tr> */}
+                   
                     <tr>
                       <td><strong>Location</strong></td>
                       <td>{emaildata?.emailFields?.LOCATION}</td>

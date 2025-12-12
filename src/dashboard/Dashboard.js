@@ -279,6 +279,8 @@ const Dashboard = () => {
       isHandlingRef.current = false;
     };
 
+    
+
     const handle = async (item, index) => {
       item?.userLevelAlarmInfo?.push({
         level: session?.userLevel,

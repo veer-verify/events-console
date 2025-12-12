@@ -129,6 +129,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
       }
     }
     closeTags();
+  
   };
 
  const pos = useRef({ x: 0, y: 0, offsetX: 0, offsetY: 0 });
@@ -639,9 +640,9 @@ export const BoundariesDialog = forwardRef(
           <button onClick={closeBoundariesDialog}>x</button>
         </div>
 
-        <div>
+      
           <img src={imgSrc} alt="Boundary" loading="lazy" className="img-fill"/>
-        </div>
+        
       </div>
     );
   }
@@ -673,9 +674,9 @@ export const MaskDialog = forwardRef(
           <button onClick={closeMaskDialog}>x</button>
         </div>
 
-        <div>
+        
           <img src={imgSrc} alt="Mask" loading="lazy" className="img-fill"/>
-        </div>
+       
       </div>
     );
   }
