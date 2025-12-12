@@ -318,3 +318,33 @@ export const manageUserSession = async (type) => {
   let payload = Object.fromEntries(obj);
   return api.post(url, payload).then((res) => res.data).catch(() => window.location.href = "/");
 }
+
+
+
+export const getImagesForCameraId=async(payload)=>{
+const url = `${environment.site_url}/getCameraImagesForCameraId_1_0`;
+
+    return api
+        .get(url, { params: { cameraId: payload?.cameraId } })
+        .then((res) => res.data)
+        .catch((err) => console.log(err));
+
+}
+
+
+export async function loadImageWithAuth(url) {
+  const user = getStorage('session');
+
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${user?.AccessToken}` }
+  });
+
+  const blob = await res.blob();
+
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result); // base64 string
+    reader.readAsDataURL(blob);
+ 
+  });
+}
