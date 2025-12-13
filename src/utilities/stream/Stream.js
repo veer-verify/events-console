@@ -1,331 +1,285 @@
-import { useEffect, useRef, useState } from "react";
-import "./Stream.css";
+import './Stream.css';
+import React, { useEffect, useRef, useState } from "react";
 
-const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789", currentCamera }) => {
+const Stream = ({ site, streamUrl,screenshot,currentCamera }) => {
   const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+
   const peerConnectionRef = useRef(null);
+  const restartTimeoutRef = useRef(null);
+  const sessionUrlRef = useRef("");
   const queuedCandidatesRef = useRef([]);
   const offerDataRef = useRef(null);
-
-  const sessionUrlRef = useRef("");
-  const lastValidSessionUrlRef = useRef("");
-  const restartTimeoutRef = useRef(null);
-  const keepaliveIntervalRef = useRef(null);
-  const watchdogIntervalRef = useRef(null);
-
-  const [showOverlay, setShowOverlay] = useState(false);
-  const [showLoader, setShowLoader] = useState(false);
   const [error, setError] = useState(null);
+ const [showOverlay, setShowOverlay] = useState(false);
+  const [showLoader, setShowLoader] = useState(false);
+  const [encoded, setEncoded] = useState("");
+  const [hitStream, setHitStream] = useState(false);
 
-  const encoded = btoa(credentials);
+  /* ---------------- INIT ---------------- */
 
   useEffect(() => {
-    let isMounted = true;
+    const username = "admin";
+    const password = "verifai123789";
+    setEncoded(btoa(`${username}:${password}`));
+    setHitStream(true);
+  }, []);
 
-    // ------------------------------------
-    // GENERIC LOADER
-    // ------------------------------------
-    const withLoader = async (fn) => {
+  useEffect(() => {
+    const requestICEServers = () => {
       setShowLoader(true);
-      try {
-        await fn();
-      } finally {
-        if (isMounted) setShowLoader(false);
-      }
-    };
-
-    // ------------------------------------
-    // SAFE DELETE (404 OK)
-    // ------------------------------------
-    const safeDelete = async (url) => {
-      if (!url) return;
-      try {
-        const res = await fetch(url, { method: "DELETE" });
-        if (res.status === 404) return true;
-        if (!res.ok) console.warn("DELETE returned:", res.status);
-        return res.ok;
-      } catch (err) {
-        console.warn("DELETE error:", err);
-        return false;
-      }
-    };
-
-    // ------------------------------------
-    // CLEANUP SESSION (SYNCHRONOUS)
-    // ------------------------------------
-    const cleanupSession = () => {
-      console.log("Running cleanup…");
-
-      // 1. Clear all intervals/timeouts immediately
-      if (keepaliveIntervalRef.current) {
-        clearInterval(keepaliveIntervalRef.current);
-        keepaliveIntervalRef.current = null;
-      }
-      if (watchdogIntervalRef.current) {
-        clearInterval(watchdogIntervalRef.current);
-        watchdogIntervalRef.current = null;
-      }
-      if (restartTimeoutRef.current) {
-        clearTimeout(restartTimeoutRef.current);
-        restartTimeoutRef.current = null;
-      }
-
-      const sessionUrl = lastValidSessionUrlRef.current;
-      lastValidSessionUrlRef.current = "";
-      sessionUrlRef.current = "";
-
-      queuedCandidatesRef.current = [];
-
-      // 2. DELETE session asynchronously (won't block unmount)
-      if (sessionUrl) {
-        setTimeout(() => {
-          safeDelete(sessionUrl).catch(() =>
-            console.warn("DELETE failed during cleanup:", sessionUrl)
-          );
-        }, 0);
-      }
-    };
-
-    // ------------------------------------
-    // ERROR HANDLER
-    // ------------------------------------
-    const onError = (err) => {
-      console.error("WebRTC Error:", err);
-      setError(err);
-      peerConnectionRef.current?.close();
-      cleanupSession();
-    };
-
-    // ------------------------------------
-    // REQUEST ICE SERVERS
-    // ------------------------------------
-    const requestICEServers = async () => {
-      setError(null);
-      try {
-        const res = await fetch(`${streamUrl}whep`, {
-          method: "OPTIONS",
-          headers: { Authorization: `Basic ${encoded}` },
+  
+      fetch(streamUrl + "whep", {
+        method: "OPTIONS",
+        headers: {
+          Authorization: `Basic ${encoded}`,
+        },
+      })
+        .then((res) => {
+          setShowLoader(false);
+  
+          const pc = new RTCPeerConnection({
+            iceServers: linkToIceServers(res.headers.get("Link")),
+          });
+  
+          peerConnectionRef.current = pc;
+  
+          pc.addTransceiver("video", { direction: "sendrecv" });
+          pc.addTransceiver("audio", { direction: "sendrecv" });
+  
+          pc.onicecandidate = onLocalCandidate;
+          pc.oniceconnectionstatechange = onConnectionState;
+          pc.ontrack = onTrack;
+  
+          createOffer();
+        })
+        .catch((err) => {
+          setShowLoader(false);
+          setHitStream(false)
+          setError(err);
+          onError(err.toString());
         });
-
-        const linkHeader = res.headers.get("Link");
-        const iceServers = linkToIceServers(linkHeader);
-
-        const pc = new RTCPeerConnection({ iceServers });
-        peerConnectionRef.current = pc;
-
-        pc.addTransceiver("video", { direction: "sendrecv" });
-        pc.addTransceiver("audio", { direction: "sendrecv" });
-
-        pc.onicecandidate = onLocalCandidate;
-        pc.oniceconnectionstatechange = onConnectionState;
-        pc.ontrack = onTrack;
-
-        await createOffer(pc);
-      } catch (err) {
-        onError(err.toString());
-      }
     };
 
-    // ------------------------------------
-    // LINK HEADER → ICE SERVERS
-    // ------------------------------------
     const linkToIceServers = (links) => {
-      const arr = [];
-      if (!links) return arr;
-
+      const servers = [];
+      if (!links) return servers;
+  
       links.split(", ").forEach((link) => {
         const m = link.match(
           /^<(.+?)>; rel="ice-server"(; username="(.*?)"; credential="(.*?)"; credential-type="password")?/i
         );
+  
         if (m) {
           const server = { urls: [m[1]] };
           if (m[3]) {
             server.username = JSON.parse(`"${m[3]}"`);
             server.credential = JSON.parse(`"${m[4]}"`);
           }
-          arr.push(server);
+          servers.push(server);
         }
       });
-
-      return arr;
+  
+      return servers;
     };
-
-    // ------------------------------------
-    // CREATE OFFER
-    // ------------------------------------
-    const createOffer = async (pc) => {
-      await withLoader(async () => {
-        const offer = await pc.createOffer();
-        offerDataRef.current = parseOffer(offer.sdp);
-        await pc.setLocalDescription(offer);
-        await sendOffer(offer);
-      });
-    };
-
-    const parseOffer = (sdp) => {
-      const o = { iceUfrag: "", icePwd: "", medias: [] };
-      sdp.split("\r\n").forEach((line) => {
-        if (line.startsWith("m=")) o.medias.push(line.slice(2));
-        if (line.startsWith("a=ice-ufrag:") && !o.iceUfrag) o.iceUfrag = line.slice(12);
-        if (line.startsWith("a=ice-pwd:") && !o.icePwd) o.icePwd = line.slice(10);
-      });
-      return o;
-    };
-
-    // ------------------------------------
-    // SEND OFFER
-    // ------------------------------------
-    const sendOffer = async (offer) => {
-      await withLoader(async () => {
-        const res = await fetch(`${streamUrl}whep`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/sdp",
-            Authorization: `Basic ${encoded}`,
-          },
-          body: offer.sdp,
-        });
-
-        const loc = res.headers.get("location");
-        const finalUrl = buildSessionUrl(loc);
-
-        sessionUrlRef.current = finalUrl;
-        lastValidSessionUrlRef.current = finalUrl;
-
-        const sdp = await res.text();
-        onRemoteAnswer(sdp);
-
-        startKeepalive();
-        startWatchdog();
-      });
-    };
-
-    const buildSessionUrl = (location) => {
-      const base = new URL(streamUrl);
-      if (!location) return "";
-      if (location.startsWith("http")) return location;
-      if (location.startsWith("/")) return `${base.origin}${location}`;
-      return `${base.origin}/${location}`;
-    };
-
-    const onRemoteAnswer = async (sdp) => {
-      setError(null);
-      const pc = peerConnectionRef.current;
-      if (!pc || pc.signalingState !== "have-local-offer") return;
-      try {
-        await pc.setRemoteDescription({ type: "answer", sdp });
-        if (queuedCandidatesRef.current.length) {
-          await sendLocalCandidates(queuedCandidatesRef.current);
-          queuedCandidatesRef.current = [];
-        }
-      } catch (err) {
-        onError(err.toString());
+  
+    const onError = () => {
+      if (restartTimeoutRef.current) return;
+  
+      peerConnectionRef.current?.close();
+  
+      // restartTimeoutRef.current = setTimeout(() => {
+      //   restartTimeoutRef.current = null;
+      //   requestICEServers();
+      // }, 2000);
+  
+      if (sessionUrlRef.current) {
+        fetch(sessionUrlRef.current, { method: "DELETE" });
       }
+  
+      sessionUrlRef.current = "";
+      queuedCandidatesRef.current = [];
     };
-
+  
     const onLocalCandidate = (evt) => {
-      if (!evt.candidate || restartTimeoutRef.current) return;
-      if (!sessionUrlRef.current) {
-        queuedCandidatesRef.current.push(evt.candidate);
-      } else {
-        sendLocalCandidates([evt.candidate]);
+      if (restartTimeoutRef.current) return;
+  
+      if (evt.candidate) {
+        if (!sessionUrlRef.current) {
+          queuedCandidatesRef.current.push(evt.candidate);
+        } else {
+          sendLocalCandidates([evt.candidate]);
+        }
       }
     };
-
-    const sendLocalCandidates = async (candidates) => {
-      const url = sessionUrlRef.current;
-      const offerData = offerDataRef.current;
-      await withLoader(async () => {
-        await fetch(url, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/trickle-ice-sdpfrag",
-            "If-Match": "*",
-          },
-          body: generateSdpFragment(offerData, candidates),
-        });
-      });
+  
+    const onConnectionState = () => {
+      const pc = peerConnectionRef.current;
+      if (!pc || restartTimeoutRef.current) return;
+  
+      if (pc.iceConnectionState === "disconnected") {
+        onError();
+      }
     };
-
-    const generateSdpFragment = (od, candidates) => {
-      const grouped = {};
-      candidates.forEach((c) => {
-        const mid = c.sdpMLineIndex;
-        if (!grouped[mid]) grouped[mid] = [];
-        grouped[mid].push(c);
+  
+    const onTrack = (evt) => {
+      if (videoRef.current) {
+        videoRef.current.srcObject = evt.streams[0];
+      }
+    };
+  
+    const createOffer = async () => {
+      try {
+        setShowLoader(true);
+        const pc = peerConnectionRef.current;
+        const offer = await pc.createOffer();
+  
+        editOffer(offer);
+        offerDataRef.current = parseOffer(offer.sdp);
+  
+        await pc.setLocalDescription(offer);
+        sendOffer(offer);
+      } catch {
+        setShowLoader(false);
+      }
+    };
+  
+    const editOffer = (offer) => {
+      const sections = offer.sdp.split("m=");
+      for (let i = 0; i < sections.length; i++) {
+        if (sections[i].startsWith("audio")) {
+          sections[i] = enableStereoOpus(sections[i]);
+        }
+      }
+      offer.sdp = sections.join("m=");
+    };
+  
+    const parseOffer = (sdp) => {
+      const data = { iceUfrag: "", icePwd: "", medias: [] };
+  
+      sdp.split("\r\n").forEach((line) => {
+        if (line.startsWith("m=")) data.medias.push(line.slice(2));
+        else if (!data.iceUfrag && line.startsWith("a=ice-ufrag:"))
+          data.iceUfrag = line.slice(12);
+        else if (!data.icePwd && line.startsWith("a=ice-pwd:"))
+          data.icePwd = line.slice(10);
       });
-
-      let frag = `a=ice-ufrag:${od.iceUfrag}\r\na=ice-pwd:${od.icePwd}\r\n`;
-      od.medias.forEach((media, i) => {
-        if (grouped[i]) {
-          frag += `m=${media}\r\na=mid:${i}\r\n`;
-          grouped[i].forEach((c) => (frag += `a=${c.candidate}\r\n`));
+  
+      return data;
+    };
+  
+    const enableStereoOpus = (section) => {
+      let opus = "";
+      const lines = section.split("\r\n");
+  
+      lines.forEach((l) => {
+        if (l.startsWith("a=rtpmap:") && l.toLowerCase().includes("opus/")) {
+          opus = l.split(" ")[0].replace("a=rtpmap:", "");
         }
       });
+  
+      if (!opus) return section;
+  
+      return lines
+        .map((l) => {
+          if (l.startsWith(`a=fmtp:${opus}`)) {
+            if (!l.includes("stereo")) l += ";stereo=1";
+            if (!l.includes("sprop-stereo")) l += ";sprop-stereo=1";
+          }
+          return l;
+        })
+        .join("\r\n");
+    };
+  
+    const sendOffer = (offer) => {
+      fetch(streamUrl + "whep", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/sdp",
+          Authorization: `Basic ${encoded}`,
+        },
+        body: offer.sdp,
+      })
+        .then((res) => {
+          if (res.status !== 201) throw new Error();
+          sessionUrlRef.current = new URL(
+            res.headers.get("location"),
+            streamUrl
+          ).toString();
+          return res.text();
+        })
+        .then(onRemoteAnswer)
+        .catch(onError)
+        .finally(() => setShowLoader(false));
+    };
+  
+    const onRemoteAnswer = (sdp) => {
+      const pc = peerConnectionRef.current;
+      if (!pc || pc.signalingState === "closed") return;
+  
+      pc.setRemoteDescription({ type: "answer", sdp });
+  
+      if (queuedCandidatesRef.current.length) {
+        sendLocalCandidates(queuedCandidatesRef.current);
+        queuedCandidatesRef.current = [];
+      }
+    };
+  
+    const sendLocalCandidates = (candidates) => {
+      fetch(sessionUrlRef.current, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/trickle-ice-sdpfrag",
+          "If-Match": "*",
+        },
+        body: generateSdpFragment(offerDataRef.current, candidates),
+      }).catch(onError);
+    };
+  
+    const generateSdpFragment = (od, candidates) => {
+      const byMid = {};
+  
+      candidates.forEach((c) => {
+        byMid[c.sdpMLineIndex] ||= [];
+        byMid[c.sdpMLineIndex].push(c);
+      });
+  
+      let frag = `a=ice-ufrag:${od.iceUfrag}\r\na=ice-pwd:${od.icePwd}\r\n`;
+  
+      od.medias.forEach((m, i) => {
+        if (byMid[i]) {
+          frag += `m=${m}\r\na=mid:${i}\r\n`;
+          byMid[i].forEach((c) => {
+            frag += `a=${c.candidate}\r\n`;
+          });
+        }
+      });
+  
       return frag;
     };
 
-    const onTrack = (evt) => {
-      if (videoRef.current) videoRef.current.srcObject = evt.streams[0];
-    };
-
-    const onConnectionState = () => {
-      setError(null);
-      const state = peerConnectionRef.current?.iceConnectionState;
-      console.log("ICE State:", state);
-      if (restartTimeoutRef.current) return;
-      if (state === "disconnected" || state === "failed") {
-        onError("Peer connection lost. Restarting…");
-        restartTimeoutRef.current = setTimeout(() => {
-          restartTimeoutRef.current = null;
-          restartStream();
-        }, 2000);
-      }
-    };
-
-    const restartStream = async () => {
-      console.warn("Restarting WebRTC stream…");
-      cleanupSession();
-      peerConnectionRef.current?.close();
-      peerConnectionRef.current = null;
+    if (hitStream && encoded) {
       requestICEServers();
-    };
+    }
 
-    const startKeepalive = () => {
-      if (keepaliveIntervalRef.current) clearInterval(keepaliveIntervalRef.current);
-      keepaliveIntervalRef.current = setInterval(() => {
-        if (sessionUrlRef.current) {
-          fetch(sessionUrlRef.current, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/trickle-ice-sdpfrag", "If-Match": "*" },
-            body: "",
-          }).catch(() => { });
-        }
-      }, 15000);
-    };
-
-    const startWatchdog = () => {
-      if (watchdogIntervalRef.current) clearInterval(watchdogIntervalRef.current);
-      watchdogIntervalRef.current = setInterval(() => {
-        console.log("Watchdog: restarting stream…");
-        restartStream();
-      }, 5 * 60 * 1000);
-    };
-
-    // START STREAM
-    requestICEServers();
-
-    // CLEANUP ON UNMOUNT / LOGOUT
     return () => {
-      isMounted = false;
+      setHitStream(false);
+      clearTimeout(restartTimeoutRef.current);
       peerConnectionRef.current?.close();
-      cleanupSession();
     };
-  }, [encoded, streamUrl]);
+  }, [hitStream, encoded, streamUrl]);
 
-  // -------------------------------
-  // SCREENSHOT
-  // -------------------------------
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.autoplay = true;
+      videoRef.current.playsInline = true;
+      videoRef.current.controls = false;
+    }
+  }, []);
+
+
+  /* ---------------- SCREENSHOT ---------------- */
+
   const handleClick = () => {
     const video = videoRef.current;
     if (!video) return;
@@ -345,8 +299,8 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789", cu
     const el = e.target.parentNode;
     el.classList.toggle('fullscreen');
   }
-
-  return (
+  
+     return (
     <div
       className="minscreen"
       onMouseEnter={() => setShowOverlay(true)}
@@ -377,6 +331,7 @@ const Stream = ({ streamUrl, screenshot, credentials = "admin:verifai123789", cu
       }
     </div>
   );
+  
 };
 
 export default Stream;

@@ -24,7 +24,6 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
   const customAction = getStorage("custom_action");
   const actionTags = getStorage("actionTags");
 
-     
 
   const { sessionStore, actionStore, loaderStore } = useSelector((state) => ({
     sessionStore: state.sessionStore,
@@ -158,6 +157,19 @@ const handleMouseMove = (e) => {
   element.style.top = `${e.clientY - pos.current.offsetY}px`;
 };
 
+
+
+
+useEffect(() => {
+  if (currentEvent?.timer == null) return;
+  
+  if (currentEvent.timer < 2 ) {
+    closeBoundariesDialog();
+    closeMaskDialog();
+  }
+
+}, [currentEvent?.timer]);
+
 const handleMouseUp = () => {
   draggingRef.current = null; // clear dragging element
   document.removeEventListener("mousemove", handleMouseMove);
@@ -283,7 +295,7 @@ const handleMouseUp = () => {
                 </button>
 
                 
-                <button className="custom-action" onClick={openLiveDialog}  disabled={session?.userLevel == 1} >
+                <button className="custom-action" onClick={openLiveDialog}  disabled={session?.userLevel == 1} style={{ opacity: session?.userLevel === 1 ? 0.5: 1 }}>
                   <img
                     src="icons/live.png"
                     alt="icon"
@@ -546,16 +558,16 @@ export const ContactInfo = ({ contactDetails }) => {
         {contactDetails?.map((item, index) => (
           <div className="contact-card" key={index}>
             <div className="card-header">
-              <strong>{item.name}</strong>
+              <strong>{item.contactName}</strong>
               <div className="icons">
                 <span title="Call">📞</span>
                 <span title="Message">🗨️</span>
-                <span title="Email">📧</span>
+                <span title="Designation">👔</span>
               </div>
             </div>
             <div className="card-body">
-              <p>{item.emailId}</p>
-              <p>{item.contactNo}</p>
+              <p>{item.contactDesignation}</p>
+              <p>{item.callNo}</p>
             </div>
           </div>
         ))}
