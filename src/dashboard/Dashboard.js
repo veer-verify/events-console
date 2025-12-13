@@ -7,6 +7,7 @@ import { aliveUser, consumeConsoleEvents, getActionTagCategories, getMonitoringI
 import { useDispatch, useSelector } from 'react-redux';
 import { saveAction } from '../../src/utilities/slices/actionTagSlice';
 import { setLoader } from '../utilities/slices/loaderSlice';
+import { useLogout } from '../utilities/hooks/logout';
 
 const Dashboard = () => {
   const dispatch = useDispatch();
@@ -43,6 +44,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     const handleFalse = async (item) => {
+      
       const subAction = getStorage('sub_action');
       const customAction = getStorage('custom_action');
 
@@ -67,11 +69,11 @@ const Dashboard = () => {
       consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: '' });
 
       const isFirst = item?.index === 0;
-
+      
       const filtered = eventData.filter((_, i) => item?.index !== i);
       const reordered = isFirst ? [null, ...filtered] : [...filtered, null];
       setEventData(reordered);
-
+      
       dispatch(setLoader(true))
       const eventResponse = await getVmsEventsQueueData();
       if (eventResponse && eventResponse.length) {
@@ -122,6 +124,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     const handleSuspicious = async (item) => {
+   
       const customAction = getStorage('custom_action');
       const subAction = getStorage('sub_action');
 
@@ -146,7 +149,7 @@ const Dashboard = () => {
       consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: '' });
 
       const isFirst = item?.index === 0;
-
+      
       const filtered = eventData.filter((_, i) => item?.index !== i);
       const reordered = isFirst ? [null, ...filtered] : [...filtered, null];
       setEventData(reordered);
@@ -226,7 +229,7 @@ const Dashboard = () => {
       }
 
       isFetching = false;
-      if (isMounted && eventData.length < 2) {
+      if (isMounted && eventData.length < 2 && actionStore.callApi) {
         timerId = setTimeout(fetchEvents, 2000);
       }
     };
@@ -237,7 +240,13 @@ const Dashboard = () => {
       isMounted = false;
       clearTimeout(timerId);
     };
-  }, [eventData.length, dispatch]);
+  }, [eventData.length, dispatch, actionStore.callApi]);
+
+  // const logout = useLogout(eventData)
+
+  // if(!actionStore.callApi && eventData.length === 0) {
+  //   logout()
+  // }
 
 
 
@@ -279,7 +288,7 @@ const Dashboard = () => {
       isHandlingRef.current = false;
     };
 
-    
+
 
     const handle = async (item, index) => {
       item?.userLevelAlarmInfo?.push({
@@ -354,14 +363,14 @@ const Dashboard = () => {
     return () => {
       clearInterval(interval);
     };
-  }, [dispatch, eventData, session?.UserId, session?.userLevel]);
+  }, [dispatch, eventData, session?.UserId, session?.queueName, session?.userLevel]);
 
 
 
 
   return (
     <Fragment>
-      <Header></Header>
+      <Header eventData={eventData}></Header>
 
       <div className='tiles'>
         {eventData.length

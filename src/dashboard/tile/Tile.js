@@ -17,13 +17,14 @@ import { playSiren, getImagesForCameraId,loadImageWithAuth } from "../../utiliti
 import { useSelector } from "react-redux";
 import ErrorInfo from "../../utilities/error-info/ErrorInfo";
 
+
 const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
   // console.log(currentEvent)
   const monitoringData = currentEvent?.monitoringInfo;
   const session = getStorage("session");
   const customAction = getStorage("custom_action");
   const actionTags = getStorage("actionTags");
-
+  
 
   const { sessionStore, actionStore, loaderStore } = useSelector((state) => ({
     sessionStore: state.sessionStore,
@@ -235,6 +236,7 @@ const handleMouseUp = () => {
   const userFlow = currentEvent?.userLevelAlarmInfo
     ?.map((item) => (item?.userName ? item?.userName : "Dummy"))
     .join(" => ");
+    const notes = currentEvent?.userLevelAlarmInfo?.map((item) => item.notes).join(" => ");
 
   return (
     <Fragment>
@@ -455,6 +457,12 @@ const handleMouseUp = () => {
                       </td>
                       <td>{userFlow}</td>
                     </tr>
+                                        <tr>
+                      <td>
+                        <strong>Notes</strong>
+                      </td>
+                      <td>{notes}</td>
+                    </tr>
                     {/* <tr>
                                                 <td><strong>History</strong></td>
                                                 { currentEvent?.userLevelAlarmInfo.map((item, i) => getTagNameById(item?.subActionTag)?.subCategoryName && <td key={i}>{ getTagNameById(item?.subActionTag)?.subCategoryName }</td>) }
@@ -629,7 +637,7 @@ export const DotCom = ({ smsDetails }) => {
 export const BoundariesDialog = forwardRef(
   ({ showBoundaries, closeBoundariesDialog, currentEvent, onMouseDown }, ref) => {
     const [imgSrc, setImgSrc] = useState(null);
-
+ 
     useEffect(() => {
       if (showBoundaries) {
         getImagesForCameraId(currentEvent).then(async (res) => {

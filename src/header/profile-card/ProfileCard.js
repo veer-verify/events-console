@@ -2,10 +2,11 @@ import './ProfileCard.css';
 import { useLogout } from '../../utilities/hooks/logout';
 import { getStorage } from '../../utilities/StorageService';
 
-const ProfileCard = () => {
+const ProfileCard = ({eventData}) => {
     const user = getStorage('session');
-    const logout = useLogout();
-
+    const logout = useLogout(eventData);
+    
+    
     return (
         <div className="profile-card">
             <img className="profile-pic" src='icons/user.svg' alt="User" />
@@ -20,7 +21,7 @@ const ProfileCard = () => {
 
             <div className="logout-section">
                 <span className="version">Version : V1.01</span>
-                <button className="logout-btn" onClick={logout}>Logout</button>
+                <button className="logout-btn" onClick={logout} >Logout</button>
             </div>
         </div>
     )

@@ -3,8 +3,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import ProfileCard from './profile-card/ProfileCard';
 import { getStorage } from '../utilities/StorageService';
 
-const Header = () => {
+const Header = ({eventData}) => {
     const user = getStorage('session');
+
 
     const [showProfile, setShowProfile] = useState(false);
     const profileRef = useRef(null);
@@ -47,7 +48,7 @@ const Header = () => {
                 </div>
 
                 <div ref={profileRef}>
-                    {showProfile && <ProfileCard />}
+                    {showProfile && <ProfileCard eventData={eventData}/>}
                 </div>
             </div>
 
