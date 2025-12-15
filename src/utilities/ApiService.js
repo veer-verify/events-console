@@ -352,7 +352,7 @@ export async function loadImageWithAuth(url) {
 
 export async function audioDisable(payload){
 
-  const url = `http://192.168.0.113:8080/checkCameraAudio_1_0`;
+  const url = `${environment.guard_monitoring_url}/checkCameraAudio_1_0`;
 
     return api
         .get(url, { params: { cameraId: payload?.cameraId,siteId:payload?.siteId } })
