@@ -404,3 +404,10 @@ iframe {
   color: #ffffff;         
   font-size: 16px;        
 }
+
+.image-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+}

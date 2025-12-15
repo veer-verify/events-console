@@ -1,5 +1,5 @@
 import "./Tile.css";
-import { useState, useRef, useEffect, Fragment,forwardRef } from "react";
+import { useState, useRef, useEffect, Fragment, forwardRef } from "react";
 import Escalation from "../escalation/Escalation";
 import Live from "../../utilities/live/Live";
 import Stream from "../../utilities/stream/Stream";
@@ -9,14 +9,19 @@ import {
   getStorage,
   getTagNameById,
   getTimeByTimezone,
+  getZone,
   isValid,
   setStorage,
   timeFormat,
 } from "../../utilities/StorageService";
-import { playSiren, getImagesForCameraId,loadImageWithAuth } from "../../utilities/ApiService";
+import {
+  playSiren,
+  getImagesForCameraId,
+  loadImageWithAuth,
+  audioDisable
+} from "../../utilities/ApiService";
 import { useSelector } from "react-redux";
 import ErrorInfo from "../../utilities/error-info/ErrorInfo";
-
 
 const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
   // console.log(currentEvent)
@@ -24,7 +29,6 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
   const session = getStorage("session");
   const customAction = getStorage("custom_action");
   const actionTags = getStorage("actionTags");
-  
 
   const { sessionStore, actionStore, loaderStore } = useSelector((state) => ({
     sessionStore: state.sessionStore,
@@ -105,6 +109,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
 
   const [imgindex, setIndex] = useState(0);
   const [imgSrc, setImgSrc] = useState(currentEvent?.image_list[0]);
+   const [audio, setAudio] = useState('');
 
   const handleAction = (data) => {
     const session = getStorage("session");
@@ -129,53 +134,62 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
       }
     }
     closeTags();
-  
   };
 
- const pos = useRef({ x: 0, y: 0, offsetX: 0, offsetY: 0 });
-const draggingRef = useRef(null); 
-const boundaryRef = useRef(null);
+  const pos = useRef({ x: 0, y: 0, offsetX: 0, offsetY: 0 });
+  const draggingRef = useRef(null);
+  const boundaryRef = useRef(null);
   const maskRef = useRef(null);
 
-const handleMouseDown = (e, ref) => {
-  const element = ref.current;
-  if (!element) return;
+  const handleMouseDown = (e, ref) => {
+    const element = ref.current;
+    if (!element) return;
 
-  draggingRef.current = element; // set current dragging element
-  pos.current.offsetX = e.clientX - element.offsetLeft;
-  pos.current.offsetY = e.clientY - element.offsetTop;
+    draggingRef.current = element; // set current dragging element
+    pos.current.offsetX = e.clientX - element.offsetLeft;
+    pos.current.offsetY = e.clientY - element.offsetTop;
 
-  document.addEventListener("mousemove", handleMouseMove);
-  document.addEventListener("mouseup", handleMouseUp);
-};
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+  };
 
-const handleMouseMove = (e) => {
-  const element = draggingRef.current;
-  if (!element) return;
+  const handleMouseMove = (e) => {
+    const element = draggingRef.current;
+    if (!element) return;
 
-  element.style.position = "absolute"; // make sure element is positioned
-  element.style.left = `${e.clientX - pos.current.offsetX}px`;
-  element.style.top = `${e.clientY - pos.current.offsetY}px`;
-};
-
-
-
+    element.style.position = "absolute"; // make sure element is positioned
+    element.style.left = `${e.clientX - pos.current.offsetX}px`;
+    element.style.top = `${e.clientY - pos.current.offsetY}px`;
+  };
 
 useEffect(() => {
-  if (currentEvent?.timer == null) return;
-  
-  if (currentEvent.timer < 2 ) {
-    closeBoundariesDialog();
-    closeMaskDialog();
+  const fetchAudio = async () => {
+    console.log(currentEvent);
+
+    const audio = await audioDisable(currentEvent);
+    setAudio(audio?.audioConfigured)
+   
+  };
+
+  if (currentEvent) {
+    fetchAudio();
   }
+}, [currentEvent]);
 
-}, [currentEvent?.timer]);
+  useEffect(() => {
+    if (currentEvent?.timer == null) return;
 
-const handleMouseUp = () => {
-  draggingRef.current = null; // clear dragging element
-  document.removeEventListener("mousemove", handleMouseMove);
-  document.removeEventListener("mouseup", handleMouseUp);
-};
+    if (currentEvent.timer < 2) {
+      closeBoundariesDialog();
+      closeMaskDialog();
+    }
+  }, [currentEvent?.timer]);
+
+  const handleMouseUp = () => {
+    draggingRef.current = null; // clear dragging element
+    document.removeEventListener("mousemove", handleMouseMove);
+    document.removeEventListener("mouseup", handleMouseUp);
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -236,7 +250,9 @@ const handleMouseUp = () => {
   const userFlow = currentEvent?.userLevelAlarmInfo
     ?.map((item) => (item?.userName ? item?.userName : "Dummy"))
     .join(" => ");
-    const notes = currentEvent?.userLevelAlarmInfo?.map((item) => item.notes).join(" => ");
+  const notes = currentEvent?.userLevelAlarmInfo
+    ?.map((item) => item.notes)
+    .join(" => ");
 
   return (
     <Fragment>
@@ -296,8 +312,12 @@ const handleMouseUp = () => {
                   />
                 </button>
 
-                
-                <button className="custom-action" onClick={openLiveDialog}  disabled={session?.userLevel == 1} style={{ opacity: session?.userLevel === 1 ? 0.5: 1 }}>
+                <button
+                  className="custom-action"
+                  onClick={openLiveDialog}
+                  disabled={session?.userLevel === 1}
+                  style={{ opacity: session?.userLevel === 1 ? 0.5 : 1 }}
+                >
                   <img
                     src="icons/live.png"
                     alt="icon"
@@ -312,7 +332,7 @@ const handleMouseUp = () => {
                       : "custom-action"
                   }
                   onClick={play}
-                  disabled={currentEvent?.playing || !monitoringData?.audioUrl}
+                  disabled={currentEvent?.playing || audio ==='F'}
                 >
                   <img
                     src={
@@ -428,7 +448,7 @@ const handleMouseUp = () => {
                       <td>
                         <strong>Timezone</strong>
                       </td>
-                      <td>{currentEvent?.timezone}</td>
+                      <td>{currentEvent?.timezone} ({getZone(currentEvent?.timezone)})</td>
                     </tr>
                     <tr>
                       <td>
@@ -457,7 +477,7 @@ const handleMouseUp = () => {
                       </td>
                       <td>{userFlow}</td>
                     </tr>
-                                        <tr>
+                    <tr>
                       <td>
                         <strong>Notes</strong>
                       </td>
@@ -471,20 +491,24 @@ const handleMouseUp = () => {
                 </table>
               </div>
             )}
-      {showBoundaries && (
-        <BoundariesDialog
-          showBoundaries={showBoundaries}
-          closeBoundariesDialog={closeBoundariesDialog}
-          currentEvent={currentEvent} onMouseDown={(e) => handleMouseDown(e, boundaryRef)} ref={boundaryRef}
-        />
-      )}
-      {showMask && (
-        <MaskDialog
-          showMask={showMask}
-          closeMaskDialog={closeMaskDialog}
-          currentEvent={currentEvent}  onMouseDown={(e) => handleMouseDown(e, maskRef)} ref={maskRef}
-        />
-      )}
+            {showBoundaries && (
+              <BoundariesDialog
+                showBoundaries={showBoundaries}
+                closeBoundariesDialog={closeBoundariesDialog}
+                currentEvent={currentEvent}
+                onMouseDown={(e) => handleMouseDown(e, boundaryRef)}
+                ref={boundaryRef}
+              />
+            )}
+            {showMask && (
+              <MaskDialog
+                showMask={showMask}
+                closeMaskDialog={closeMaskDialog}
+                currentEvent={currentEvent}
+                onMouseDown={(e) => handleMouseDown(e, maskRef)}
+                ref={maskRef}
+              />
+            )}
           </Fragment>
         ) : (
           <Fragment>
@@ -519,7 +543,6 @@ const handleMouseUp = () => {
       {live && (
         <Live currentEvent={currentEvent} closeLiveDialog={closeLiveDialog} />
       )}
-
     </Fragment>
   );
 };
@@ -635,34 +658,61 @@ export const DotCom = ({ smsDetails }) => {
 };
 
 export const BoundariesDialog = forwardRef(
-  ({ showBoundaries, closeBoundariesDialog, currentEvent, onMouseDown }, ref) => {
+  (
+    { showBoundaries, closeBoundariesDialog, currentEvent, onMouseDown },
+    ref
+  ) => {
     const [imgSrc, setImgSrc] = useState(null);
- 
+    const [loading, setLoading] = useState(false);
+
     useEffect(() => {
-      if (showBoundaries) {
-        getImagesForCameraId(currentEvent).then(async (res) => {
-          const url = res?.data?.monitoringImage;
-          if (url) {
-            const base64 = await loadImageWithAuth(url);
-            setImgSrc(base64);
-          }
-        });
+      const fetchImage = async () => {
+        setLoading(true);
+        setImgSrc(null);
+
+        const res = await getImagesForCameraId(currentEvent);
+        const url = res?.data?.monitoringImage;
+
+        if (url) {
+          const base64 = await loadImageWithAuth(url);
+          setImgSrc(base64);
+        }
+
+        setLoading(false);
+      };
+
+      if (showBoundaries && currentEvent) {
+        fetchImage();
       } else {
         setImgSrc(null);
+        setLoading(false);
       }
     }, [showBoundaries, currentEvent]);
 
     return (
       <div className="cam-container1" ref={ref} onMouseDown={onMouseDown}>
+        {/* Header */}
         <div className="header">
           <p>{currentEvent?.siteName}</p>
           <p>Boundary Image</p>
           <button onClick={closeBoundariesDialog}>x</button>
         </div>
 
-      
-          <img src={imgSrc} alt="Boundary" loading="lazy" className="img-fill"/>
-        
+        {/* Loader */}
+        {loading && <div className="image-loader">Loading...</div>}
+
+        {/* Image */}
+        {!loading && imgSrc && (
+          <img
+            src={imgSrc}
+            alt="Boundary"
+            className="img-fill"
+            loading="lazy"
+            onError={(e) => {
+              e.currentTarget.src = "icons/eyedisabled.svg";
+            }}
+          />
+        )}
       </div>
     );
   }
@@ -671,34 +721,56 @@ export const BoundariesDialog = forwardRef(
 export const MaskDialog = forwardRef(
   ({ showMask, closeMaskDialog, currentEvent, onMouseDown }, ref) => {
     const [imgSrc, setImgSrc] = useState(null);
-
+    const [loading, setLoading] = useState(false);
     useEffect(() => {
-      if (showMask) {
-        getImagesForCameraId(currentEvent).then(async (res) => {
-          const url = res?.data?.eventsImage;
-          if (url) {
-            const base64 = await loadImageWithAuth(url);
-            setImgSrc(base64);
-          }
-        });
+      const fetchImage = async () => {
+        setLoading(true);
+        setImgSrc(null);
+
+        const res = await getImagesForCameraId(currentEvent);
+        const url = res?.data?.eventsImage;
+
+        if (url) {
+          const base64 = await loadImageWithAuth(url);
+          setImgSrc(base64);
+        }
+
+        setLoading(false);
+      };
+
+      if (showMask && currentEvent) {
+        fetchImage();
       } else {
         setImgSrc(null);
+        setLoading(false);
       }
     }, [showMask, currentEvent]);
 
     return (
       <div className="cam-container1" ref={ref} onMouseDown={onMouseDown}>
+        {/* Header */}
         <div className="header">
           <p>{currentEvent?.siteName}</p>
           <p>Mask Image</p>
           <button onClick={closeMaskDialog}>x</button>
         </div>
 
-        
-          <img src={imgSrc} alt="Mask" loading="lazy" className="img-fill"/>
-       
+        {/* Loader */}
+        {loading && <div className="image-loader">Loading...</div>}
+
+        {/* Image */}
+        {!loading && imgSrc && (
+          <img
+            src={imgSrc}
+            alt=""
+            className="img-fill"
+            loading="lazy"
+            onError={(e) => {
+              e.currentTarget.src = "icons/eyedisabled.svg";
+            }}
+          />
+        )}
       </div>
     );
   }
 );
-

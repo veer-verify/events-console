@@ -155,7 +155,9 @@ const Dashboard = () => {
       setEventData(reordered);
       // setEventData(eventData.splice(item.index, 1, event));
       dispatch(setLoader(true))
-      const eventResponse = await getVmsEventsQueueData();
+
+        const eventResponse = await getVmsEventsQueueData();
+      
       if (eventResponse.length) {
         const [first] = eventResponse;
         const monitoringInfo = await getMonitoringInfo(first);
@@ -175,6 +177,7 @@ const Dashboard = () => {
         setEventData(filtered);
         dispatch(setLoader(false))
       }
+    
     }
 
     const runQueue = async () => {
