@@ -204,14 +204,19 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
                       <td><strong>BCC</strong></td>
                       <td>{emaildata?.BCC?.join(', ')}</td>
                     </tr>
+
+                                        <tr>
+                      <td><strong>Body</strong></td>
+                      <td>{emaildata?.emailBody}</td>
+                    </tr>
                   </tbody>
                 </table>
 
                
 
-                <p className="alert-message">
+                {/* <p className="alert-message">
                   {emaildata?.emailBody}
-                </p>
+                </p> */}
 
                 {/* {
                 emaildata?.screenshots?.map((item, i) =>

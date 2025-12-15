@@ -88,10 +88,10 @@ const Stream = ({ site, streamUrl,screenshot,currentCamera }) => {
   
       peerConnectionRef.current?.close();
   
-      // restartTimeoutRef.current = setTimeout(() => {
-      //   restartTimeoutRef.current = null;
-      //   requestICEServers();
-      // }, 2000);
+      restartTimeoutRef.current = setTimeout(() => {
+        restartTimeoutRef.current = null;
+        requestICEServers();
+      }, 2000);
   
       if (sessionUrlRef.current) {
         fetch(sessionUrlRef.current, { method: "DELETE" });

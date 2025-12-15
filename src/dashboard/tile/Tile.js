@@ -109,7 +109,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
 
   const [imgindex, setIndex] = useState(0);
   const [imgSrc, setImgSrc] = useState(currentEvent?.image_list[0]);
-   const [audio, setAudio] = useState('');
+  const [audio, setAudio] = useState('');
 
   const handleAction = (data) => {
     const session = getStorage("session");
@@ -162,19 +162,17 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
     element.style.top = `${e.clientY - pos.current.offsetY}px`;
   };
 
-useEffect(() => {
-  const fetchAudio = async () => {
-    console.log(currentEvent);
+  useEffect(() => {
+    const fetchAudio = async () => {
+      const audio = await audioDisable(currentEvent);
+      setAudio(audio?.audioConfigured)
 
-    const audio = await audioDisable(currentEvent);
-    setAudio(audio?.audioConfigured)
-   
-  };
+    };
 
-  if (currentEvent) {
-    fetchAudio();
-  }
-}, [currentEvent]);
+    if (currentEvent) {
+      fetchAudio();
+    }
+  }, [currentEvent]);
 
   useEffect(() => {
     if (currentEvent?.timer == null) return;
@@ -249,10 +247,10 @@ useEffect(() => {
   const smsDetails = monitoringData?.smsDetails || [];
   const userFlow = currentEvent?.userLevelAlarmInfo
     ?.map((item) => (item?.userName ? item?.userName : "Dummy"))
-    .join(" => ");
+    .join(" - ");
   const notes = currentEvent?.userLevelAlarmInfo
     ?.map((item) => item.notes)
-    .join(" => ");
+    .join(" - ");
 
   return (
     <Fragment>
@@ -265,8 +263,8 @@ useEffect(() => {
                 currentEvent?.timer < 10
                   ? "red-blink camera-feeds"
                   : currentEvent?.objectName === "DUMMY"
-                  ? "yellow-blink camera-feeds"
-                  : "camera-feeds"
+                    ? "yellow-blink camera-feeds"
+                    : "camera-feeds"
               }
             >
               <div className="camera">
@@ -332,7 +330,7 @@ useEffect(() => {
                       : "custom-action"
                   }
                   onClick={play}
-                  disabled={currentEvent?.playing || audio ==='F'}
+                  disabled={currentEvent?.playing || audio === 'F'}
                 >
                   <img
                     src={
@@ -671,12 +669,14 @@ export const BoundariesDialog = forwardRef(
         setImgSrc(null);
 
         const res = await getImagesForCameraId(currentEvent);
-        const url = res?.data?.monitoringImage;
-
-        if (url) {
+        if (res?.data?.statusCode === 200) {
+          const url = res?.data?.monitoringImage;
           const base64 = await loadImageWithAuth(url);
           setImgSrc(base64);
+        } else {
+          setImgSrc('/icons/eyedisabled.svg')
         }
+
 
         setLoading(false);
       };
@@ -702,7 +702,7 @@ export const BoundariesDialog = forwardRef(
         {loading && <div className="image-loader">Loading...</div>}
 
         {/* Image */}
-        {!loading && imgSrc && (
+        {!loading && (
           <img
             src={imgSrc}
             alt="Boundary"
@@ -713,6 +713,7 @@ export const BoundariesDialog = forwardRef(
             }}
           />
         )}
+
       </div>
     );
   }
@@ -728,11 +729,12 @@ export const MaskDialog = forwardRef(
         setImgSrc(null);
 
         const res = await getImagesForCameraId(currentEvent);
-        const url = res?.data?.eventsImage;
-
-        if (url) {
+        if (res?.data?.statusCode === 200) {
+          const url = res?.data?.monitoringImage;
           const base64 = await loadImageWithAuth(url);
           setImgSrc(base64);
+        } else {
+          setImgSrc('/icons/eyedisabled.svg')
         }
 
         setLoading(false);
@@ -759,7 +761,7 @@ export const MaskDialog = forwardRef(
         {loading && <div className="image-loader">Loading...</div>}
 
         {/* Image */}
-        {!loading && imgSrc && (
+        {!loading && (
           <img
             src={imgSrc}
             alt=""

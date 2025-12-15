@@ -11,20 +11,20 @@ export const useLogout = (eventData) => {
   const navigate = useNavigate("");
 
   const logout = async () => {
-    if (eventData.length !== 0) {
-      return Swal.fire({
-        title: "Warning!",
-        text: "Please clear events before logout",
-        icon: "warning",
-        showConfirmButton: true,
-        showCancelButton: true,
-        confirmButtonText: "Sure",
-      }).then((res) => {
-        if (res.isConfirmed) {
-          dispatch(setCallApi(false));
-        }
-      });
-    }
+    // if (eventData.length !== 0) {
+    //   return Swal.fire({
+    //     title: "Warning!",
+    //     text: "Please clear events before logout",
+    //     icon: "warning",
+    //     showConfirmButton: true,
+    //     showCancelButton: true,
+    //     confirmButtonText: "Sure",
+    //   }).then((res) => {
+    //     if (res.isConfirmed) {
+    //       dispatch(setCallApi(false));
+    //     }
+    //   });
+    // }
 
     dispatch(setMainLoader(true));
     await manageUserSession("logOut");

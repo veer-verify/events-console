@@ -143,15 +143,39 @@ export const getRole = () => {
     : "";
 };
 
+const timeZoneCountryList = [
+  { timeZone: "Asia/Kolkata", countryCode: "IN" },
+  { timeZone: "Asia/Tokyo", countryCode: "JP" },
+  { timeZone: "Asia/Dubai", countryCode: "AE" },
+  { timeZone: "Europe/London", countryCode: "GB" },
+  { timeZone: "Europe/Paris", countryCode: "FR" },
+  { timeZone: "Europe/Berlin", countryCode: "DE" },
+  { timeZone: "America/New_York", countryCode: "US" },
+  { timeZone: "America/Chicago", countryCode: "US" },
+  { timeZone: "America/Denver", countryCode: "US" },
+  { timeZone: "America/Los_Angeles", countryCode: "US" },
+  { timeZone: "America/Toronto", countryCode: "CA" },
+  { timeZone: "Australia/Sydney", countryCode: "AU" },
+  { timeZone: "Australia/Melbourne", countryCode: "AU" },
+  { timeZone: "Australia/Canberra", countryCode: "AU" },
+  { timeZone: "Africa/Johannesburg", countryCode: "ZA" },
+  { timeZone: "Asia/Singapore", countryCode: "SG" }
+];
+
+
+const getCountry = (zone) => {
+  return timeZoneCountryList.find((item) => item.timeZone === zone)?.countryCode || 'US';
+}
+
+
 export const getZone = (timezone) => {
   const date = new Date();
-
-  const tz = new Intl.DateTimeFormat("en-US", {
-    timeZone: timezone,
+  const tz = new Intl.DateTimeFormat(`en-${getCountry(timezone)}`, {
+    timeZone: timezone.toString(),
     timeZoneName: "short",
   })
     .formatToParts(date)
-    .find((part) => part.type === "timeZoneName").value;
+    .find((part) => part.type === "timeZoneName")?.value;
     return tz;
 
 };

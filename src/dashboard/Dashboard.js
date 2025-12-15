@@ -44,7 +44,6 @@ const Dashboard = () => {
 
   useEffect(() => {
     const handleFalse = async (item) => {
-      
       const subAction = getStorage('sub_action');
       const customAction = getStorage('custom_action');
 
@@ -63,17 +62,17 @@ const Dashboard = () => {
           notes: item.notes ?? ''
         }
       );
-      updateEventFullDetails(
-        { ...item, actionTag: customAction, subActionTag: subAction?.subCategoryId }
-      );
+      updateEventFullDetails({ ...item, actionTag: customAction, subActionTag: subAction?.subCategoryId });
       consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: '' });
 
       const isFirst = item?.index === 0;
-      
       const filtered = eventData.filter((_, i) => item?.index !== i);
+      // if(!actionStore.callApi) {
+      //   setEventData(filtered);
+      // }
+
       const reordered = isFirst ? [null, ...filtered] : [...filtered, null];
       setEventData(reordered);
-      
       dispatch(setLoader(true))
       const eventResponse = await getVmsEventsQueueData();
       if (eventResponse && eventResponse.length) {
@@ -86,14 +85,13 @@ const Dashboard = () => {
           audioPlayed: false,
           timer: 60,
         };
-
         writetoRedisQueueData(event);
         const updated = isFirst ? [event, ...filtered] : [...filtered, event];
         setEventData(updated);
-        dispatch(setLoader(false))
+        dispatch(setLoader(false));
       } else {
         setEventData(filtered);
-        dispatch(setLoader(false))
+        dispatch(setLoader(false));
       }
     };
 
@@ -124,7 +122,6 @@ const Dashboard = () => {
 
   useEffect(() => {
     const handleSuspicious = async (item) => {
-   
       const customAction = getStorage('custom_action');
       const subAction = getStorage('sub_action');
 
@@ -143,21 +140,17 @@ const Dashboard = () => {
           notes: item.notes ?? ''
         }
       );
-      write2VmsDispatchQueue(
-        { ...item, actionTag: customAction, subActionTag: subAction?.subCategoryId, queue_name: item?.nextQueueName }
-      );
+      write2VmsDispatchQueue({ ...item, actionTag: customAction, subActionTag: subAction?.subCategoryId, queue_name: item?.nextQueueName });
       consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: '' });
 
       const isFirst = item?.index === 0;
-      
       const filtered = eventData.filter((_, i) => item?.index !== i);
       const reordered = isFirst ? [null, ...filtered] : [...filtered, null];
       setEventData(reordered);
       // setEventData(eventData.splice(item.index, 1, event));
-      dispatch(setLoader(true))
+      dispatch(setLoader(true));
 
-        const eventResponse = await getVmsEventsQueueData();
-      
+      const eventResponse = await getVmsEventsQueueData();
       if (eventResponse.length) {
         const [first] = eventResponse;
         const monitoringInfo = await getMonitoringInfo(first);
@@ -177,7 +170,6 @@ const Dashboard = () => {
         setEventData(filtered);
         dispatch(setLoader(false))
       }
-    
     }
 
     const runQueue = async () => {
@@ -186,12 +178,10 @@ const Dashboard = () => {
 
       isSuspiciousProcessing.current = true;
       const nextItem = suspiciousQueue[0];
-
       await handleSuspicious(nextItem);
       setSuspiciousQueue(prev => prev.slice(1));
       isSuspiciousProcessing.current = false;
     };
-
     runQueue();
   }, [dispatch, eventData, suspiciousQueue]);
 
@@ -209,7 +199,6 @@ const Dashboard = () => {
       if (eventData.length >= 2) return;
 
       isFetching = true;
-
       dispatch(setLoader(true))
       const response = await getVmsEventsQueueData();
       dispatch(setLoader(false))
@@ -225,7 +214,6 @@ const Dashboard = () => {
         };
 
         writetoRedisQueueData(event);
-
         const monitoringInfo = await getMonitoringInfo(event);
         const merged = { ...event, monitoringInfo };
         setEventData(prev => [...prev, merged]);
@@ -245,13 +233,6 @@ const Dashboard = () => {
     };
   }, [eventData.length, dispatch, actionStore.callApi]);
 
-  // const logout = useLogout(eventData)
-
-  // if(!actionStore.callApi && eventData.length === 0) {
-  //   logout()
-  // }
-
-
 
   useEffect(() => {
     const fetchTags = async () => {
@@ -263,7 +244,6 @@ const Dashboard = () => {
     };
 
     fetchTags();
-
     aliveUser();
     const interval = setInterval(aliveUser, 60000);
     return () => clearInterval(interval);
@@ -308,20 +288,13 @@ const Dashboard = () => {
         notes: item?.notes ?? "",
       });
 
-      write2VmsDispatchQueue({
-        ...item,
-        actionTag: 0,
-        subActionTag: 0,
-        queue_name: "timed-out",
-      });
-
+      write2VmsDispatchQueue({...item,actionTag: 0,subActionTag: 0,queue_name: "timed-out",});
       consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: "", });
 
       const isFirst = index === 0;
       const filtered = eventData.filter((_, i) => index !== i);
       const reordered = isFirst ? [null, ...filtered] : [...filtered, null];
       setEventData(reordered);
-
       dispatch(setLoader(true))
       const eventResponse = await getVmsEventsQueueData();
       if (eventResponse && eventResponse.length) {
@@ -368,8 +341,11 @@ const Dashboard = () => {
     };
   }, [dispatch, eventData, session?.UserId, session?.queueName, session?.userLevel]);
 
+  // const logout = useLogout(eventData)
 
-
+  // if(!actionStore.callApi && eventData.length === 0) {
+  //   logout()
+  // }
 
   return (
     <Fragment>
