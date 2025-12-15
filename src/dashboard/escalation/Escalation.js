@@ -56,6 +56,7 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
 
   const clearFields = () => {
     setSelectedSubType("");
+    setSelectedAlertType("");
     setEmailData(null);
   }
 
