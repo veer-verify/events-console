@@ -679,9 +679,6 @@ export const BoundariesDialog = forwardRef(
 
       if (showBoundaries && currentEvent) {
         fetchImage();
-      } else {
-        setImgSrc(null);
-        setLoading(false);
       }
     }, [showBoundaries, currentEvent]);
 
@@ -701,7 +698,7 @@ export const BoundariesDialog = forwardRef(
         {!loading && (
           <img
             src={imgSrc}
-            alt="Boundary"
+            alt=""
             className="img-fill"
             loading="lazy"
             onError={(e) => {
@@ -714,6 +711,10 @@ export const BoundariesDialog = forwardRef(
     );
   }
 );
+
+
+
+
 
 export const MaskDialog = forwardRef(
   ({ showMask, closeMaskDialog, currentEvent, onMouseDown }, ref) => {
@@ -738,9 +739,6 @@ export const MaskDialog = forwardRef(
 
       if (showMask && currentEvent) {
         fetchImage();
-      } else {
-        setImgSrc(null);
-        setLoading(false);
       }
     }, [showMask, currentEvent]);
 
