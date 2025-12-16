@@ -669,7 +669,8 @@ export const BoundariesDialog = forwardRef(
         setImgSrc(null);
 
         const res = await getImagesForCameraId(currentEvent);
-        if (res?.data?.statusCode === 200) {
+        
+        if (res?.statusCode === 200) {
           const url = res?.data?.monitoringImage;
           const base64 = await loadImageWithAuth(url);
           setImgSrc(base64);
@@ -683,10 +684,7 @@ export const BoundariesDialog = forwardRef(
 
       if (showBoundaries && currentEvent) {
         fetchImage();
-      } else {
-        setImgSrc(null);
-        setLoading(false);
-      }
+      } 
     }, [showBoundaries, currentEvent]);
 
     return (
@@ -705,7 +703,7 @@ export const BoundariesDialog = forwardRef(
         {!loading && (
           <img
             src={imgSrc}
-            alt="Boundary"
+            alt=""
             className="img-fill"
             loading="lazy"
             onError={(e) => {
@@ -719,6 +717,10 @@ export const BoundariesDialog = forwardRef(
   }
 );
 
+
+
+
+
 export const MaskDialog = forwardRef(
   ({ showMask, closeMaskDialog, currentEvent, onMouseDown }, ref) => {
     const [imgSrc, setImgSrc] = useState(null);
@@ -729,8 +731,8 @@ export const MaskDialog = forwardRef(
         setImgSrc(null);
 
         const res = await getImagesForCameraId(currentEvent);
-        if (res?.data?.statusCode === 200) {
-          const url = res?.data?.monitoringImage;
+        if (res?.statusCode === 200) {
+          const url = res?.data?.eventsImage;
           const base64 = await loadImageWithAuth(url);
           setImgSrc(base64);
         } else {
@@ -742,10 +744,7 @@ export const MaskDialog = forwardRef(
 
       if (showMask && currentEvent) {
         fetchImage();
-      } else {
-        setImgSrc(null);
-        setLoading(false);
-      }
+      } 
     }, [showMask, currentEvent]);
 
     return (
