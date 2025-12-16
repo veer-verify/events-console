@@ -8,6 +8,7 @@ import { saveSession } from '../utilities/slices/sessionSlice';
 import { login, manageUserSession } from '../utilities/ApiService';
 import Swal from 'sweetalert2'
 import { setMainLoader } from '../utilities/slices/loaderSlice';
+import { setCallApi } from '../utilities/slices/actionTagSlice';
 
 const SignIn = () => {
   const navigate = useNavigate('');
@@ -41,6 +42,7 @@ const SignIn = () => {
         dispatch(saveSession({ ...temp, sessionId: activeSession?.sessionId }));
 
         if (loginData.userLevel) {
+          dispatch(setCallApi(true));
           navigate('/dashboard');
         } else {
           Swal.fire({

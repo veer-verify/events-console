@@ -85,7 +85,7 @@ api.interceptors.response.use((response) => response, async (error) => {
         // Optional logout if refresh fails
         // logout();
         clearStorage();
-        window.location.href = "/";
+        window.location.href = "/events-console";
         // <Navigate to="/" replace />
         return Promise.reject(err);
       }

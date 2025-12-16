@@ -48,7 +48,6 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
   const [showTags, setShowTags] = useState(false);
   const [categories, setCategories] = useState([]);
   const [live, setLive] = useState(false);
-  // const [playing, setPlaying] = useState(false);
   const [hoverIndex, setHoverIndex] = useState(null);
   const [showEscalation, setShowEscalation] = useState(false);
   const dialogRef = useRef(null);
@@ -92,9 +91,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
       currentEvent.activityDetTime = getTimeByTimezone(currentEvent?.timezone);
     }
 
-    // setPlaying(true);
-    const res = await playSiren(monitoringData);
-    // setPlaying(false);
+    const res = await playSiren(currentEvent);
 
     if (currentEvent) {
       currentEvent.playing = false;
@@ -164,9 +161,10 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
 
   useEffect(() => {
     const fetchAudio = async () => {
-      const audio = await audioDisable(currentEvent);
-      setAudio(audio?.audioConfigured)
-
+      const audioRes = await audioDisable(currentEvent);
+      if (audioRes?.statusCode === 200) {
+        setAudio(audioRes.audioConfigured)
+      }
     };
 
     if (currentEvent) {
@@ -333,14 +331,12 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
                   disabled={currentEvent?.playing || audio === 'F'}
                 >
                   <img
-                    src={
-                      monitoringData?.audioUrl
-                        ? "icons/siren.png"
-                        : "icons/siren-disabled.png"
-                    }
+                    src="icons/siren.png"
                     alt="icon"
                     width={20}
                     title="Play Siren"
+                    disabled={audio === 'F'}
+                    style={{ opacity: audio === 'T' ? 1 : 0.5 }}
                   />
                 </button>
 
@@ -669,7 +665,7 @@ export const BoundariesDialog = forwardRef(
         setImgSrc(null);
 
         const res = await getImagesForCameraId(currentEvent);
-        if (res?.data?.statusCode === 200) {
+        if (res?.statusCode === 200) {
           const url = res?.data?.monitoringImage;
           const base64 = await loadImageWithAuth(url);
           setImgSrc(base64);
@@ -729,8 +725,8 @@ export const MaskDialog = forwardRef(
         setImgSrc(null);
 
         const res = await getImagesForCameraId(currentEvent);
-        if (res?.data?.statusCode === 200) {
-          const url = res?.data?.monitoringImage;
+        if (res?.statusCode === 200) {
+          const url = res?.data?.eventsImage;
           const base64 = await loadImageWithAuth(url);
           setImgSrc(base64);
         } else {

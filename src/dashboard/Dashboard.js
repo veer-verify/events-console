@@ -2,12 +2,13 @@ import './Dashboard.css';
 import { createContext, Fragment, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import Header from '../header/Header';
 import Tile from './tile/Tile';
-import { getSession, getStorage, getTimeByTimezone, setStorage } from '../utilities/StorageService';
-import { aliveUser, consumeConsoleEvents, getActionTagCategories, getMonitoringInfo, getVmsEventsQueueData, updateEventFullDetails, write2VmsDispatchQueue, writetoRedisQueueData } from '../utilities/ApiService';
+import { clearStorage, getSession, getStorage, getTimeByTimezone, setStorage } from '../utilities/StorageService';
+import { aliveUser, consumeConsoleEvents, getActionTagCategories, getMonitoringInfo, getVmsEventsQueueData, manageUserSession, updateEventFullDetails, write2VmsDispatchQueue, writetoRedisQueueData } from '../utilities/ApiService';
 import { useDispatch, useSelector } from 'react-redux';
 import { saveAction } from '../../src/utilities/slices/actionTagSlice';
 import { setLoader } from '../utilities/slices/loaderSlice';
 import { useLogout } from '../utilities/hooks/logout';
+import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
   const dispatch = useDispatch();
@@ -30,6 +31,9 @@ const Dashboard = () => {
 
   // const EventContext = createContext();
   const [eventData, setEventData] = useState([]);
+  const logout = useLogout();
+  // const navigate = useNavigate("");
+
 
 
   /**
@@ -67,13 +71,18 @@ const Dashboard = () => {
 
       const isFirst = item?.index === 0;
       const filtered = eventData.filter((_, i) => item?.index !== i);
-      // if(!actionStore.callApi) {
-      //   setEventData(filtered);
-      // }
+      if (!actionStore.callApi) {
+        setEventData(filtered);
+        if (eventData.length === 1) {
+          logout()
+        }
+        return;
+      }
+
 
       const reordered = isFirst ? [null, ...filtered] : [...filtered, null];
       setEventData(reordered);
-      dispatch(setLoader(true))
+      dispatch(setLoader(true));
       const eventResponse = await getVmsEventsQueueData();
       if (eventResponse && eventResponse.length) {
         const [first] = eventResponse;
@@ -107,7 +116,7 @@ const Dashboard = () => {
     };
 
     runQueue();
-  }, [dispatch, eventData, falseQueue]);
+  }, [actionStore.callApi, dispatch, eventData, falseQueue, logout]);
 
 
   /**
@@ -145,6 +154,15 @@ const Dashboard = () => {
 
       const isFirst = item?.index === 0;
       const filtered = eventData.filter((_, i) => item?.index !== i);
+      if (!actionStore.callApi) {
+        setEventData(filtered);
+        if (eventData.length === 1) {
+          logout()
+        }
+        return;
+      }
+
+
       const reordered = isFirst ? [null, ...filtered] : [...filtered, null];
       setEventData(reordered);
       // setEventData(eventData.splice(item.index, 1, event));
@@ -183,7 +201,7 @@ const Dashboard = () => {
       isSuspiciousProcessing.current = false;
     };
     runQueue();
-  }, [dispatch, eventData, suspiciousQueue]);
+  }, [actionStore.callApi, dispatch, eventData, logout, suspiciousQueue]);
 
 
   /**
@@ -197,6 +215,8 @@ const Dashboard = () => {
     const fetchEvents = async () => {
       if (!isMounted || isFetching) return;
       if (eventData.length >= 2) return;
+      if (!actionStore.callApi) return;
+
 
       isFetching = true;
       dispatch(setLoader(true))
@@ -237,7 +257,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchTags = async () => {
       const tags = await getActionTagCategories();
-      if(tags?.statusCode === 200) {
+      if (tags?.statusCode === 200) {
         setStorage("actionTags", tags);
         dispatch(saveAction(tags));
       }
@@ -256,7 +276,7 @@ const Dashboard = () => {
   const isHandlingRef = useRef(false);
   const queueRef = useRef([]);
   useEffect(() => {
-    if(session.queueName === 'timed-out') return;
+    if (session.queueName === 'timed-out') return;
     if (session?.userLevel !== 1 || eventData.length === 0) return;
 
     const processQueue = async () => {
@@ -288,7 +308,7 @@ const Dashboard = () => {
         notes: item?.notes ?? "",
       });
 
-      write2VmsDispatchQueue({...item,actionTag: 0,subActionTag: 0,queue_name: "timed-out",});
+      write2VmsDispatchQueue({ ...item, actionTag: 0, subActionTag: 0, queue_name: "timed-out", });
       consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: "", });
 
       const isFirst = index === 0;
@@ -341,11 +361,6 @@ const Dashboard = () => {
     };
   }, [dispatch, eventData, session?.UserId, session?.queueName, session?.userLevel]);
 
-  // const logout = useLogout(eventData)
-
-  // if(!actionStore.callApi && eventData.length === 0) {
-  //   logout()
-  // }
 
   return (
     <Fragment>

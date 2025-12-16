@@ -16,7 +16,6 @@ const Stream = ({ site, streamUrl,screenshot,currentCamera }) => {
   const [encoded, setEncoded] = useState("");
   const [hitStream, setHitStream] = useState(false);
 
-  /* ---------------- INIT ---------------- */
 
   useEffect(() => {
     const username = "admin";

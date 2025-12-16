@@ -1,12 +1,36 @@
 import './ProfileCard.css';
 import { useLogout } from '../../utilities/hooks/logout';
 import { getStorage } from '../../utilities/StorageService';
+import Swal from "sweetalert2";
+import { useDispatch } from 'react-redux';
+import { setCallApi } from '../../utilities/slices/actionTagSlice';
 
-const ProfileCard = ({eventData}) => {
+
+const ProfileCard = ({ eventData }) => {
     const user = getStorage('session');
-    const logout = useLogout(eventData);
-    
-    
+    const logout = useLogout();
+    const dispatch = useDispatch();
+
+    const handle = () => {
+        if (eventData.length !== 0) {
+            return Swal.fire({
+                title: "Warning!",
+                text: "Please clear events before logout",
+                icon: "warning",
+                showConfirmButton: true,
+                showCancelButton: true,
+                confirmButtonText: "Yes",
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    dispatch(setCallApi(false));
+                }
+            });
+        }
+
+        logout();
+    }
+
+
     return (
         <div className="profile-card">
             <img className="profile-pic" src='icons/user.svg' alt="User" />
@@ -21,7 +45,7 @@ const ProfileCard = ({eventData}) => {
 
             <div className="logout-section">
                 <span className="version">Version : V1.01</span>
-                <button className="logout-btn" onClick={logout} >Logout</button>
+                <button className="logout-btn" onClick={handle} >Logout</button>
             </div>
         </div>
     )
