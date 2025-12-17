@@ -71,7 +71,8 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
     );
     // setShowTags(true);
     closeEscalation();
-    closeBoundariesDialog();closeMaskDialog();
+    closeBoundariesDialog();
+    closeMaskDialog();
   };
 
   const openLiveDialog = () => {
@@ -110,6 +111,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
   const [audio, setAudio] = useState('');
 
   const handleAction = (data) => {
+   
     const session = getStorage("session");
     const customAction = getStorage("custom_action");
     const currentTime = getTimeByTimezone(currentEvent?.timezone);
