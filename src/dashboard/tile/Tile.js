@@ -71,6 +71,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
     );
     // setShowTags(true);
     closeEscalation();
+    closeBoundariesDialog();closeMaskDialog();
   };
 
   const openLiveDialog = () => {
@@ -117,6 +118,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
     if (customAction === 1) {
       setImgSrc(null);
       handleFalse({ ...currentEvent, index, actionTagTime: currentTime });
+      
     } else {
       if (session?.userLevel !== 1) {
         setShowEscalation(true);
@@ -475,7 +477,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
                       <td>
                         <strong>Notes</strong>
                       </td>
-                      <td>{notes}</td>
+                      <td>{notes || "None"}</td>
                     </tr>
                     {/* <tr>
                                                 <td><strong>History</strong></td>
