@@ -251,7 +251,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
     ?.map((item) => (item?.userName ? item?.userName : "Dummy"))
     .join(" - ");
   const notes = currentEvent?.userLevelAlarmInfo
-    ?.map((item) => item.notes)
+    ?.map((item) => item.notes || 'None')
     .join(" - ");
 
   return (
