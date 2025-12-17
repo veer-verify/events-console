@@ -18,4 +18,12 @@ export const environment = {
     // common_url: `${prod}:8844/metadata`,
     // guard_monitoring_url: `${prod}:5553/guard_monitoring`,
     // events_url: `https://prodmq.ivisecurity.com/queueManagement`,
+
+
+    //  login_url: `${prod}/userDetails_test`,
+    // site_url: `${prod}/vipsites_test`,
+    // common_url: `${prod}/metadata`,
+    // guard_monitoring_url: `${prod}/guard_monitoring_test`,
+    // events_url: `https://prodmq.ivisecurity.com/queueManagement`,
+    // event_process_url: `${prod}/events_data_test`,
 };

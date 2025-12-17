@@ -27,6 +27,7 @@ const Stream = ({ site, streamUrl,screenshot,currentCamera }) => {
   useEffect(() => {
     const requestICEServers = () => {
       setShowLoader(true);
+      setError(null);
   
       fetch(streamUrl + "whep", {
         method: "OPTIONS",
@@ -55,7 +56,9 @@ const Stream = ({ site, streamUrl,screenshot,currentCamera }) => {
         .catch((err) => {
           setShowLoader(false);
           setHitStream(false)
+       
           setError(err);
+       
           onError(err.toString());
         });
     };
@@ -115,7 +118,7 @@ const Stream = ({ site, streamUrl,screenshot,currentCamera }) => {
     const onConnectionState = () => {
       const pc = peerConnectionRef.current;
       if (!pc || restartTimeoutRef.current) return;
-  
+   
       if (pc.iceConnectionState === "disconnected") {
         onError();
       }
@@ -124,6 +127,7 @@ const Stream = ({ site, streamUrl,screenshot,currentCamera }) => {
     const onTrack = (evt) => {
       if (videoRef.current) {
         videoRef.current.srcObject = evt.streams[0];
+          
       }
     };
   
@@ -334,3 +338,10 @@ const Stream = ({ site, streamUrl,screenshot,currentCamera }) => {
 };
 
 export default Stream;
+
+
+
+
+
+
+
