@@ -57,7 +57,7 @@ const Stream = ({ site, streamUrl,screenshot,currentCamera }) => {
           setShowLoader(false);
           setHitStream(false)
        
-          setError(err);
+          // setError(err);
        
           onError(err.toString());
         });

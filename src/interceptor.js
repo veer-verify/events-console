@@ -56,8 +56,8 @@ api.interceptors.response.use((response) => response, async (error) => {
 
       try {
         const tempSession = getStorage("session");
-        // if (!tempSession) throw new Error("No user data found");
-        if (!tempSession) return console.log("No user data found");
+        if (!tempSession) throw new Error("No user data found");
+        // if (!tempSession) return console.log("No user data found");
         const response = await getAccessforRefreshToken();
 
         // Extract new token safely
