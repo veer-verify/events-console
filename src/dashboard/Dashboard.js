@@ -66,7 +66,7 @@ const Dashboard = () => {
           notes: item.notes ?? ''
         }
       );
-      updateEventFullDetails({ ...item, actionTag: customAction, subActionTag: subAction?.subCategoryId });
+       updateEventFullDetails({ ...item, actionTag: customAction, subActionTag: subAction?.subCategoryId });
       consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: '' });
 
       const isFirst = item?.index === 0;
