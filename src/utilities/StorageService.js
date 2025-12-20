@@ -80,8 +80,8 @@ export const timeFormat = (monitoringData) => {
     const dayStr =
       days.length > 1
         ? `${days[0][0].toUpperCase()}${days[0].slice(1)}-${days[
-            days.length - 1
-          ][0].toUpperCase()}${days[days.length - 1].slice(1)}`
+          days.length - 1
+        ][0].toUpperCase()}${days[days.length - 1].slice(1)}`
         : `${days[0][0].toUpperCase()}${days[0].slice(1)}`;
     return (
       <span key={index}>
@@ -95,7 +95,7 @@ export const timeFormat = (monitoringData) => {
 export const isValid = (data) => {
   if (!data) return;
   const landing = new Date(data.landingTime);
-  const landingPlus10 = landing.setSeconds(landing.getSeconds() + 10);
+  const landingPlus10 = landing.setSeconds(landing.getSeconds() + 5);
   return (
     moment(new Date(landingPlus10))?.format("YYYY-MM-DD HH:mm:ss") >
     moment().tz(data.timezone)?.format("YYYY-MM-DD HH:mm:ss")
@@ -135,12 +135,12 @@ export const getRole = () => {
   return session?.userLevel === 1
     ? "screener"
     : session?.userLevel === 2
-    ? ""
-    : session?.userLevel === 3
-    ? ""
-    : session?.userLevel === 4
-    ? ""
-    : "";
+      ? ""
+      : session?.userLevel === 3
+        ? ""
+        : session?.userLevel === 4
+          ? ""
+          : "";
 };
 
 const timeZoneCountryList = [
@@ -176,6 +176,6 @@ export const getZone = (timezone) => {
   })
     .formatToParts(date)
     .find((part) => part.type === "timeZoneName")?.value;
-    return tz;
+  return tz;
 
 };

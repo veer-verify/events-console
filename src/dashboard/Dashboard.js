@@ -66,7 +66,7 @@ const Dashboard = () => {
           notes: item.notes ?? ''
         }
       );
-       updateEventFullDetails({ ...item, actionTag: customAction, subActionTag: subAction?.subCategoryId });
+      updateEventFullDetails({ ...item, actionTag: customAction, subActionTag: subAction?.subCategoryId });
       consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: '' });
 
       const isFirst = item?.index === 0;
@@ -211,7 +211,7 @@ const Dashboard = () => {
     let isMounted = true;
     let timerId = null;
     let isFetching = false; // prevent overlap
-    
+
     const fetchEvents = async () => {
       if (!isMounted || isFetching) return;
       if (eventData.length >= 2) return;
@@ -317,15 +317,15 @@ const Dashboard = () => {
       const filtered = eventData.filter((_, i) => index !== i);
 
       if (!actionStore.callApi) {
-  setEventData(filtered);
-  if (eventData.length === 1) {
-    logout()
-  }
-  return;
-}
+        setEventData(filtered);
+        if (eventData.length === 1) {
+          logout()
+        }
+        return;
+      }
       const reordered = isFirst ? [null, ...filtered] : [...filtered, null];
       setEventData(reordered);
-      
+
       dispatch(setLoader(true))
 
 
@@ -372,7 +372,7 @@ const Dashboard = () => {
     return () => {
       clearInterval(interval);
     };
-  }, [actionStore.callApi,dispatch, eventData, session?.UserId, session?.queueName, session?.userLevel]);
+  }, [actionStore.callApi, dispatch, eventData, logout, session?.UserId, session.queueName, session?.userLevel]);
 
 
   return (

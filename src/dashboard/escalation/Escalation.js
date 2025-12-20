@@ -48,7 +48,7 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
     }
     if (session?.userLevel === 2) {
       eventsGenericEmail(
-        { ...currentEvent, actionTag: emaildata?.alertTagId, alertTypeId: selectedAlertType, alertSubTypeId: selectedSubType, objectName: selection, ...emaildata }
+        { ...currentEvent, actionTag: emaildata?.alertTag, alertTypeId: selectedAlertType, alertSubTypeId: selectedSubType, objectName: selection, ...emaildata }
       );
     }
     closeEscalation();
@@ -77,8 +77,8 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
   }, [currentEvent]);
 
   const check = () => {
-    if(session.userLevel === 2) {
-      if(emaildata) return true
+    if (session.userLevel === 2) {
+      if (emaildata) return true
     } else {
       return true;
     }
@@ -97,11 +97,11 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
             {/* Person / Vehicle radio buttons */}
             <div className="radio-group">
               <label>
-                <input type="radio" name="selection" checked={selection === "person"} onChange={() => {setSelection("person"); clearFields()}} />
+                <input type="radio" name="selection" checked={selection === "person"} onChange={() => { setSelection("person"); clearFields() }} />
                 Person
               </label>
               <label>
-                <input type="radio" name="selection" checked={selection === "vehicle"} onChange={() => {setSelection("vehicle"); clearFields()}} />
+                <input type="radio" name="selection" checked={selection === "vehicle"} onChange={() => { setSelection("vehicle"); clearFields() }} />
                 Vehicle
               </label>
             </div>
@@ -162,7 +162,7 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
         </div>
 
         {/* Action Buttons */}
-        { check() &&
+        {check() &&
           <div className="button-group">
             <button className="btn-secondary" onClick={() => handle('complete')}>COMPLETE</button>
             {monitoringData && monitoringData.nextQueueName && <button className="btn-primary" onClick={() => handle('escalate')}>ESCALATE</button>}
@@ -183,7 +183,7 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
 
                 </div>
 
-                 <div className="preview-card">
+                <div className="preview-card">
                   <div className="alert-header">
                     <span>
                       {emaildata?.emailSubject}
@@ -193,7 +193,7 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
 
                 <table>
                   <tbody>
-                     <tr>
+                    <tr>
                       <td><strong>To</strong></td>
                       <td>{emaildata?.recipientEmails?.join(', ')}</td>
                     </tr>
@@ -206,14 +206,14 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
                       <td>{emaildata?.BCC?.join(', ')}</td>
                     </tr>
 
-                                        <tr>
+                    <tr>
                       <td><strong>Body</strong></td>
                       <td>{emaildata?.emailBody}</td>
                     </tr>
                   </tbody>
                 </table>
 
-               
+
 
                 {/* <p className="alert-message">
                   {emaildata?.emailBody}
@@ -243,7 +243,7 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
                       <td><strong>Action Tag</strong></td>
                       <td>{emaildata?.alertTag}</td>
                     </tr> */}
-                   
+
                     <tr>
                       <td><strong>Location</strong></td>
                       <td>{emaildata?.emailFields?.LOCATION}</td>
