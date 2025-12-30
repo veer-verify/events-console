@@ -200,6 +200,7 @@ export const getMonitoringInfo = async (payload) => {
   const params = new URLSearchParams();
   params.append('siteId', payload?.siteId);
   params.append('cameraId', payload?.cameraId);
+  params.append('timezone', payload?.timezone);
   params.append('level', user?.userLevel);
   return api.get(url, { params: params }).then((res) => res?.data.statusCode === 200 ? res.data : null).catch((err) => console.log(err));
 }
@@ -321,12 +322,12 @@ export const manageUserSession = async (type) => {
 
 
 
-export const getImagesForCameraId=async(payload)=>{
-const url = `${environment.site_url}/getCameraImagesForCameraId_1_0`;
-    return api
-        .get(url, { params: { cameraId: payload?.cameraId } })
-        .then((res) => res.data)
-        .catch((err) => console.log(err));
+export const getImagesForCameraId = async (payload) => {
+  const url = `${environment.site_url}/getCameraImagesForCameraId_1_0`;
+  return api
+    .get(url, { params: { cameraId: payload?.cameraId } })
+    .then((res) => res.data)
+    .catch((err) => console.log(err));
 }
 
 
@@ -345,10 +346,10 @@ export async function loadImageWithAuth(url) {
 }
 
 
-export async function audioDisable(payload){
+export async function audioDisable(payload) {
   const url = `${environment.guard_monitoring_url}/checkCameraAudio_1_0`;
-    return api
-        .get(url, { params: { cameraId: payload?.cameraId,siteId:payload?.siteId } })
-        .then((res) => res.data)
-        .catch((err) => console.log(err));
+  return api
+    .get(url, { params: { cameraId: payload?.cameraId, siteId: payload?.siteId } })
+    .then((res) => res.data)
+    .catch((err) => console.log(err));
 }

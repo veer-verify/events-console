@@ -4,7 +4,7 @@ import Header from '../header/Header';
 import Tile from './tile/Tile';
 import { clearStorage, getSession, getStorage, getTimeByTimezone, setStorage } from '../utilities/StorageService';
 import { aliveUser, consumeConsoleEvents, getActionTagCategories, getMonitoringInfo, getVmsEventsQueueData, manageUserSession, updateEventFullDetails, write2VmsDispatchQueue, writetoRedisQueueData } from '../utilities/ApiService';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 import { saveAction } from '../../src/utilities/slices/actionTagSlice';
 import { setLoader } from '../utilities/slices/loaderSlice';
 import { useLogout } from '../utilities/hooks/logout';
@@ -15,7 +15,7 @@ const Dashboard = () => {
   const { sessionStore, actionStore } = useSelector((state) => ({
     sessionStore: state.sessionStore,
     actionStore: state.actionStore,
-  }));
+  }), shallowEqual);
 
   const session = getStorage('session');
   const tempAction = getStorage('actionTags');

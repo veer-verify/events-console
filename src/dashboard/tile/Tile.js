@@ -20,7 +20,7 @@ import {
   loadImageWithAuth,
   audioDisable
 } from "../../utilities/ApiService";
-import { useSelector } from "react-redux";
+import { useSelector, shallowEqual } from "react-redux";
 import ErrorInfo from "../../utilities/error-info/ErrorInfo";
 
 const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
@@ -34,7 +34,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
     sessionStore: state.sessionStore,
     actionStore: state.actionStore,
     loaderStore: state.loaderStore,
-  }));
+  }), shallowEqual);
 
   if (!sessionStore.data) {
     setStorage("session", session);
@@ -111,7 +111,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
   const [audio, setAudio] = useState('');
 
   const handleAction = (data) => {
-   
+
     const session = getStorage("session");
     const customAction = getStorage("custom_action");
     const currentTime = getTimeByTimezone(currentEvent?.timezone);
@@ -120,7 +120,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
     if (customAction === 1) {
       setImgSrc(null);
       handleFalse({ ...currentEvent, index, actionTagTime: currentTime });
-      
+
     } else {
       if (session?.userLevel !== 1) {
         setShowEscalation(true);
