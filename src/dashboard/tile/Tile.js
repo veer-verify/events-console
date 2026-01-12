@@ -1,5 +1,5 @@
 import "./Tile.css";
-import { useState, useRef, useEffect, Fragment, forwardRef } from "react";
+import { useState, useRef, useEffect, Fragment, forwardRef, memo } from "react";
 import Escalation from "../escalation/Escalation";
 import Live from "../../utilities/live/Live";
 import Stream from "../../utilities/stream/Stream";
@@ -120,7 +120,6 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
     if (customAction === 1) {
       setImgSrc(null);
       handleFalse({ ...currentEvent, index, actionTagTime: currentTime });
-
     } else {
       if (session?.userLevel !== 1) {
         setShowEscalation(true);
@@ -545,7 +544,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
   );
 };
 
-export default Tile;
+export default memo(Tile);
 
 // =============================
 // Monitoring Info Component
@@ -715,9 +714,6 @@ export const BoundariesDialog = forwardRef(
     );
   }
 );
-
-
-
 
 
 export const MaskDialog = forwardRef(

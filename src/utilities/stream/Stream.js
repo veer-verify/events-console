@@ -1,7 +1,7 @@
 import './Stream.css';
-import React, { useEffect, useRef, useState } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 
-const Stream = ({ site, streamUrl,screenshot,currentCamera }) => {
+const Stream = ({ site, streamUrl, screenshot, currentCamera }) => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
@@ -11,7 +11,7 @@ const Stream = ({ site, streamUrl,screenshot,currentCamera }) => {
   const queuedCandidatesRef = useRef([]);
   const offerDataRef = useRef(null);
   const [error, setError] = useState(null);
- const [showOverlay, setShowOverlay] = useState(false);
+  const [showOverlay, setShowOverlay] = useState(false);
   const [showLoader, setShowLoader] = useState(false);
   const [encoded, setEncoded] = useState("");
   const [hitStream, setHitStream] = useState(false);
@@ -28,7 +28,7 @@ const Stream = ({ site, streamUrl,screenshot,currentCamera }) => {
     const requestICEServers = () => {
       setShowLoader(true);
       setError(null);
-  
+
       fetch(streamUrl + "whep", {
         method: "OPTIONS",
         headers: {
@@ -37,28 +37,28 @@ const Stream = ({ site, streamUrl,screenshot,currentCamera }) => {
       })
         .then((res) => {
           setShowLoader(false);
-  
+
           const pc = new RTCPeerConnection({
             iceServers: linkToIceServers(res.headers.get("Link")),
           });
-  
+
           peerConnectionRef.current = pc;
-  
+
           pc.addTransceiver("video", { direction: "sendrecv" });
           pc.addTransceiver("audio", { direction: "sendrecv" });
-  
+
           pc.onicecandidate = onLocalCandidate;
           pc.oniceconnectionstatechange = onConnectionState;
           pc.ontrack = onTrack;
-  
+
           createOffer();
         })
         .catch((err) => {
           setShowLoader(false);
           setHitStream(false)
-       
+
           // setError(err);
-       
+
           onError(err.toString());
         });
     };
@@ -66,12 +66,12 @@ const Stream = ({ site, streamUrl,screenshot,currentCamera }) => {
     const linkToIceServers = (links) => {
       const servers = [];
       if (!links) return servers;
-  
+
       links.split(", ").forEach((link) => {
         const m = link.match(
           /^<(.+?)>; rel="ice-server"(; username="(.*?)"; credential="(.*?)"; credential-type="password")?/i
         );
-  
+
         if (m) {
           const server = { urls: [m[1]] };
           if (m[3]) {
@@ -81,31 +81,31 @@ const Stream = ({ site, streamUrl,screenshot,currentCamera }) => {
           servers.push(server);
         }
       });
-  
+
       return servers;
     };
-  
+
     const onError = () => {
       if (restartTimeoutRef.current) return;
-  
+
       peerConnectionRef.current?.close();
-  
+
       restartTimeoutRef.current = setTimeout(() => {
         restartTimeoutRef.current = null;
         requestICEServers();
       }, 2000);
-  
+
       if (sessionUrlRef.current) {
         fetch(sessionUrlRef.current, { method: "DELETE" });
       }
-  
+
       sessionUrlRef.current = "";
       queuedCandidatesRef.current = [];
     };
-  
+
     const onLocalCandidate = (evt) => {
       if (restartTimeoutRef.current) return;
-  
+
       if (evt.candidate) {
         if (!sessionUrlRef.current) {
           queuedCandidatesRef.current.push(evt.candidate);
@@ -114,39 +114,39 @@ const Stream = ({ site, streamUrl,screenshot,currentCamera }) => {
         }
       }
     };
-  
+
     const onConnectionState = () => {
       const pc = peerConnectionRef.current;
       if (!pc || restartTimeoutRef.current) return;
-   
+
       if (pc.iceConnectionState === "disconnected") {
         onError();
       }
     };
-  
+
     const onTrack = (evt) => {
       if (videoRef.current) {
         videoRef.current.srcObject = evt.streams[0];
-          
+
       }
     };
-  
+
     const createOffer = async () => {
       try {
         setShowLoader(true);
         const pc = peerConnectionRef.current;
         const offer = await pc.createOffer();
-  
+
         editOffer(offer);
         offerDataRef.current = parseOffer(offer.sdp);
-  
+
         await pc.setLocalDescription(offer);
         sendOffer(offer);
       } catch {
         setShowLoader(false);
       }
     };
-  
+
     const editOffer = (offer) => {
       const sections = offer.sdp.split("m=");
       for (let i = 0; i < sections.length; i++) {
@@ -156,10 +156,10 @@ const Stream = ({ site, streamUrl,screenshot,currentCamera }) => {
       }
       offer.sdp = sections.join("m=");
     };
-  
+
     const parseOffer = (sdp) => {
       const data = { iceUfrag: "", icePwd: "", medias: [] };
-  
+
       sdp.split("\r\n").forEach((line) => {
         if (line.startsWith("m=")) data.medias.push(line.slice(2));
         else if (!data.iceUfrag && line.startsWith("a=ice-ufrag:"))
@@ -167,22 +167,22 @@ const Stream = ({ site, streamUrl,screenshot,currentCamera }) => {
         else if (!data.icePwd && line.startsWith("a=ice-pwd:"))
           data.icePwd = line.slice(10);
       });
-  
+
       return data;
     };
-  
+
     const enableStereoOpus = (section) => {
       let opus = "";
       const lines = section.split("\r\n");
-  
+
       lines.forEach((l) => {
         if (l.startsWith("a=rtpmap:") && l.toLowerCase().includes("opus/")) {
           opus = l.split(" ")[0].replace("a=rtpmap:", "");
         }
       });
-  
+
       if (!opus) return section;
-  
+
       return lines
         .map((l) => {
           if (l.startsWith(`a=fmtp:${opus}`)) {
@@ -193,7 +193,7 @@ const Stream = ({ site, streamUrl,screenshot,currentCamera }) => {
         })
         .join("\r\n");
     };
-  
+
     const sendOffer = (offer) => {
       fetch(streamUrl + "whep", {
         method: "POST",
@@ -215,19 +215,19 @@ const Stream = ({ site, streamUrl,screenshot,currentCamera }) => {
         .catch(onError)
         .finally(() => setShowLoader(false));
     };
-  
+
     const onRemoteAnswer = (sdp) => {
       const pc = peerConnectionRef.current;
       if (!pc || pc.signalingState === "closed") return;
-  
+
       pc.setRemoteDescription({ type: "answer", sdp });
-  
+
       if (queuedCandidatesRef.current.length) {
         sendLocalCandidates(queuedCandidatesRef.current);
         queuedCandidatesRef.current = [];
       }
     };
-  
+
     const sendLocalCandidates = (candidates) => {
       fetch(sessionUrlRef.current, {
         method: "PATCH",
@@ -238,17 +238,17 @@ const Stream = ({ site, streamUrl,screenshot,currentCamera }) => {
         body: generateSdpFragment(offerDataRef.current, candidates),
       }).catch(onError);
     };
-  
+
     const generateSdpFragment = (od, candidates) => {
       const byMid = {};
-  
+
       candidates.forEach((c) => {
         byMid[c.sdpMLineIndex] ||= [];
         byMid[c.sdpMLineIndex].push(c);
       });
-  
+
       let frag = `a=ice-ufrag:${od.iceUfrag}\r\na=ice-pwd:${od.icePwd}\r\n`;
-  
+
       od.medias.forEach((m, i) => {
         if (byMid[i]) {
           frag += `m=${m}\r\na=mid:${i}\r\n`;
@@ -257,7 +257,7 @@ const Stream = ({ site, streamUrl,screenshot,currentCamera }) => {
           });
         }
       });
-  
+
       return frag;
     };
 
@@ -302,8 +302,8 @@ const Stream = ({ site, streamUrl,screenshot,currentCamera }) => {
     const el = e.target.parentNode;
     el.classList.toggle('fullscreen');
   }
-  
-     return (
+
+  return (
     <div
       className="minscreen"
       onMouseEnter={() => setShowOverlay(true)}
@@ -311,7 +311,7 @@ const Stream = ({ site, streamUrl,screenshot,currentCamera }) => {
       onDoubleClick={(e) => screenshot && max(e)}
     >
       <video ref={videoRef} autoPlay playsInline muted controls={false} />
-      
+
       {
         showLoader && <div className="loader"></div>
       }
@@ -334,10 +334,10 @@ const Stream = ({ site, streamUrl,screenshot,currentCamera }) => {
       }
     </div>
   );
-  
+
 };
 
-export default Stream;
+export default memo(Stream);
 
 
 

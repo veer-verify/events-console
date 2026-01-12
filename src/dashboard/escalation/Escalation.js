@@ -19,8 +19,6 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
   const [selection, setSelection] = useState("person");
   const [emaildata, setEmailData] = useState(null);
   const [notes, setNotes] = useState('');
-  //  const [selectedButton, setSelectedButton] = useState("mail");
-  //  const selectButton = (button) => setSelectedButton(button);
 
 
   const fetchEmailData = async (val) => {
@@ -42,9 +40,9 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
   const handle = (type) => {
     const currentTime = getTimeByTimezone(currentEvent?.timezone);
     if (type === 'escalate') {
-      handleSuspicious({ ...currentEvent, index, actionTagTime: currentTime, ...monitoringData, notes });
+      handleSuspicious({ ...currentEvent, index, actionTagTime: currentTime, alertTypeId: selectedAlertType, alertSubTypeId: selectedSubType, ...monitoringData, notes });
     } else {
-      handleFalse({ ...currentEvent, index, actionTagTime: currentTime, notes });
+      handleFalse({ ...currentEvent, alertTypeId: selectedAlertType, alertSubTypeId: selectedSubType, index, actionTagTime: currentTime, notes });
     }
     if (session?.userLevel === 2) {
       eventsGenericEmail(
@@ -179,8 +177,6 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
               <Fragment>
                 <div className="flex-group">
                   <p className="section-title">PREVIEW</p>
-
-
                 </div>
 
                 <div className="preview-card">

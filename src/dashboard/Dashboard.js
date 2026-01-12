@@ -9,6 +9,7 @@ import { saveAction } from '../../src/utilities/slices/actionTagSlice';
 import { setLoader } from '../utilities/slices/loaderSlice';
 import { useLogout } from '../utilities/hooks/logout';
 import { useNavigate } from 'react-router-dom';
+import { MyContext } from '..';
 
 const Dashboard = () => {
   const dispatch = useDispatch();
@@ -29,11 +30,13 @@ const Dashboard = () => {
     setStorage('actionTags', actionStore.data)
   }
 
+  // const contexData = useContext(MyContext);
+  // console.log(contexData)
+
   // const EventContext = createContext();
   const [eventData, setEventData] = useState([]);
   const logout = useLogout();
   // const navigate = useNavigate("");
-
 
 
   /**
@@ -63,6 +66,8 @@ const Dashboard = () => {
           reviewEnd: getTimeByTimezone(item?.timezone),
           actionTag: customAction,
           subActionTag: subAction?.subCategoryId,
+          alertTag: parseInt(item?.alertTypeId),
+          subAlertTag: parseInt(item?.alertSubTypeId),
           notes: item.notes ?? ''
         }
       );
@@ -146,6 +151,8 @@ const Dashboard = () => {
           reviewEnd: getTimeByTimezone(item?.timezone),
           actionTag: customAction,
           subActionTag: subAction?.subCategoryId,
+          alertTag: parseInt(item?.alertTypeId),
+          subAlertTag: parseInt(item?.alertSubTypeId),
           notes: item.notes ?? ''
         }
       );
@@ -217,8 +224,6 @@ const Dashboard = () => {
       if (eventData.length >= 2) return;
       if (!actionStore.callApi) return;
 
-
-
       isFetching = true;
       dispatch(setLoader(true))
       const response = await getVmsEventsQueueData();
@@ -247,7 +252,6 @@ const Dashboard = () => {
     };
 
     fetchEvents();
-
     return () => {
       isMounted = false;
       clearTimeout(timerId);
@@ -277,7 +281,6 @@ const Dashboard = () => {
   const isHandlingRef = useRef(false);
   const queueRef = useRef([]);
   useEffect(() => {
-
     if (session.queueName === 'timed-out') return;
     if (session?.userLevel !== 1 || eventData.length === 0) return;
 
@@ -327,7 +330,6 @@ const Dashboard = () => {
       setEventData(reordered);
 
       dispatch(setLoader(true))
-
 
       const eventResponse = await getVmsEventsQueueData();
       if (eventResponse && eventResponse.length) {
@@ -387,7 +389,6 @@ const Dashboard = () => {
               key={i}
               index={i}
               currentEvent={item}
-
               handleFalse={falseHandler}
               handleSuspicious={suspiciousHandler}
             />

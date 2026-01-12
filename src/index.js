@@ -1,4 +1,4 @@
-import React from 'react';
+import { StrictMode, createContext } from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
@@ -11,13 +11,15 @@ import SignIn from './signin/SignIn';
 import Dashboard from './dashboard/Dashboard';
 
 
-
+export const MyContext = createContext();
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   // <HashRouter future={{  : true, v7_relativeSplatPath: true }}>
   <Provider store={store}>
+    {/* <MyContext.Provider value={{ name: 'veer', age: 27 }}> */}
     <App />
+    {/* </MyContext.Provider> */}
   </Provider>
   // </HashRouter>
 );
