@@ -1,7 +1,6 @@
 import axios from "axios";
-import { Navigate } from 'react-router-dom';
 import { getAccessforRefreshToken } from "./utilities/ApiService";
-import { clearStorage, getStorage, setStorage, show_loader } from "./utilities/StorageService";
+import { getStorage, setStorage } from "./utilities/StorageService";
 import { useLogout } from "./utilities/hooks/logout";
 
 
@@ -11,6 +10,7 @@ const api = axios.create();
 // Refresh control flags
 let isRefreshing = false;
 let failedQueue = [];
+const Logout = () => useLogout();
 
 // Helper to resolve/reject queued requests
 const processQueue = (error, token = null) => {
@@ -83,15 +83,16 @@ api.interceptors.response.use((response) => response, async (error) => {
       isRefreshing = false;
 
       // Optional logout if refresh fails
-      // logout();
-      clearStorage();
-      window.location.href = "/events-console";
-      // <Navigate to="/" replace />
+      // clearStorage();
+      // window.location.href = "/events-console";
+      Logout();
       return Promise.reject(err);
     }
   }
   return Promise.reject(error);
 }
 );
+
+
 
 export default api;
