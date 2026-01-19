@@ -190,7 +190,18 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
     document.removeEventListener("mouseup", handleMouseUp);
   };
 
+  const iRef = useRef(1);
+  const dirRef = useRef(1);
+  const lastRef = useRef(0);
   useEffect(() => {
+    // currentEvent.image_list = [
+    //   'images/background.png',
+    //   'images/camera.png',
+    //   'images/hide.svg',
+    //   'images/verifai-logo.png',
+    //   'images/camera.png',
+    //   'images/hide.svg',
+    // ]
     const handleClickOutside = (event) => {
       if (
         showTags &&
@@ -205,22 +216,20 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
       window.addEventListener("mousedown", handleClickOutside);
     }
 
-    if (!currentEvent?.image_list || currentEvent?.image_list.length === "")
-      return;
+    if (!currentEvent?.image_list || currentEvent?.image_list.length === 0) return;
     // if (currentEvent?.objectName === 'DUMMY') return setImgSrc(currentEvent?.image_list[0]);
 
-    let i = 0;
     const interval = setInterval(() => {
-      setIndex(i);
+      setIndex(iRef.current);
       if (currentEvent?.objectName === "DUMMY") {
         setImgSrc(currentEvent?.image_list[1]);
       } else {
-        setImgSrc(currentEvent?.image_list[i]);
+        setImgSrc(currentEvent?.image_list[iRef.current]);
       }
-      if (i === 5) {
-        i = 0;
+      if (iRef.current === 5) {
+        iRef.current = 0;
       } else {
-        i += 1;
+        iRef.current += 1;
       }
     }, 1000);
 
@@ -268,7 +277,17 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
                     : "camera-feeds"
               }
             >
-              <div className="camera">
+              <div className="camera" onMouseMove={() => {
+                const now = Date.now();
+                if (now - lastRef.current < 300) return;
+
+                lastRef.current = now;
+                if (iRef.current === 5) dirRef.current = -1;
+                if (iRef.current === 1) dirRef.current = 1;
+                iRef.current += dirRef.current;
+
+                setImgSrc(currentEvent?.image_list[iRef.current]);
+              }}>
                 {imgSrc && (
                   <img
                     src={imgSrc}
@@ -278,9 +297,9 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
                 )}
               </div>
               <div className="camera">
-                {currentEvent?.httpUrl && (
+                {/* {currentEvent?.httpUrl && (
                   <Stream key={index} streamUrl={`${currentEvent?.httpUrl}/`} />
-                )}
+                )} */}
               </div>
             </div>
 
