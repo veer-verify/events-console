@@ -23,7 +23,8 @@ import {
 import { useSelector, shallowEqual } from "react-redux";
 import ErrorInfo from "../../utilities/error-info/ErrorInfo";
 
-const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
+const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => {
+  // console.log(count)
   // console.log(currentEvent)
   const monitoringData = currentEvent?.monitoringInfo;
   const session = getStorage("session");
@@ -455,7 +456,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
               )}
             </div>
 
-            {monitoringData && (
+            {monitoringData && count === 2 && (
               <div className="monitoring">
                 <p className="monitoring-title">MONITORING INFO</p>
                 <table>
@@ -507,6 +508,7 @@ const Tile = ({ currentEvent, index, handleFalse, handleSuspicious }) => {
                 </table>
               </div>
             )}
+
             {showBoundaries && (
               <BoundariesDialog
                 showBoundaries={showBoundaries}

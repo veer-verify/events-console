@@ -8,7 +8,7 @@ import { saveSession } from '../utilities/slices/sessionSlice';
 import { login, manageUserSession } from '../utilities/ApiService';
 import Swal from 'sweetalert2'
 import { setMainLoader } from '../utilities/slices/loaderSlice';
-import { setCallApi } from '../utilities/slices/actionTagSlice';
+import { handleApiForConfig, handleApiForLogout } from '../utilities/slices/actionTagSlice';
 
 const SignIn = () => {
   const navigate = useNavigate('');
@@ -42,7 +42,8 @@ const SignIn = () => {
         dispatch(saveSession({ ...temp, sessionId: activeSession?.sessionId }));
 
         if (loginData.userLevel) {
-          dispatch(setCallApi(true));
+          dispatch(handleApiForLogout(true));
+          dispatch(handleApiForConfig(false));
           navigate('/dashboard');
         } else {
           Swal.fire({
@@ -86,8 +87,8 @@ const SignIn = () => {
           <div className="form-group">
             <label>Password</label>
             <input className='pass' type={showPassword ? 'text' : 'password'} placeholder="Password here" onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleSignIn()
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSignIn()
               }} />
             {/* <img className='togglepass' src={showPassword ?  'images/show.svg' : 'images/hide.svg' } onClick={togglePassword}/> */}
             {/* <div>

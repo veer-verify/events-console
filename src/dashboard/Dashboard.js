@@ -3,11 +3,12 @@ import { createContext, Fragment, useContext, useEffect, useRef, useState, useCa
 import Header from '../header/Header';
 import Tile from './tile/Tile';
 import { clearStorage, getSession, getStorage, getTimeByTimezone, setStorage } from '../utilities/StorageService';
-import { aliveUser, consumeConsoleEvents, getActionTagCategories, getMonitoringInfo, getVmsEventsQueueData, manageUserSession, updateEventFullDetails, write2VmsDispatchQueue, writetoRedisQueueData } from '../utilities/ApiService';
+import { aliveUser, consumeConsoleEvents, getActionTagCategories, getMonitoringInfo, getVmsEventsQueueData, updateEventFullDetails, write2VmsDispatchQueue, writetoRedisQueueData } from '../utilities/ApiService';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux';
-import { saveAction } from '../../src/utilities/slices/actionTagSlice';
+import { saveAction, handleApiForLogout, handleApiForConfig } from '../../src/utilities/slices/actionTagSlice';
 import { setLoader } from '../utilities/slices/loaderSlice';
 import { useLogout } from '../utilities/hooks/logout';
+import Swal from "sweetalert2";
 import { useNavigate } from 'react-router-dom';
 import { MyContext } from '..';
 
@@ -35,6 +36,8 @@ const Dashboard = () => {
 
   // const EventContext = createContext();
   const [eventData, setEventData] = useState([]);
+  const [config, setConfig] = useState(false);
+  const [count, setCount] = useState(2);
   const logout = useLogout();
   // const navigate = useNavigate("");
 
@@ -42,173 +45,155 @@ const Dashboard = () => {
   /**
    * to handle false activity
    */
-  const [falseQueue, setFalseQueue] = useState([]);
-  const isFalseProcessing = useRef(false);
+  const handleFalse = async (item) => {
+    const subAction = getStorage('sub_action');
+    const customAction = getStorage('custom_action');
 
-  const falseHandler = useCallback((item) => {
-    setFalseQueue(prev => [...prev, item]);
-  }, []);
-
-  useEffect(() => {
-    const handleFalse = async (item) => {
-      const subAction = getStorage('sub_action');
-      const customAction = getStorage('custom_action');
-
-      item?.userLevelAlarmInfo?.push(
-        {
-          level: getSession()?.userLevel,
-          user: getSession()?.UserId,
-          userName: getSession()?.UserName,
-          alarm: item.audioPlayed ? 'P' : 'N',
-          activityDetTime: item.activityDetTime ?? '',
-          landingTime: item?.landingTime ?? '',
-          reviewStart: item?.landingTime ?? '',
-          reviewEnd: getTimeByTimezone(item?.timezone),
-          actionTag: customAction,
-          subActionTag: subAction?.subCategoryId,
-          alertTag: parseInt(item?.alertTypeId),
-          subAlertTag: parseInt(item?.alertSubTypeId),
-          notes: item.notes ?? ''
-        }
-      );
-      updateEventFullDetails({ ...item, actionTag: customAction, subActionTag: subAction?.subCategoryId });
-      consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: '' });
-
-      const isFirst = item?.index === 0;
-      const filtered = eventData.filter((_, i) => item?.index !== i);
-      if (!actionStore.callApi) {
-        setEventData(filtered);
-        if (eventData.length === 1) {
-          logout()
-        }
-        return;
+    item?.userLevelAlarmInfo?.push(
+      {
+        level: getSession()?.userLevel,
+        user: getSession()?.UserId,
+        userName: getSession()?.UserName,
+        alarm: item.audioPlayed ? 'P' : 'N',
+        activityDetTime: item.activityDetTime ?? '',
+        landingTime: item?.landingTime ?? '',
+        reviewStart: item?.landingTime ?? '',
+        reviewEnd: getTimeByTimezone(item?.timezone),
+        actionTag: customAction,
+        subActionTag: subAction?.subCategoryId,
+        alertTag: parseInt(item?.alertTypeId),
+        subAlertTag: parseInt(item?.alertSubTypeId),
+        notes: item.notes ?? ''
       }
+    );
+    updateEventFullDetails({ ...item, actionTag: customAction, subActionTag: subAction?.subCategoryId });
+    consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: '' });
 
-
-      const reordered = isFirst ? [null, ...filtered] : [...filtered, null];
-      setEventData(reordered);
-      dispatch(setLoader(true));
-      const eventResponse = await getVmsEventsQueueData();
-      if (eventResponse && eventResponse.length) {
-        const [first] = eventResponse;
-        const monitoringInfo = await getMonitoringInfo(first);
-        const event = {
-          ...first,
-          monitoringInfo,
-          landingTime: getTimeByTimezone(first.timezone),
-          audioPlayed: false,
-          timer: 60,
-        };
-        writetoRedisQueueData(event);
-        const updated = isFirst ? [event, ...filtered] : [...filtered, event];
-        setEventData(updated);
-        dispatch(setLoader(false));
-      } else {
-        setEventData(filtered);
-        dispatch(setLoader(false));
+    const filtered = eventData.filter((_, i) => item?.index !== i);
+    if (!actionStore.callApi) {
+      setEventData(filtered);
+      if (eventData.length === 1) {
+        logout();
       }
-    };
+      return;
+    }
 
-    const runQueue = async () => {
-      if (isFalseProcessing.current) return;
-      if (falseQueue.length === 0) return;
-      isFalseProcessing.current = true;
-      const nextItem = falseQueue[0];
+    if (actionStore.isConfigOpened) {
+      setEventData(filtered);
+      if (eventData.length === 1) {
+        setConfig((prev) => prev = !prev);
+      }
+      return;
+    }
 
-      await handleFalse(nextItem);
-      setFalseQueue(prev => prev.slice(1));
-      isFalseProcessing.current = false;
-    };
 
-    runQueue();
-  }, [actionStore.callApi, dispatch, eventData, falseQueue, logout]);
+    setEventData(prev => {
+      const copy = [...prev];
+      copy[item.index] = null;
+      return copy;
+    });
+    dispatch(setLoader(true));
+    const eventResponse = await getVmsEventsQueueData();
+    if (eventResponse && eventResponse.length) {
+      const [first] = eventResponse;
+      const monitoringInfo = await getMonitoringInfo(first);
+      const event = {
+        ...first,
+        monitoringInfo,
+        landingTime: getTimeByTimezone(first.timezone),
+        audioPlayed: false,
+        timer: 60,
+      };
+      writetoRedisQueueData(event);
+      setEventData(prev => {
+        const copy = [...prev];
+        copy[item.index] = event;
+        return copy;
+      });
+      dispatch(setLoader(false));
+    } else {
+      setEventData(filtered);
+      dispatch(setLoader(false));
+    }
+  };
 
 
   /**
    * to handel suspicious activity
    */
-  const [suspiciousQueue, setSuspiciousQueue] = useState([]);
-  const isSuspiciousProcessing = useRef(false);
+  const handleSuspicious = async (item) => {
+    const customAction = getStorage('custom_action');
+    const subAction = getStorage('sub_action');
 
-  const suspiciousHandler = useCallback((item) => {
-    setSuspiciousQueue(prev => [...prev, item]);
-  }, []);
-
-  useEffect(() => {
-    const handleSuspicious = async (item) => {
-      const customAction = getStorage('custom_action');
-      const subAction = getStorage('sub_action');
-
-      item?.userLevelAlarmInfo?.push(
-        {
-          level: getSession()?.userLevel,
-          user: getSession()?.UserId,
-          userName: getSession()?.UserName,
-          alarm: item.audioPlayed ? 'P' : 'N',
-          activityDetTime: item.activityDetTime ?? '',
-          landingTime: item?.landingTime ?? '',
-          reviewStart: item?.landingTime ?? '',
-          reviewEnd: getTimeByTimezone(item?.timezone),
-          actionTag: customAction,
-          subActionTag: subAction?.subCategoryId,
-          alertTag: parseInt(item?.alertTypeId),
-          subAlertTag: parseInt(item?.alertSubTypeId),
-          notes: item.notes ?? ''
-        }
-      );
-      write2VmsDispatchQueue({ ...item, actionTag: customAction, subActionTag: subAction?.subCategoryId, queue_name: item?.nextQueueName });
-      consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: '' });
-
-      const isFirst = item?.index === 0;
-      const filtered = eventData.filter((_, i) => item?.index !== i);
-      if (!actionStore.callApi) {
-        setEventData(filtered);
-        if (eventData.length === 1) {
-          logout()
-        }
-        return;
+    item?.userLevelAlarmInfo?.push(
+      {
+        level: getSession()?.userLevel,
+        user: getSession()?.UserId,
+        userName: getSession()?.UserName,
+        alarm: item.audioPlayed ? 'P' : 'N',
+        activityDetTime: item.activityDetTime ?? '',
+        landingTime: item?.landingTime ?? '',
+        reviewStart: item?.landingTime ?? '',
+        reviewEnd: getTimeByTimezone(item?.timezone),
+        actionTag: customAction,
+        subActionTag: subAction?.subCategoryId,
+        alertTag: parseInt(item?.alertTypeId),
+        subAlertTag: parseInt(item?.alertSubTypeId),
+        notes: item.notes ?? ''
       }
+    );
+    write2VmsDispatchQueue({ ...item, actionTag: customAction, subActionTag: subAction?.subCategoryId, queue_name: item?.nextQueueName });
+    consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: '' });
 
-
-      const reordered = isFirst ? [null, ...filtered] : [...filtered, null];
-      setEventData(reordered);
-      // setEventData(eventData.splice(item.index, 1, event));
-      dispatch(setLoader(true));
-
-      const eventResponse = await getVmsEventsQueueData();
-      if (eventResponse.length) {
-        const [first] = eventResponse;
-        const monitoringInfo = await getMonitoringInfo(first);
-        const event = {
-          ...first,
-          monitoringInfo,
-          landingTime: getTimeByTimezone(first.timezone),
-          audioPlayed: false,
-          timer: 60,
-        };
-
-        writetoRedisQueueData(event);
-        const updated = isFirst ? [event, ...filtered] : [...filtered, event];
-        setEventData(updated);
-        dispatch(setLoader(false))
-      } else {
-        setEventData(filtered);
-        dispatch(setLoader(false))
+    const filtered = eventData.filter((_, i) => item?.index !== i);
+    if (!actionStore.callApi) {
+      setEventData(filtered);
+      if (eventData.length === 1) {
+        logout()
       }
+      return;
     }
 
-    const runQueue = async () => {
-      if (isSuspiciousProcessing.current) return;
-      if (suspiciousQueue.length === 0) return;
+    if (actionStore.isConfigOpened) {
+      setEventData(filtered);
+      if (eventData.length === 1) {
+        setConfig((prev) => prev = !prev);
+      }
+      return;
+    }
 
-      isSuspiciousProcessing.current = true;
-      const nextItem = suspiciousQueue[0];
-      await handleSuspicious(nextItem);
-      setSuspiciousQueue(prev => prev.slice(1));
-      isSuspiciousProcessing.current = false;
-    };
-    runQueue();
-  }, [actionStore.callApi, dispatch, eventData, logout, suspiciousQueue]);
+
+    setEventData(prev => {
+      const copy = [...prev];
+      copy[item.index] = null;
+      return copy;
+    });
+    dispatch(setLoader(true));
+
+    const eventResponse = await getVmsEventsQueueData();
+    if (eventResponse.length) {
+      const [first] = eventResponse;
+      const monitoringInfo = await getMonitoringInfo(first);
+      const event = {
+        ...first,
+        monitoringInfo,
+        landingTime: getTimeByTimezone(first.timezone),
+        audioPlayed: false,
+        timer: 60,
+      };
+
+      writetoRedisQueueData(event);
+      setEventData(prev => {
+        const copy = [...prev];
+        copy[item.index] = event;
+        return copy;
+      });
+      dispatch(setLoader(false))
+    } else {
+      setEventData(filtered);
+      dispatch(setLoader(false))
+    }
+  }
 
 
   /**
@@ -221,8 +206,9 @@ const Dashboard = () => {
 
     const fetchEvents = async () => {
       if (!isMounted || isFetching) return;
-      if (eventData.length >= 2) return;
+      if (eventData.length >= count) return;
       if (!actionStore.callApi) return;
+      if (actionStore.isConfigOpened) return;
 
       isFetching = true;
       dispatch(setLoader(true))
@@ -246,7 +232,7 @@ const Dashboard = () => {
       }
 
       isFetching = false;
-      if (isMounted && eventData.length < 2 && actionStore.callApi) {
+      if (isMounted && eventData.length < count && actionStore.callApi) {
         timerId = setTimeout(fetchEvents, 2000);
       }
     };
@@ -256,7 +242,7 @@ const Dashboard = () => {
       isMounted = false;
       clearTimeout(timerId);
     };
-  }, [eventData.length, dispatch, actionStore.callApi]);
+  }, [eventData.length, dispatch, actionStore.callApi, count, actionStore.isConfigOpened]);
 
 
   useEffect(() => {
@@ -284,19 +270,35 @@ const Dashboard = () => {
     if (session.queueName === 'timed-out') return;
     if (session?.userLevel !== 1 || eventData.length === 0) return;
 
+    // const processQueue = async () => {
+    //   if (isHandlingRef.current) return; // already processing
+    //   isHandlingRef.current = true;
+
+    //   while (queueRef.current.length > 0) {
+    //     const { item, index } = queueRef.current.shift();
+    //     await handle(item, index);
+    //   }
+
+    //   isHandlingRef.current = false;
+    // };
     const processQueue = async () => {
-      if (isHandlingRef.current) return; // already processing
+      if (isHandlingRef.current) return;
+
       isHandlingRef.current = true;
 
-      while (queueRef.current.length > 0) {
-        const { item, index } = queueRef.current.shift();
-        await handle(item, index);
+      try {
+        while (queueRef.current.length > 0) {
+          const { item, index } = queueRef.current.shift();
+          await handle(item, index);
+        }
+      } finally {
+        isHandlingRef.current = false;
+
+        if (queueRef.current.length > 0) {
+          processQueue();
+        }
       }
-
-      isHandlingRef.current = false;
     };
-
-
 
     const handle = async (item, index) => {
       item?.userLevelAlarmInfo?.push({
@@ -316,9 +318,7 @@ const Dashboard = () => {
       write2VmsDispatchQueue({ ...item, actionTag: 0, subActionTag: 0, queue_name: "timed-out", });
       consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: "", });
 
-      const isFirst = index === 0;
       const filtered = eventData.filter((_, i) => index !== i);
-
       if (!actionStore.callApi) {
         setEventData(filtered);
         if (eventData.length === 1) {
@@ -326,10 +326,13 @@ const Dashboard = () => {
         }
         return;
       }
-      const reordered = isFirst ? [null, ...filtered] : [...filtered, null];
-      setEventData(reordered);
 
-      dispatch(setLoader(true))
+      setEventData(prev => {
+        const copy = [...prev];
+        copy[index] = null;
+        return copy;
+      });
+      dispatch(setLoader(true));
 
       const eventResponse = await getVmsEventsQueueData();
       if (eventResponse && eventResponse.length) {
@@ -344,9 +347,12 @@ const Dashboard = () => {
         };
 
         writetoRedisQueueData(event);
-        const updated = isFirst ? [event, ...filtered] : [...filtered, event];
-        setEventData(updated);
-        dispatch(setLoader(false))
+        setEventData(prev => {
+          const copy = [...prev];
+          copy[index] = event;
+          return copy;
+        });
+        dispatch(setLoader(false));
       } else {
         setEventData(filtered);
         dispatch(setLoader(false))
@@ -376,10 +382,36 @@ const Dashboard = () => {
     };
   }, [actionStore.callApi, dispatch, eventData, logout, session?.UserId, session.queueName, session?.userLevel]);
 
+  const handleConfig = () => {
+    if (eventData.length !== 0) {
+      Swal.fire({
+        title: "Warning!",
+        text: "Please clear events before modifying",
+        icon: "warning",
+        showConfirmButton: true,
+        showCancelButton: true,
+        confirmButtonText: "Ok",
+      }).then((res) => {
+        if (res.isConfirmed) {
+          dispatch(handleApiForConfig(true));
+        }
+      });
+    }
+    // setConfig((prev) => prev = !prev);
+  }
+
+  const handleCount = (count) => {
+    setCount(count);
+    dispatch(handleApiForConfig(false));
+    setConfig((prev) => prev = !prev);
+  }
+
 
   return (
     <Fragment>
       <Header eventData={eventData}></Header>
+
+      <button className='config-btn' onClick={handleConfig}>configure</button>
 
       <div className='tiles'>
         {eventData.length
@@ -388,9 +420,10 @@ const Dashboard = () => {
             <Tile
               key={i}
               index={i}
+              count={count}
               currentEvent={item}
-              handleFalse={falseHandler}
-              handleSuspicious={suspiciousHandler}
+              handleFalse={handleFalse}
+              handleSuspicious={handleSuspicious}
             />
           ))
           :
@@ -398,12 +431,73 @@ const Dashboard = () => {
         }
       </div>
 
+      {config && <Configure handleConfig={handleConfig} handleCount={handleCount} />}
+
       <Reload />
     </Fragment>
   )
 }
 
 export default Dashboard;
+
+const Configure = ({ handleConfig, handleCount }) => {
+  const layouts = [
+    { id: "1x2", tiles: 2 },
+    { id: "2x2", tiles: 4 },
+    { id: "3x3", tiles: 9 },
+    { id: "4x4", tiles: 16 },
+  ];
+
+  // const dispatch = useDispatch();
+  const [queueName, setQueueName] = useState("verifai-PDQ-CE");
+  const [selectedLayout, setSelectedLayout] = useState(2);
+
+  return (
+    <div className="ems-container">
+      {/* Header */}
+      <div className="ems-header">
+        <div className="ems-header-icon">⚙️</div>
+        <h1>Event Monitoring System</h1>
+        {/* <p>Configure your monitoring dashboard</p> */}
+      </div>
+
+      {/* Body */}
+      <div className="ems-body">
+        {/* Queue Name */}
+        <label className="ems-label">Queue Name</label>
+        <input
+          className="ems-input"
+          value={queueName}
+          disabled
+        />
+
+        {/* Tile Layout */}
+        <h3 className="ems-section-title">Tile Layout</h3>
+
+        <div className="ems-layout-grid">
+          {layouts.map((layout) => (
+            <div
+              key={layout.id}
+              className={`ems-tile ${selectedLayout === layout.tiles ? "active" : ""
+                }`}
+              onClick={() => setSelectedLayout(layout.tiles)}
+            >
+              <div className="ems-grid-icon">▦</div>
+              <strong>{layout.id}</strong>
+              {/* <span>{layout.tiles} tiles</span> */}
+              {selectedLayout === layout.tiles && (
+                <span className="ems-dot" />
+              )}
+            </div>
+          ))}
+        </div>
+
+        <button className='apply-btn' onClick={() => handleCount(selectedLayout)}>apply</button>
+        <button className='apply-btn' onClick={handleConfig}>close</button>
+      </div>
+    </div>
+  )
+}
 
 const Reload = () => {
   useEffect(() => {
