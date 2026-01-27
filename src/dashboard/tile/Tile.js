@@ -24,7 +24,6 @@ import { useSelector, shallowEqual } from "react-redux";
 import ErrorInfo from "../../utilities/error-info/ErrorInfo";
 
 const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => {
-  // console.log(count)
   // console.log(currentEvent)
   const monitoringData = currentEvent?.monitoringInfo;
   const session = getStorage("session");
@@ -297,19 +296,24 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
                   />
                 )}
               </div>
-              <div className="camera">
-                {/* {currentEvent?.httpUrl && (
-                  <Stream key={index} streamUrl={`${currentEvent?.httpUrl}/`} />
-                )} */}
-              </div>
+              {
+                count === 2 &&
+                <div className="camera">
+                  {currentEvent?.httpUrl && (
+                    <Stream key={index} streamUrl={`${currentEvent?.httpUrl}/`} />
+                  )}
+                </div>
+              }
             </div>
 
             <div className="camera-id">
               <div style={{ position: "relative" }} ref={dialogRef}>
+
+                {/**false activity */}
                 <button
                   className="custom-action"
                   onClick={() => handle(1)}
-                  disabled={isValid(currentEvent) || loaderStore.eventLoader}
+                  disabled={isValid(currentEvent)}
                 >
                   <img
                     src="icons/false.png"
@@ -318,10 +322,11 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
                     title="False Activity"
                   />
                 </button>
+
+                {/**suspicious activity */}
                 <button
                   className="custom-action"
                   onClick={() => handle(2)}
-                  disabled={loaderStore.eventLoader}
                 >
                   <img
                     src="icons/suspicious.png"
@@ -385,7 +390,7 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
                 </button>
 
                 {showTags && (
-                  <div className="tag-grid">
+                  <div className={count > 4 ? 'tag-grid-new' : 'tag-grid'}>
                     <p>{customAction === 1 ? "false" : "suspicious"}</p>
                     <div className="tag-items">
                       {categories?.map((tag, i) => (
@@ -409,7 +414,6 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
                           onMouseEnter={() => setHoverIndex(i)}
                           onMouseLeave={() => setHoverIndex(null)}
                           onClick={() => handleAction(tag)}
-                          disabled={loaderStore.eventLoader}
                         >
                           {tag.subCategoryName}
                         </button>
@@ -423,39 +427,43 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
               <p>{currentEvent?.eventTime}</p>
             </div>
 
-            <div className="store-info">
-              <p>{`${currentEvent?.siteId} - ${currentEvent?.siteName}`}</p>
-              <p>{addressParts.join(", ")}</p>
+            {/**site info */}
+            {count === 2 &&
+              <div className="store-info">
+                <p>{`${currentEvent?.siteId} - ${currentEvent?.siteName}`}</p>
+                <p>{addressParts.join(", ")}</p>
 
-              {plannedActivities.length !== 0 && (
-                <Fragment>
-                  {activitiesToShow.map((item, i) => (
-                    <div className="activity-box" key={i}>
-                      <div>
-                        <strong>PLANNED SITE ACTIVITY</strong>
-                        <br />
-                        <span>{`${item?.plannedActivityStart} - ${item?.plannedActivityEnd}`}</span>
+                {plannedActivities.length !== 0 && (
+                  <Fragment>
+                    {activitiesToShow.map((item, i) => (
+                      <div className="activity-box" key={i}>
+                        <div>
+                          <strong>PLANNED SITE ACTIVITY</strong>
+                          <br />
+                          <span>{`${item?.plannedActivityStart} - ${item?.plannedActivityEnd}`}</span>
+                        </div>
+                        <div>
+                          <strong>{item?.activityName}</strong>
+                          <br />
+                          <span>{item?.plannedActivityDescription}</span>
+                        </div>
                       </div>
-                      <div>
-                        <strong>{item?.activityName}</strong>
-                        <br />
-                        <span>{item?.plannedActivityDescription}</span>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
 
-                  {plannedActivities.length > 1 && (
-                    <button
-                      className="show-more-btn"
-                      onClick={() => setShowAll((prev) => !prev)}
-                    >
-                      {showAll ? "Show Less" : "Show More"}
-                    </button>
-                  )}
-                </Fragment>
-              )}
-            </div>
+                    {plannedActivities.length > 1 && (
+                      <button
+                        className="show-more-btn"
+                        onClick={() => setShowAll((prev) => !prev)}
+                      >
+                        {showAll ? "Show Less" : "Show More"}
+                      </button>
+                    )}
+                  </Fragment>
+                )}
+              </div>
+            }
 
+            {/**monitoring info */}
             {monitoringData && count === 2 && (
               <div className="monitoring">
                 <p className="monitoring-title">MONITORING INFO</p>

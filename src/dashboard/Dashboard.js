@@ -327,6 +327,14 @@ const Dashboard = () => {
         return;
       }
 
+      if (actionStore.isConfigOpened) {
+        setEventData(filtered);
+        if (eventData.length === 1) {
+          setConfig((prev) => prev = !prev);
+        }
+        return;
+      }
+
       setEventData(prev => {
         const copy = [...prev];
         copy[index] = null;
@@ -380,7 +388,7 @@ const Dashboard = () => {
     return () => {
       clearInterval(interval);
     };
-  }, [actionStore.callApi, dispatch, eventData, logout, session?.UserId, session.queueName, session?.userLevel]);
+  }, [actionStore.callApi, actionStore.isConfigOpened, dispatch, eventData, logout, session?.UserId, session.queueName, session?.userLevel]);
 
   const handleConfig = () => {
     if (eventData.length !== 0) {
@@ -397,23 +405,32 @@ const Dashboard = () => {
         }
       });
     }
-    // setConfig((prev) => prev = !prev);
   }
 
   const handleCount = (count) => {
     setCount(count);
     dispatch(handleApiForConfig(false));
     setConfig((prev) => prev = !prev);
+    const cols = count === 8 ? 4 : count === 6 ? 3 : 2;
+    tileRef.current.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
   }
 
+  const closeConfig = () => {
+    setConfig(false);
+    dispatch(handleApiForConfig(false));
+  }
+
+  const tileRef = useRef(null);
 
   return (
     <Fragment>
       <Header eventData={eventData}></Header>
 
-      <button className='config-btn' onClick={handleConfig}>configure</button>
+      {session?.userLevel === 1 &&
+        <button className='config-btn' onClick={handleConfig}>configure</button>
+      }
 
-      <div className='tiles'>
+      <div className='tiles' ref={tileRef}>
         {eventData.length
           ?
           eventData.map((item, i) => (
@@ -431,7 +448,7 @@ const Dashboard = () => {
         }
       </div>
 
-      {config && <Configure handleConfig={handleConfig} handleCount={handleCount} />}
+      {config && <Configure handleConfig={handleConfig} handleCount={handleCount} closeConfig={closeConfig} />}
 
       <Reload />
     </Fragment>
@@ -440,16 +457,16 @@ const Dashboard = () => {
 
 export default Dashboard;
 
-const Configure = ({ handleConfig, handleCount }) => {
+const Configure = ({ handleCount, closeConfig }) => {
   const layouts = [
     { id: "1x2", tiles: 2 },
     { id: "2x2", tiles: 4 },
-    { id: "3x3", tiles: 9 },
-    { id: "4x4", tiles: 16 },
+    { id: "2x3", tiles: 6 },
+    { id: "2x4", tiles: 8 }
   ];
 
   // const dispatch = useDispatch();
-  const [queueName, setQueueName] = useState("verifai-PDQ-CE");
+  const session = getStorage('session');
   const [selectedLayout, setSelectedLayout] = useState(2);
 
   return (
@@ -457,19 +474,13 @@ const Configure = ({ handleConfig, handleCount }) => {
       {/* Header */}
       <div className="ems-header">
         <div className="ems-header-icon">⚙️</div>
-        <h1>Event Monitoring System</h1>
-        {/* <p>Configure your monitoring dashboard</p> */}
+        <h2 style={{ color: '#fff' }}>Event Monitoring System</h2>
       </div>
 
       {/* Body */}
       <div className="ems-body">
         {/* Queue Name */}
-        <label className="ems-label">Queue Name</label>
-        <input
-          className="ems-input"
-          value={queueName}
-          disabled
-        />
+        <label className="ems-label">Queue Name - <strong>{session?.queueName}</strong></label>
 
         {/* Tile Layout */}
         <h3 className="ems-section-title">Tile Layout</h3>
@@ -493,7 +504,7 @@ const Configure = ({ handleConfig, handleCount }) => {
         </div>
 
         <button className='apply-btn' onClick={() => handleCount(selectedLayout)}>apply</button>
-        <button className='apply-btn' onClick={handleConfig}>close</button>
+        <button className='apply-btn' onClick={closeConfig}>close</button>
       </div>
     </div>
   )

@@ -267,6 +267,19 @@ iframe {
   padding: 16px;
 }
 
+.tag-grid-new {
+  width: 45vw;
+  position: fixed;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: transparent linear-gradient(180deg, #ffffff 0%, #eeeeee 100%) 0%
+    0% no-repeat padding-box;
+  border-radius: 6px;
+  padding: 16px;
+}
+
 .tag-grid p {
   margin-bottom: 10px !important;
   text-align: left;

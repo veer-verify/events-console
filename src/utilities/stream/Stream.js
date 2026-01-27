@@ -1,9 +1,8 @@
 import './Stream.css';
-import React, { memo, useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 
 const Stream = ({ site, streamUrl, screenshot, currentCamera }) => {
   const videoRef = useRef(null);
-  const canvasRef = useRef(null);
 
   const peerConnectionRef = useRef(null);
   const restartTimeoutRef = useRef(null);
@@ -56,7 +55,7 @@ const Stream = ({ site, streamUrl, screenshot, currentCamera }) => {
         .catch((err) => {
           setShowLoader(false);
           setHitStream(false)
-
+          // clearInterval(restartTimeoutRef.current);
           // setError(err);
 
           onError(err.toString());
@@ -86,14 +85,14 @@ const Stream = ({ site, streamUrl, screenshot, currentCamera }) => {
     };
 
     const onError = () => {
-      if (restartTimeoutRef.current) return;
+      // if (restartTimeoutRef.current) return;
 
       peerConnectionRef.current?.close();
 
-      restartTimeoutRef.current = setTimeout(() => {
-        restartTimeoutRef.current = null;
-        requestICEServers();
-      }, 2000);
+      // restartTimeoutRef.current = setTimeout(() => {
+      //   restartTimeoutRef.current = null;
+      //   requestICEServers();
+      // }, 2000);
 
       if (sessionUrlRef.current) {
         fetch(sessionUrlRef.current, { method: "DELETE" });
@@ -104,7 +103,7 @@ const Stream = ({ site, streamUrl, screenshot, currentCamera }) => {
     };
 
     const onLocalCandidate = (evt) => {
-      if (restartTimeoutRef.current) return;
+      // if (restartTimeoutRef.current) return;
 
       if (evt.candidate) {
         if (!sessionUrlRef.current) {
@@ -117,7 +116,7 @@ const Stream = ({ site, streamUrl, screenshot, currentCamera }) => {
 
     const onConnectionState = () => {
       const pc = peerConnectionRef.current;
-      if (!pc || restartTimeoutRef.current) return;
+      // if (!pc || restartTimeoutRef.current) return;
 
       if (pc.iceConnectionState === "disconnected") {
         onError();
@@ -267,7 +266,7 @@ const Stream = ({ site, streamUrl, screenshot, currentCamera }) => {
 
     return () => {
       setHitStream(false);
-      clearTimeout(restartTimeoutRef.current);
+      // clearTimeout(restartTimeoutRef.current);
       peerConnectionRef.current?.close();
     };
   }, [hitStream, encoded, streamUrl]);

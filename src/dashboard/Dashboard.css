@@ -14,6 +14,11 @@
   right: 160px;
   top: 20px;
   cursor: pointer;
+  border: none;
+  background: red;
+  color: white;
+  border-radius: 4px;
+  padding: 4px;
 }
 
 @media (max-width: 1080px) {
@@ -55,36 +60,35 @@ button {
 }
 
 .ems-container {
-  max-width: 900px;
   margin: 40px auto;
-  background: #111a2e;
+  background: #fff;
   border-radius: 8px;
   overflow: hidden;
-  color: #fff;
+  color: #000;
   position: fixed;
   z-index: 99;
-  top: 20%;
-  left: 20%;
-  width: 100%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 800px;
 }
 
 /* Header */
 .ems-header {
   background: #ed3237;
-  padding: 40px;
+  padding: 24px;
   text-align: center;
 }
 
 .ems-header-icon {
   background: rgba(255, 255, 255, 0.15);
-  width: 48px;
-  height: 48px;
+  width: 36px;
+  height: 36px;
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 16px;
-  font-size: 22px;
 }
 
 .ems-header h1 {
@@ -111,10 +115,10 @@ button {
 .ems-input {
   width: 50%;
   padding: 14px;
-  background: #0f172a;
+  background: #ffffff;
   border: 1px solid #334155;
   border-radius: 10px;
-  color: #fff;
+  color: #000000;
   font-size: 15px;
 }
 
@@ -135,7 +139,7 @@ button {
 }
 
 .ems-tile {
-  background: #0f172a;
+  background: #fff;
   border: 1px solid #334155;
   border-radius: 14px;
   padding: 24px;
@@ -146,12 +150,13 @@ button {
 }
 
 .ems-tile:hover {
-  border-color: #38bdf8;
+  border-color: #ed3237;
 }
 
 .ems-tile.active {
-  background: #082f49;
-  border-color: #22d3ee;
+  background: #ed3237;
+  border-color: #ed3237;
+  color: #ffffff;
 }
 
 .ems-grid-icon {
@@ -166,6 +171,18 @@ button {
 
 .apply-btn {
   float: right;
-  margin: 16px 8px;
-  padding: 10px 20px;
+  padding: 6px 12px;
+  background-color: #ed3237;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  margin: 8px 0;
+
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+.apply-btn:nth-child(odd) {
+  margin-right: 8px;
 }

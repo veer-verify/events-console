@@ -1,5 +1,4 @@
 import './App.css';
-import { Routes, Route, RouterProvider } from 'react-router-dom';
 import SignIn from './signin/SignIn';
 import Dashboard from './dashboard/Dashboard';
 import { ToastContainer } from 'react-toastify';
@@ -7,9 +6,7 @@ import { Fragment } from 'react/jsx-runtime';
 import PageLoader from './utilities/page-loader/PageLoader';
 import { useSelector } from 'react-redux';
 import ProtectedRoute from './utilities/protected-route/ProtectedRoute';
-import { getStorage } from './utilities/StorageService';
-import { BrowserRouter, createHashRouter } from 'react-router-dom';
-
+import { BrowserRouter, createHashRouter, RouterProvider } from 'react-router-dom';
 
 
 const routes = createHashRouter([
@@ -26,7 +23,6 @@ const routes = createHashRouter([
   }
 ])
 
-
 function App() {
   const loaderStore = useSelector((state) => state.loaderStore);
 
@@ -35,18 +31,6 @@ function App() {
       {loaderStore.mainLoader && <PageLoader />}
       <ToastContainer />
       <RouterProvider router={routes} future={{ v7_startTransition: true }} />
-
-      {/* <Routes>
-        <Route path='/' element={<SignIn />} />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute isAuthenticated={session ? true : false}>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-      </Routes> */}
     </Fragment>
 
   );
