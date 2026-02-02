@@ -2,15 +2,13 @@ import './Dashboard.css';
 import { createContext, Fragment, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import Header from '../header/Header';
 import Tile from './tile/Tile';
-import { clearStorage, getSession, getStorage, getTimeByTimezone, setStorage } from '../utilities/StorageService';
-import { aliveUser, consumeConsoleEvents, getActionTagCategories, getMonitoringInfo, getVmsEventsQueueData, updateEventFullDetails, write2VmsDispatchQueue, writetoRedisQueueData } from '../utilities/ApiService';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 import { saveAction, handleApiForLogout, handleApiForConfig } from '../../src/utilities/slices/actionTagSlice';
 import { setLoader } from '../utilities/slices/loaderSlice';
 import { useLogout } from '../utilities/hooks/logout';
 import Swal from "sweetalert2";
-import { useNavigate } from 'react-router-dom';
-import { MyContext } from '..';
+import { getSession, getStorage, getTimeByTimezone, setStorage } from '../utilities/services/StorageService';
+import { aliveUser, consumeConsoleEvents, getActionTagCategories, getMonitoringInfo, getVmsEventsQueueData, updateEventFullDetails, write2VmsDispatchQueue, writetoRedisQueueData } from '../utilities/services/ApiService';
 
 const Dashboard = () => {
   const dispatch = useDispatch();
@@ -70,7 +68,7 @@ const Dashboard = () => {
     consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: '' });
 
     const filtered = eventData.filter((_, i) => item?.index !== i);
-    if (!actionStore.callApi) {
+    if (actionStore.isLogoutClicked) {
       setEventData(filtered);
       if (eventData.length === 1) {
         logout();
@@ -146,7 +144,7 @@ const Dashboard = () => {
     consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: '' });
 
     const filtered = eventData.filter((_, i) => item?.index !== i);
-    if (!actionStore.callApi) {
+    if (actionStore.isLogoutClicked) {
       setEventData(filtered);
       if (eventData.length === 1) {
         logout()
@@ -207,7 +205,7 @@ const Dashboard = () => {
     const fetchEvents = async () => {
       if (!isMounted || isFetching) return;
       if (eventData.length >= count) return;
-      if (!actionStore.callApi) return;
+      if (actionStore.isLogoutClicked) return;
       if (actionStore.isConfigOpened) return;
 
       isFetching = true;
@@ -232,7 +230,7 @@ const Dashboard = () => {
       }
 
       isFetching = false;
-      if (isMounted && eventData.length < count && actionStore.callApi) {
+      if (isMounted && eventData.length < count && !actionStore.isLogoutClicked) {
         timerId = setTimeout(fetchEvents, 2000);
       }
     };
@@ -242,7 +240,7 @@ const Dashboard = () => {
       isMounted = false;
       clearTimeout(timerId);
     };
-  }, [eventData.length, dispatch, actionStore.callApi, count, actionStore.isConfigOpened]);
+  }, [eventData.length, dispatch, actionStore.isLogoutClicked, count, actionStore.isConfigOpened]);
 
 
   useEffect(() => {
@@ -319,7 +317,7 @@ const Dashboard = () => {
       consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: "", });
 
       const filtered = eventData.filter((_, i) => index !== i);
-      if (!actionStore.callApi) {
+      if (actionStore.isLogoutClicked) {
         setEventData(filtered);
         if (eventData.length === 1) {
           logout()
@@ -388,7 +386,7 @@ const Dashboard = () => {
     return () => {
       clearInterval(interval);
     };
-  }, [actionStore.callApi, actionStore.isConfigOpened, dispatch, eventData, logout, session?.UserId, session.queueName, session?.userLevel]);
+  }, [actionStore.isLogoutClicked, actionStore.isConfigOpened, dispatch, eventData, logout, session?.UserId, session.queueName, session?.userLevel]);
 
   const handleConfig = () => {
     if (eventData.length !== 0) {

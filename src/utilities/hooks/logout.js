@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import { clearStorage } from "../StorageService";
-import { manageUserSession } from "../ApiService";
 import { useDispatch } from "react-redux";
 import { setMainLoader } from "../slices/loaderSlice";
+import { manageUserSession } from "../services/ApiService";
+import { clearStorage } from "../services/StorageService";
 
 export const useLogout = () => {
   const dispatch = useDispatch();

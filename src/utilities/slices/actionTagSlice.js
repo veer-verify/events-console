@@ -2,13 +2,13 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const actionTagSlice = createSlice({
     name: 'action',
-    initialState: { data: null, callApi: true, isConfigOpened: false },
+    initialState: { data: null, isLogoutClicked: false, isConfigOpened: false },
     reducers: {
         saveAction: (state, action) => {
             state.data = action.payload;
         },
         handleApiForLogout: (state, action) => {
-            state.callApi = action.payload;
+            state.isLogoutClicked = action.payload;
         },
         handleApiForConfig: (state, action) => {
             state.isConfigOpened = action.payload;

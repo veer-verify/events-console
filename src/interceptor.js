@@ -1,7 +1,7 @@
 import axios from "axios";
-import { getAccessforRefreshToken } from "./utilities/ApiService";
-import { getStorage, setStorage } from "./utilities/StorageService";
 import { useLogout } from "./utilities/hooks/logout";
+import { getStorage, setStorage } from "./utilities/services/StorageService";
+import { getAccessforRefreshToken } from "./utilities/services/ApiService";
 
 
 // Axios instance

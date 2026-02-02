@@ -1,6 +1,6 @@
 import { Navigate } from 'react-router-dom';
 import Dashboard from '../../dashboard/Dashboard';
-import { getStorage } from '../StorageService';
+import { getStorage } from '../services/StorageService';
 
 const ProtectedRoute = () => {
   const session = getStorage('session');

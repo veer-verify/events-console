@@ -1,33 +1,29 @@
 @font-face {
-  font-family: 'Neometric Regular';
-  src: url('../public/fonts/neometric-2/Neometric-Regular.otf') format('woff2');
+  font-family: "Neometric Regular";
+  src: url("../public/fonts/neometric/Neometric-Regular.otf") format("woff2");
   font-weight: normal;
   font-style: normal;
 }
 
-@font-face{
-  font-family: 'Neometric Lighter';
-  src: url('../public/fonts/neometric-2/Neometric\ Alt\ Extra\ Light\ \(Regular\).otf') format('woff2');
+@font-face {
+  font-family: "Neometric Lighter";
+  src: url("../public/fonts/neometric/Neometric-Light.otf") format("woff2");
   font-weight: lighter;
   font-style: normal;
 }
 
 body {
   margin: 0;
-  font-family: 'Neometric Regular', sans-serif;
+  font-family: "Neometric Regular", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #EEEEEE;
+  background-color: #eeeeee;
 }
 
 button {
-  font-family: 'Neometric Regular', sans-serif !important;
+  font-family: "Neometric Regular", sans-serif !important;
 }
 
 p {
   margin: 0 !important;
 }
-
-/* code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
-} */

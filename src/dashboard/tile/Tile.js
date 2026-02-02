@@ -4,24 +4,10 @@ import Escalation from "../escalation/Escalation";
 import Live from "../../utilities/live/Live";
 import Stream from "../../utilities/stream/Stream";
 import { toast } from "react-toastify";
-import {
-  getSession,
-  getStorage,
-  getTagNameById,
-  getTimeByTimezone,
-  getZone,
-  isValid,
-  setStorage,
-  timeFormat,
-} from "../../utilities/StorageService";
-import {
-  playSiren,
-  getImagesForCameraId,
-  loadImageWithAuth,
-  audioDisable
-} from "../../utilities/ApiService";
 import { useSelector, shallowEqual } from "react-redux";
 import ErrorInfo from "../../utilities/error-info/ErrorInfo";
+import { getStorage, getTimeByTimezone, getZone, isValid, setStorage, timeFormat } from "../../utilities/services/StorageService";
+import { audioDisable, getImagesForCameraId, loadImageWithAuth, playSiren } from "../../utilities/services/ApiService";
 
 const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => {
   // console.log(currentEvent)
@@ -538,7 +524,7 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
           </Fragment>
         ) : (
           <Fragment>
-            <ErrorInfo message={"waiting for event..."} />
+            <ErrorInfo message={"waiting for event"} />
           </Fragment>
         )}
 

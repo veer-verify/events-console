@@ -1,9 +1,9 @@
 import './ProfileCard.css';
 import { useLogout } from '../../utilities/hooks/logout';
-import { getStorage } from '../../utilities/StorageService';
 import Swal from "sweetalert2";
 import { useDispatch } from 'react-redux';
 import { handleApiForLogout } from '../../utilities/slices/actionTagSlice';
+import { getStorage } from '../../utilities/services/StorageService';
 
 
 const ProfileCard = ({ eventData }) => {
@@ -22,7 +22,7 @@ const ProfileCard = ({ eventData }) => {
                 confirmButtonText: "Yes",
             }).then((res) => {
                 if (res.isConfirmed) {
-                    dispatch(handleApiForLogout(false));
+                    dispatch(handleApiForLogout(true));
                 }
             });
         }

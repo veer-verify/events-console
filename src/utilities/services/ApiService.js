@@ -1,5 +1,5 @@
-import api from '../interceptor';
-import { environment } from '../environment';
+import api from '../../interceptor';
+import { environment } from '../../environment';
 import { getDay, getHour, getStorage, getTimeByTimezone, formatTimestamp } from './StorageService';
 import { toast } from 'react-toastify';
 import axios from 'axios';

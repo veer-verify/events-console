@@ -1,9 +1,9 @@
 import "./Escalation.css";
-import { useState, useEffect, Fragment } from "react";
+import { useState, useEffect, Fragment, memo } from "react";
 import { useAuth } from "../Dashboard";
 import ErrorInfo from "../../utilities/error-info/ErrorInfo";
-import { eventsGenericEmail, getAlertCategoriesForSiteId, getEmailDataForVMSEvents } from "../../utilities/ApiService";
-import { getStorage, getTimeByTimezone, timeFormat } from "../../utilities/StorageService";
+import { eventsGenericEmail, getAlertCategoriesForSiteId, getEmailDataForVMSEvents } from "../../utilities/services/ApiService";
+import { getStorage, getTimeByTimezone } from "../../utilities/services/StorageService";
 
 
 const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleSuspicious, monitoringData }) => {
@@ -201,7 +201,6 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
                       <td><strong>BCC</strong></td>
                       <td>{emaildata?.BCC?.join(', ')}</td>
                     </tr>
-
                     <tr>
                       <td><strong>Body</strong></td>
                       <td>{emaildata?.emailBody}</td>
@@ -267,4 +266,4 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
   );
 }
 
-export default Escalation;
+export default memo(Escalation);

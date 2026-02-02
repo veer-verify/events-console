@@ -2,13 +2,13 @@ import './SignIn.css';
 import { Fragment, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { clearStorage, Encrypt, getStorage, setStorage } from '../utilities/StorageService';
 import { useDispatch } from 'react-redux';
 import { saveSession } from '../utilities/slices/sessionSlice';
-import { login, manageUserSession } from '../utilities/ApiService';
 import Swal from 'sweetalert2'
-import { setMainLoader } from '../utilities/slices/loaderSlice';
 import { handleApiForConfig, handleApiForLogout } from '../utilities/slices/actionTagSlice';
+import { login, manageUserSession } from '../utilities/services/ApiService';
+import { setMainLoader } from '../utilities/slices/loaderSlice';
+import { clearStorage, Encrypt, getStorage, setStorage } from '../utilities/services/StorageService';
 
 const SignIn = () => {
   const navigate = useNavigate('');
@@ -42,7 +42,7 @@ const SignIn = () => {
         dispatch(saveSession({ ...temp, sessionId: activeSession?.sessionId }));
 
         if (loginData.userLevel) {
-          dispatch(handleApiForLogout(true));
+          dispatch(handleApiForLogout(false));
           dispatch(handleApiForConfig(false));
           navigate('/dashboard');
         } else {
