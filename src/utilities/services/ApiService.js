@@ -191,6 +191,8 @@ export const eventsGenericEmail = async (payload) => {
   //   }
   // });
   formData.append("textDetails", JSON.stringify(payload?.smsDetails));
+  formData.append('userSendMailLevel', payload?.userSendMailLevel);
+  formData.append('address', JSON.stringify(payload?.address));
   return api.post(url, formData, { params: params }).then((res) => res).catch((err) => console.log(err));
 }
 

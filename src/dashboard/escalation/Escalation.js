@@ -7,6 +7,7 @@ import { getStorage, getTimeByTimezone } from "../../utilities/services/StorageS
 
 
 const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleSuspicious, monitoringData }) => {
+  // console.log(monitoringData)
   // const data = useAuth();
 
   const [alerts, setAlerts] = useState([]);
@@ -44,9 +45,10 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
     } else {
       handleFalse({ ...currentEvent, alertTypeId: selectedAlertType, alertSubTypeId: selectedSubType, index, actionTagTime: currentTime, notes });
     }
+
     if (session?.userLevel === 2) {
       eventsGenericEmail(
-        { ...currentEvent, actionTag: emaildata?.alertTag, alertTypeId: selectedAlertType, alertSubTypeId: selectedSubType, objectName: selection, ...emaildata }
+        { ...currentEvent, actionTag: emaildata?.alertTag, alertTypeId: selectedAlertType, alertSubTypeId: selectedSubType, objectName: selection, ...emaildata, userSendMailLevel: type, address: monitoringData?.address }
       );
     }
     closeEscalation();
