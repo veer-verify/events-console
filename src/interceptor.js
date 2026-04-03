@@ -7,7 +7,7 @@ import { getAccessforRefreshToken } from "./utilities/services/ApiService";
 // Axios instance
 const api = axios.create();
 
-// Refresh control flags
+let session = null;
 let isRefreshing = false;
 let failedQueue = [];
 const Logout = () => useLogout();
@@ -21,20 +21,18 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
-// Request Interceptor — attach token to every request
+// Request Interceptor
 api.interceptors.request.use((config) => {
-  // const logout = useLogout();
-  const session = getStorage("session");
+  session = getStorage("session");
   if (session) {
-    config.headers["Authorization"] = `Bearer ${session.AccessToken}`;
+    config.headers["Authorization"] = `Bearer ${session?.AccessToken}`;
   }
   return config;
 }, (error) => Promise.reject(error)
 );
 
-// Response Interceptor — handle expired tokens
+// Response Interceptor
 api.interceptors.response.use((response) => response, async (error) => {
-  // const logout = useLogout();
   const originalRequest = error.config;
 
   // If 401 error and we haven’t retried yet
@@ -55,27 +53,23 @@ api.interceptors.response.use((response) => response, async (error) => {
     isRefreshing = true;
 
     try {
-      const tempSession = getStorage("session");
-      if (!tempSession) throw new Error("No user data found");
-      // if (!tempSession) return console.log("No user data found");
-      const response = await getAccessforRefreshToken();
+      // const tempSession = getStorage("session");
+      if (!session) throw new Error("No user data found");
 
-      // Extract new token safely
-      // const newToken = response?.access_token;
-      // if (!response.access_token) throw new Error("No access token returned from refresh API");
-      if (!response) console.log("No access token returned from refresh API");
+      const response = await getAccessforRefreshToken();
+      if (!response) throw new Error("No access token returned from refresh API");
 
       // Save new access token
-      tempSession.AccessToken = response?.access_token;
-      tempSession.RefreshToken = response?.refresh_token
-      setStorage("session", tempSession);
+      session.AccessToken = response?.access_token;
+      session.RefreshToken = response?.refresh_token
+      setStorage("session", session);
 
       // Resume queued requests
-      processQueue(null, tempSession.AccessToken);
+      processQueue(null, session.AccessToken);
       isRefreshing = false;
 
       // Retry original request with new token
-      originalRequest.headers["Authorization"] = `Bearer ${tempSession.AccessToken}`;
+      originalRequest.headers["Authorization"] = `Bearer ${session.AccessToken}`;
       return api(originalRequest);
     } catch (err) {
       console.error("Token refresh failed:", err);

@@ -6,7 +6,7 @@ import { eventsGenericEmail, getAlertCategoriesForSiteId, getEmailDataForVMSEven
 import { getStorage, getTimeByTimezone } from "../../utilities/services/StorageService";
 
 
-const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleSuspicious, monitoringData }) => {
+const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleSuspicious, monitoringData, actionsTaken }) => {
   // console.log(monitoringData)
   // const data = useAuth();
 
@@ -41,9 +41,30 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
   const handle = (type) => {
     const currentTime = getTimeByTimezone(currentEvent?.timezone);
     if (type === 'escalate') {
-      handleSuspicious({ ...currentEvent, index, actionTagTime: currentTime, alertTypeId: selectedAlertType, alertSubTypeId: selectedSubType, ...monitoringData, notes });
+      handleSuspicious(
+        {
+          ...currentEvent,
+          index,
+          actionTagTime: currentTime,
+          alertTypeId: selectedAlertType,
+          alertSubTypeId: selectedSubType,
+          ...monitoringData,
+          notes,
+          actionsTaken
+        }
+      );
     } else {
-      handleFalse({ ...currentEvent, alertTypeId: selectedAlertType, alertSubTypeId: selectedSubType, index, actionTagTime: currentTime, notes });
+      handleFalse(
+        {
+          ...currentEvent,
+          alertTypeId: selectedAlertType,
+          alertSubTypeId: selectedSubType,
+          index, actionTagTime:
+            currentTime,
+          notes,
+          actionsTaken
+        }
+      );
     }
 
     if (session?.userLevel === 2) {

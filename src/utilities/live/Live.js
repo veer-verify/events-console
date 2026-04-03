@@ -51,13 +51,20 @@ const Live = ({ currentEvent, closeLiveDialog }) => {
     return (
         <Fragment>
             <div className="cam-container" ref={liveRef} onMouseDown={handleMouseDown}>
-                <div className="header">
-                    <p>{currentEvent?.siteName}</p>
-                    <button onClick={() => { closeLiveDialog() }}>x</button>
+
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <div className="header">
+                        <p>{currentEvent?.siteName}</p>
+                        <button onClick={() => { closeLiveDialog() }}>x</button>
+                    </div>
+
+
+                    <div className='cameras'>
+                        {cameras && cameras.map((item, i) => <Stream key={i} streamUrl={`${item.httpUrl}/`} screenshot={true} currentCamera={item} />)}
+                    </div>
                 </div>
-                <div className='cameras'>
-                    {cameras && cameras.map((item, i) => <Stream key={i} streamUrl={`${item.httpUrl}/`} screenshot={true} currentCamera={item} />)}
-                </div>
+
+                <video style={{ width: '100%', height: '100%', border: '1px solid red' }}></video>
             </div>
         </Fragment>
     )

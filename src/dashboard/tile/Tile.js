@@ -15,6 +15,7 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
   const session = getStorage("session");
   const customAction = getStorage("custom_action");
   const actionTags = getStorage("actionTags");
+  const metadata = getStorage('metadata');
 
   const { sessionStore, actionStore, loaderStore } = useSelector((state) => ({
     sessionStore: state.sessionStore,
@@ -40,6 +41,7 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
 
   const [showBoundaries, setShowBoundaries] = useState(false);
   const [showMask, setShowMask] = useState(false);
+  const [actionsTaken, setActionsTaken] = useState([]);
 
   const openBoundariesDialog = () => setShowBoundaries(true);
   const closeBoundariesDialog = () => setShowBoundaries(false);
@@ -105,7 +107,7 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
 
     if (customAction === 1) {
       setImgSrc(null);
-      handleFalse({ ...currentEvent, index, actionTagTime: currentTime });
+      handleFalse({ ...currentEvent, index, actionTagTime: currentTime, actionsTaken });
     } else {
       if (session?.userLevel !== 1) {
         setShowEscalation(true);
@@ -116,6 +118,7 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
           index,
           actionTagTime: currentTime,
           ...monitoringData,
+          actionsTaken
         });
       }
     }
@@ -148,6 +151,17 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
     element.style.top = `${e.clientY - pos.current.offsetY}px`;
   };
 
+  /**
+   * actions taken
+   */
+  useEffect(() => {
+    const [actionsTakenTypes] = metadata.filter((item) => item.typeName === 'ActionsTaken');
+    setActionsTaken(() => {
+      return Array.from(actionsTakenTypes?.metadata, (el) => ({ name: el.value, selected: false, time: null, status: false, editing: false }));
+    })
+  }, [currentEvent])
+
+
   useEffect(() => {
     const fetchAudio = async () => {
       const audioRes = await audioDisable(currentEvent);
@@ -155,7 +169,6 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
         setAudio(audioRes.audioConfigured)
       }
     };
-
     if (currentEvent) {
       fetchAudio();
     }
@@ -248,6 +261,43 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
     ?.map((item) => item.notes || 'None')
     .join(" - ");
 
+
+
+  const toggleSelect = (index) => {
+    const updated = [...actionsTaken];
+    updated[index].selected = !updated[index].selected;
+    setActionsTaken(updated);
+  };
+
+  const toggleResponded = (index, e) => {
+    e.stopPropagation();
+    const updated = [...actionsTaken];
+    // updated[index].responded = !updated[index].responded;
+    updated[index].status = !updated[index].status;
+    setActionsTaken(updated);
+    // console.log(actionsTaken)
+  };
+
+  const enableEdit = (index, e) => {
+    e.stopPropagation();
+    const updated = [...actionsTaken];
+    updated[index].editing = true;
+    setActionsTaken(updated);
+  };
+
+  const updateTime = (index, value) => {
+    const updated = [...actionsTaken];
+    updated[index].time = new Date(value);
+    setActionsTaken(updated);
+  };
+
+  const saveEdit = (index, e) => {
+    e.stopPropagation();
+    const updated = [...actionsTaken];
+    updated[index].editing = false;
+    setActionsTaken(updated);
+  };
+
   return (
     <Fragment>
       <div className="tile">
@@ -325,7 +375,7 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
                 <button
                   className="custom-action"
                   onClick={openLiveDialog}
-                  disabled={session?.userLevel === 1}
+                  // disabled={session?.userLevel === 1}
                   style={{ opacity: session?.userLevel === 1 ? 0.5 : 1 }}
                 >
                   <img
@@ -335,6 +385,18 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
                     title="Live"
                   />
                 </button>
+                {/* <button
+                  className="custom-action"
+                  onClick={() => ''}
+                >
+                  <img
+                    src="icons/playback.png"
+                    alt="icon"
+                    width={20}
+                    title="Playback"
+                  />
+                </button> */}
+
                 <button
                   className={
                     currentEvent?.playing
@@ -409,15 +471,83 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
                 )}
               </div>
 
+
+              {/* <div> */}
               <p>{currentEvent?.cameraId}</p>
               <p>{currentEvent?.eventTime}</p>
+              {/* </div> */}
+
             </div>
 
             {/**site info */}
             {count === 2 &&
               <div className="store-info">
-                <p>{`${currentEvent?.siteId} - ${currentEvent?.siteName}`}</p>
-                <p>{addressParts.join(", ")}</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+
+                  <div>
+                    <p>{`${currentEvent?.siteId} - ${currentEvent?.siteName}`}</p>
+                    <p>{addressParts.join(", ")}</p>
+                  </div>
+
+                  <div style={{ display: "flex", gap: "4px" }}>
+                    {actionsTaken.map((item, index) => (
+                      <div
+                        key={index}
+                        onClick={() => toggleSelect(index)}
+                        style={{
+                          padding: "4px 8px",
+                          borderRadius: "20px",
+                          border: item.selected ? "2px solid red" : "1px solid gray",
+                          cursor: "pointer"
+                        }}
+                      >
+                        <span style={{ fontSize: '10px', whiteSpace: 'nowrap' }}>{item.name}</span>
+
+                        {/* TIME VIEW */}
+                        {item.selected && !item.editing && (
+                          <span style={{ fontSize: '10px' }}>
+                            {" "}
+                            - {new Date(item.time).toLocaleString()}
+                            <span
+                              style={{ marginLeft: 5, cursor: "pointer" }}
+                              onClick={(e) => enableEdit(index, e)}
+                            >
+                              ✏️
+                            </span>
+                          </span>
+                        )}
+
+                        {/* TIME EDIT */}
+                        {item.editing && (
+                          <span>
+                            <input
+                              type="datetime-local"
+                              onClick={(e) => e.stopPropagation()}
+                              onChange={(e) => updateTime(index, e.target.value)}
+                            />
+                            <span
+                              style={{ marginLeft: 5 }}
+                              onClick={(e) => saveEdit(index, e)}
+                            >
+                              ✔️
+                            </span>
+                          </span>
+                        )}
+
+                        {/* RESPONDED */}
+                        {item.selected &&
+                          <span
+                            style={{ marginLeft: 4, fontSize: '12px' }}
+                            onClick={(e) => toggleResponded(index, e)}
+                          >
+                            {item.status ? "✅" : "⚪"}
+                          </span>
+                        }
+
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
                 {plannedActivities.length !== 0 && (
                   <Fragment>
@@ -547,6 +677,7 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
               handleFalse={handleFalse}
               handleSuspicious={handleSuspicious}
               monitoringData={monitoringData}
+              actionsTaken={actionsTaken}
             />
           </div>
         )}

@@ -6,7 +6,7 @@ import { useDispatch } from 'react-redux';
 import { saveSession } from '../utilities/slices/sessionSlice';
 import Swal from 'sweetalert2'
 import { handleApiForConfig, handleApiForLogout } from '../utilities/slices/actionTagSlice';
-import { login, manageUserSession } from '../utilities/services/ApiService';
+import { getMetadata, login, manageUserSession } from '../utilities/services/ApiService';
 import { setMainLoader } from '../utilities/slices/loaderSlice';
 import { clearStorage, Encrypt, getStorage, setStorage } from '../utilities/services/StorageService';
 
@@ -29,6 +29,7 @@ const SignIn = () => {
     dispatch(setMainLoader(false));
 
     if (loginData?.Status === 'Success') {
+
       setStorage('session', loginData);
       dispatch(saveSession(loginData));
 
@@ -52,6 +53,8 @@ const SignIn = () => {
             icon: "warning",
           })
         }
+        const metadata = await getMetadata();
+        setStorage('metadata', metadata);
       }
     } else {
       Swal.fire({

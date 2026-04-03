@@ -16,11 +16,9 @@ export const Decrypt = (data) => AES.decrypt(data, key).toString(enc.Utf8);
 /**
  * methods to set and get data from storage
  */
-export const setStorage = (key, data) =>
-  sessionStorage.setItem(key, JSON.stringify(data));
+export const setStorage = (key, data) => sessionStorage.setItem(key, JSON.stringify(data));
 export const getStorage = (key) => JSON.parse(sessionStorage.getItem(key));
 export const clearStorage = () => sessionStorage.clear();
-
 export const getSession = () => getStorage("session");
 
 /**
@@ -49,7 +47,6 @@ export const timeFormat = (monitoringData) => {
     "saturday",
     "sunday",
   ];
-
   const sortedDays = Object.keys(monitoring_hours).sort(
     (a, b) => weekdays.indexOf(a) - weekdays.indexOf(b)
   );
@@ -167,7 +164,6 @@ const getCountry = (zone) => {
   return timeZoneCountryList.find((item) => item.timeZone === zone)?.countryCode || 'US';
 }
 
-
 export const getZone = (timezone) => {
   const date = new Date();
   const tz = new Intl.DateTimeFormat(`en-${getCountry(timezone)}`, {
@@ -177,5 +173,4 @@ export const getZone = (timezone) => {
     .formatToParts(date)
     .find((part) => part.type === "timeZoneName")?.value;
   return tz;
-
 };

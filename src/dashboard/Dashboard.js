@@ -1,9 +1,9 @@
 import './Dashboard.css';
-import { createContext, Fragment, useContext, useEffect, useRef, useState, useCallback } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import Header from '../header/Header';
 import Tile from './tile/Tile';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux';
-import { saveAction, handleApiForLogout, handleApiForConfig } from '../../src/utilities/slices/actionTagSlice';
+import { saveAction, handleApiForConfig } from '../../src/utilities/slices/actionTagSlice';
 import { setLoader } from '../utilities/slices/loaderSlice';
 import { useLogout } from '../utilities/hooks/logout';
 import Swal from "sweetalert2";
@@ -29,15 +29,10 @@ const Dashboard = () => {
     setStorage('actionTags', actionStore.data)
   }
 
-  // const contexData = useContext(MyContext);
-  // console.log(contexData)
-
-  // const EventContext = createContext();
   const [eventData, setEventData] = useState([]);
   const [config, setConfig] = useState(false);
   const [count, setCount] = useState(2);
   const logout = useLogout();
-  // const navigate = useNavigate("");
 
 
   /**
@@ -61,7 +56,11 @@ const Dashboard = () => {
         subActionTag: subAction?.subCategoryId,
         alertTag: parseInt(item?.alertTypeId),
         subAlertTag: parseInt(item?.alertSubTypeId),
-        notes: item.notes ?? ''
+        notes: item.notes ?? '',
+        actionsTakenInfo: item?.actionsTaken.filter((el) => {
+          delete el.editing;
+          return el.selected;
+        })
       }
     );
     updateEventFullDetails({ ...item, actionTag: customAction, subActionTag: subAction?.subCategoryId });
@@ -137,7 +136,11 @@ const Dashboard = () => {
         subActionTag: subAction?.subCategoryId,
         alertTag: parseInt(item?.alertTypeId),
         subAlertTag: parseInt(item?.alertSubTypeId),
-        notes: item.notes ?? ''
+        notes: item.notes ?? '',
+        actionsTakenInfo: item?.actionsTaken.filter((el) => {
+          delete el.editing;
+          return el.selected;
+        })
       }
     );
     write2VmsDispatchQueue({ ...item, actionTag: customAction, subActionTag: subAction?.subCategoryId, queue_name: item?.nextQueueName });
@@ -311,6 +314,7 @@ const Dashboard = () => {
         actionTag: 0,
         subActionTag: 0,
         notes: item?.notes ?? "",
+        actionsTakenInfo: []
       });
 
       write2VmsDispatchQueue({ ...item, actionTag: 0, subActionTag: 0, queue_name: "timed-out", });
@@ -320,7 +324,7 @@ const Dashboard = () => {
       if (actionStore.isLogoutClicked) {
         setEventData(filtered);
         if (eventData.length === 1) {
-          logout()
+          logout();
         }
         return;
       }

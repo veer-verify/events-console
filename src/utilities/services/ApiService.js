@@ -1,7 +1,6 @@
 import api from '../../interceptor';
 import { environment } from '../../environment';
 import { getDay, getHour, getStorage, getTimeByTimezone, formatTimestamp } from './StorageService';
-import { toast } from 'react-toastify';
 import axios from 'axios';
 import { Navigate } from 'react-router-dom';
 
@@ -9,6 +8,8 @@ import { Navigate } from 'react-router-dom';
 export const getAccessforRefreshToken = async () => {
   const url = `${environment.login_url}/getAccessforRefreshToken`;
   const user = getStorage('session');
+  // if(!user) return;
+
   return api.post(url, null, {
     params: {
       refresh_token: user?.RefreshToken,
@@ -216,10 +217,8 @@ export const getLiveInfoForSiteAndCamera = async (payload) => {
 
 export const playSiren = async (payload) => {
   const url = `${environment.site_url}/play_1_0/${payload?.cameraId}`;
-  // const url = payload?.audioUrl;
   return api.get(url).then((res) => res.data).catch((err) => console.log(err));
 }
-
 
 export const userLogin = async () => {
   const url = `${environment.event_process_url}/userLogin`;
@@ -321,8 +320,6 @@ export const manageUserSession = async (type) => {
   let payload = Object.fromEntries(obj);
   return api.post(url, payload).then((res) => res?.data?.statusCode === 200 ? res.data : null).catch(() => window.location.href = "/events-console");
 }
-
-
 
 export const getImagesForCameraId = async (payload) => {
   const url = `${environment.site_url}/getCameraImagesForCameraId_1_0`;
