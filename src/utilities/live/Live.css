@@ -5,15 +5,15 @@
   left: 50%;
   transform: translate(-50%, -50%);
   background-color: #000000;
-  display: flex;
-  width: 80%;
+  /* display: flex;
+  width: 100%; */
 }
 
 .cameras {
   display: grid;
   overflow-y: auto;
   height: 70vh;
-  width: 70vw;
+  width: 54vw;
   grid-template-columns: repeat(4, 1fr);
   gap: 1px;
   border-radius: 8px;
@@ -40,4 +40,50 @@
   font-weight: bold;
   color: #ffff;
   z-index: 999;
+}
+
+.video-container {
+  position: relative;
+  width: 30vw;
+  height: 100%;
+  margin: auto;
+  border: 1px solid #fff;
+}
+
+.video {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+}
+
+/* Navigation buttons */
+.nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  padding: 12px;
+  cursor: pointer;
+  border-radius: 50%;
+  font-size: 18px;
+
+  /* hidden by default */
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* left & right positioning */
+.prev {
+  left: 10px;
+}
+
+.next {
+  right: 10px;
+}
+
+/* show on hover */
+.video-container:hover .nav-btn {
+  opacity: 1;
 }

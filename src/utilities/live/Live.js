@@ -1,13 +1,44 @@
 import './Live.css';
-import { Fragment, useEffect, useState, useRef } from "react";
+import { Fragment, useEffect, useState, useRef, memo } from "react";
 import Stream from "../stream/Stream";
-import { getLiveInfoForSiteAndCamera } from '../services/ApiService';
+import { getLiveInfoForSiteAndCamera, getPlayback } from '../services/ApiService';
 
 const Live = ({ currentEvent, closeLiveDialog }) => {
 
     const [cameras, setCameras] = useState([]);
+    const [videos, setVideos] = useState([]);
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [loader, setLoader] = useState(false);
+
     const liveRef = useRef(null);
     const pos = useRef({ x: 0, y: 0, offsetX: 0, offsetY: 0 });
+
+    const handleNext = () => {
+        if (currentIndex < videos.length - 1) {
+            setCurrentIndex((prev) => prev + 1);
+        }
+    };
+
+    const handlePrev = () => {
+        if (currentIndex > 0) {
+            setCurrentIndex((prev) => prev - 1);
+        }
+    };
+
+    const getCamera = (data) => {
+        const event = { ...currentEvent, cameraId: data?.cameraId };
+        currentEvent = event;
+        console.log(currentEvent)
+        const playback = async () => {
+            setLoader(true)
+            const response = await getPlayback(currentEvent);
+            setLoader(false)
+            if (response) {
+                setVideos(response);
+            }
+        }
+        playback();
+    }
 
     useEffect(() => {
         const getLive = async () => {
@@ -18,8 +49,20 @@ const Live = ({ currentEvent, closeLiveDialog }) => {
         }
         getLive();
 
+        const playback = async () => {
+            setLoader(true)
+
+            const response = await getPlayback(currentEvent);
+            setLoader(false)
+            if (response) {
+                setVideos(response);
+            }
+        }
+        playback();
+
         return () => {
             setCameras([]);
+            setVideos([]);
         };
     }, [currentEvent]);
 
@@ -49,25 +92,57 @@ const Live = ({ currentEvent, closeLiveDialog }) => {
     };
 
     return (
-        <Fragment>
-            <div className="cam-container" ref={liveRef} onMouseDown={handleMouseDown}>
+        <div className="cam-container" ref={liveRef} onMouseDown={handleMouseDown}>
 
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <div className="header">
-                        <p>{currentEvent?.siteName}</p>
-                        <button onClick={() => { closeLiveDialog() }}>x</button>
-                    </div>
-
-
-                    <div className='cameras'>
-                        {cameras && cameras.map((item, i) => <Stream key={i} streamUrl={`${item.httpUrl}/`} screenshot={true} currentCamera={item} />)}
-                    </div>
+            <div className="header">
+                <p>{currentEvent?.siteName}</p>
+                <button onClick={() => closeLiveDialog()}>x</button>
+            </div>
+            <div style={{ display: 'flex' }}>
+                <div className='cameras'>
+                    {cameras && cameras.map((item, i) => <Stream key={i} streamUrl={`${item.httpUrl}/`} screenshot={true} currentCamera={item} getCamera={getCamera} />)}
                 </div>
 
-                <video style={{ width: '100%', height: '100%', border: '1px solid red' }}></video>
+                <div style={{ with: '24vw' }}>
+                    <div className="video-container">
+                        {!loader &&
+                            <Fragment>
+                                <video
+                                    key={videos[currentIndex]}
+                                    src={videos[currentIndex]}
+                                    className="video"
+                                    controls
+                                    autoPlay
+                                    loop
+                                />
+
+                                {/* Prev */}
+                                {currentIndex > 0 && (
+                                    <button className="nav-btn prev" onClick={handlePrev}>
+                                        ⬅
+                                    </button>
+                                )}
+
+                                {/* Next */}
+                                {currentIndex < videos.length - 1 && (
+                                    <button className="nav-btn next" onClick={handleNext}>
+                                        ➡
+                                    </button>
+                                )}
+                            </Fragment>
+                        }
+                        {loader &&
+                            <Fragment>
+                                <img src='gif/loading-gif.gif' alt='' style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }} />
+                            </Fragment>
+                        }
+                    </div>
+                </div>
             </div>
-        </Fragment>
+
+        </div>
+
     )
 }
 
-export default Live;
+export default memo(Live);

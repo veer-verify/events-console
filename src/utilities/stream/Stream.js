@@ -1,7 +1,7 @@
 import './Stream.css';
 import { memo, useEffect, useRef, useState } from "react";
 
-const Stream = ({ site, streamUrl, screenshot, currentCamera }) => {
+const Stream = ({ site, streamUrl, screenshot, currentCamera, getCamera }) => {
   const videoRef = useRef(null);
 
   const peerConnectionRef = useRef(null);
@@ -315,12 +315,21 @@ const Stream = ({ site, streamUrl, screenshot, currentCamera }) => {
         showLoader && <div className="loader"></div>
       }
 
+
       {
         showOverlay && screenshot &&
         <div className="hover-overlay">
           <div className="display-icon">
             <p>{currentCamera?.cameraId}</p>
-            <img src="icons/screenshot.svg" alt="overlay" style={{ width: "20px", height: "20px", cursor: "pointer" }} onClick={handleClick} title="Screenshot" />
+
+            <div>
+              <img src="icons/play-back.png" alt="overlay"
+                style={{ width: "20px", height: "20px", cursor: "pointer", rotate: '180deg', marginRight: '4px' }}
+                onClick={() => getCamera(currentCamera)} title="Playback" />
+              <img src="icons/screenshot.svg" alt="overlay"
+                style={{ width: "20px", height: "20px", cursor: "pointer", }}
+                onClick={handleClick} title="Screenshot" />
+            </div>
           </div>
         </div>
       }
@@ -333,7 +342,6 @@ const Stream = ({ site, streamUrl, screenshot, currentCamera }) => {
       }
     </div>
   );
-
 };
 
 export default memo(Stream);

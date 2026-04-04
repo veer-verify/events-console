@@ -3,6 +3,7 @@ import { environment } from '../../environment';
 import { getDay, getHour, getStorage, getTimeByTimezone, formatTimestamp } from './StorageService';
 import axios from 'axios';
 import { Navigate } from 'react-router-dom';
+import dayjs from 'dayjs';
 
 
 export const getAccessforRefreshToken = async () => {
@@ -19,7 +20,7 @@ export const getAccessforRefreshToken = async () => {
 };
 
 export const getMetadata = async () => {
-  const url = `${environment.common_url}/getValuesListByType_1_0`;
+  const url = `${environment.metadata_url}/getValuesListByType_1_0`;
   return api.get(url).then((res) => res.data).catch((err) => console.log(err));
 };
 
@@ -167,7 +168,6 @@ export const eventsGenericEmail = async (payload) => {
   formData.append('alertSubTypeId', payload?.alertSubTypeId);
   formData.append('objectName', payload?.objectName);
   formData.append('eventTag', 'Camera-Event');
-  // formData.append('eventFromTime', getTimeByTimezone(payload?.timezone));
   formData.append('eventFromTime', formatTimestamp(payload?.eventTime));
   formData.append('eventToTime', getTimeByTimezone(payload?.timezone));
   formData.append('actionTag', payload?.actionTag);
@@ -181,6 +181,11 @@ export const eventsGenericEmail = async (payload) => {
   formData.append("Bcc", payload?.BCC?.join(','));
   formData.append("Cc", payload?.Cc?.join(','));
   formData.append('callingSystemDetail', 'events-console');
+  formData.append('resolutionNotes', payload?.emailResolution);
+  formData.append("textDetails", JSON.stringify(payload?.smsDetails));
+  formData.append('userSendMailLevel', payload?.userSendMailLevel);
+  formData.append('address', JSON.stringify(payload?.address));
+
   for (var i = 0; i < payload?.screenshots?.length; i++) {
     formData.append("files", payload?.screenshots[i]);
   }
@@ -191,9 +196,6 @@ export const eventsGenericEmail = async (payload) => {
   //     }
   //   }
   // });
-  formData.append("textDetails", JSON.stringify(payload?.smsDetails));
-  formData.append('userSendMailLevel', payload?.userSendMailLevel);
-  formData.append('address', JSON.stringify(payload?.address));
   return api.post(url, formData, { params: params }).then((res) => res).catch((err) => console.log(err));
 }
 
@@ -345,10 +347,24 @@ export async function loadImageWithAuth(url) {
 }
 
 
-export async function audioDisable(payload) {
+export async function checkCameraAudio(payload) {
   const url = `${environment.guard_monitoring_url}/checkCameraAudio_1_0`;
   return api
     .get(url, { params: { cameraId: payload?.cameraId, siteId: payload?.siteId } })
+    .then((res) => res.data)
+    .catch((err) => console.log(err));
+}
+
+export const getPlayback = async (payload) => {
+  const url = `${environment.common_url}/custom_playback_urls_1_0`;
+  let params = new URLSearchParams();
+  params.append('cameraId', payload?.cameraId);
+  params.append('siteId', payload?.siteId);
+  params.append('eventTime', dayjs(payload?.landingTime).format('YYYY-MM-DD HH:mm:ss'));
+  params.append('minutesBeforeEvent', payload?.minutesBeforeEvent ?? 2);
+  params.append('currentTime', getTimeByTimezone(payload?.timezone));
+  return api
+    .get(url, { params: params })
     .then((res) => res.data)
     .catch((err) => console.log(err));
 }

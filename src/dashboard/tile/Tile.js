@@ -6,8 +6,8 @@ import Stream from "../../utilities/stream/Stream";
 import { toast } from "react-toastify";
 import { useSelector, shallowEqual } from "react-redux";
 import ErrorInfo from "../../utilities/error-info/ErrorInfo";
-import { getStorage, getTimeByTimezone, getZone, isValid, setStorage, timeFormat } from "../../utilities/services/StorageService";
-import { audioDisable, getImagesForCameraId, loadImageWithAuth, playSiren } from "../../utilities/services/ApiService";
+import { getHour, getStorage, getTimeByTimezone, getZone, isValid, setStorage, timeFormat } from "../../utilities/services/StorageService";
+import { checkCameraAudio, getImagesForCameraId, loadImageWithAuth, playSiren } from "../../utilities/services/ApiService";
 
 const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => {
   // console.log(currentEvent)
@@ -74,6 +74,7 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
 
   const play = async () => {
     // if (monitoringData?.audioUrl === '') return toast.warn('No URL Found!');
+
     setShowTags(false);
     if (currentEvent) {
       currentEvent.playing = true;
@@ -156,6 +157,8 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
    */
   useEffect(() => {
     const [actionsTakenTypes] = metadata.filter((item) => item.typeName === 'ActionsTaken');
+    // const actionsTakenTypes = monitoringData?.actionsTaken?.filter((item) => item.typeName === 'ActionsTaken');
+
     setActionsTaken(() => {
       return Array.from(actionsTakenTypes?.metadata, (el) => ({ name: el.value, selected: false, time: null, status: false, editing: false }));
     })
@@ -164,9 +167,9 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
 
   useEffect(() => {
     const fetchAudio = async () => {
-      const audioRes = await audioDisable(currentEvent);
+      const audioRes = await checkCameraAudio(currentEvent);
       if (audioRes?.statusCode === 200) {
-        setAudio(audioRes.audioConfigured)
+        setAudio(audioRes)
       }
     };
     if (currentEvent) {
@@ -184,7 +187,7 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
   }, [currentEvent?.timer]);
 
   const handleMouseUp = () => {
-    draggingRef.current = null; // clear dragging element
+    draggingRef.current = null;
     document.removeEventListener("mousemove", handleMouseMove);
     document.removeEventListener("mouseup", handleMouseUp);
   };
@@ -193,14 +196,6 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
   const dirRef = useRef(1);
   const lastRef = useRef(0);
   useEffect(() => {
-    // currentEvent.image_list = [
-    //   'images/background.png',
-    //   'images/camera.png',
-    //   'images/hide.svg',
-    //   'images/verifai-logo.png',
-    //   'images/camera.png',
-    //   'images/hide.svg',
-    // ]
     const handleClickOutside = (event) => {
       if (
         showTags &&
@@ -265,7 +260,9 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
 
   const toggleSelect = (index) => {
     const updated = [...actionsTaken];
+    updated[index].status = false;
     updated[index].selected = !updated[index].selected;
+    updated[index].time = getTimeByTimezone(currentEvent?.timezone);
     setActionsTaken(updated);
   };
 
@@ -275,7 +272,7 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
     // updated[index].responded = !updated[index].responded;
     updated[index].status = !updated[index].status;
     setActionsTaken(updated);
-    // console.log(actionsTaken)
+    console.log(actionsTaken)
   };
 
   const enableEdit = (index, e) => {
@@ -404,15 +401,15 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
                       : "custom-action"
                   }
                   onClick={play}
-                  disabled={currentEvent?.playing || audio === 'F'}
+                  disabled={currentEvent?.playing || audio?.audioConfigured === 'F'}
                 >
                   <img
                     src="icons/siren.png"
                     alt="icon"
                     width={20}
                     title="Play Siren"
-                    disabled={audio === 'F'}
-                    style={{ opacity: audio === 'T' ? 1 : 0.5 }}
+                    disabled={audio?.audioConfigured === 'F'}
+                    style={{ opacity: audio?.audioConfigured === 'F' ? 0.5 : 1 }}
                   />
                 </button>
 
@@ -489,7 +486,7 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
                     <p>{addressParts.join(", ")}</p>
                   </div>
 
-                  <div style={{ display: "flex", gap: "4px" }}>
+                  <div style={{ display: "flex", gap: "4px", userSelect: 'none' }}>
                     {actionsTaken.map((item, index) => (
                       <div
                         key={index}
@@ -580,7 +577,7 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
             }
 
             {/**monitoring info */}
-            {monitoringData && count === 2 && (
+            {monitoringData && count === 2 && !showEscalation && (
               <div className="monitoring">
                 <p className="monitoring-title">MONITORING INFO</p>
                 <table>
@@ -624,10 +621,6 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
                       </td>
                       <td>{notes || "None"}</td>
                     </tr>
-                    {/* <tr>
-                                                <td><strong>History</strong></td>
-                                                { currentEvent?.userLevelAlarmInfo.map((item, i) => getTagNameById(item?.subActionTag)?.subCategoryName && <td key={i}>{ getTagNameById(item?.subActionTag)?.subCategoryName }</td>) }
-                                            </tr> */}
                   </tbody>
                 </table>
               </div>
@@ -658,13 +651,13 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
           </Fragment>
         )}
 
-        {session?.userLevel !== 1 && contactDetails?.length !== 0 && (
+        {session?.userLevel !== 1 && contactDetails?.length !== 0 && !showEscalation && (
           <ContactInfo contactDetails={contactDetails} />
         )}
-        {session?.userLevel !== 1 && lawEnforcement?.length !== 0 && (
+        {session?.userLevel !== 1 && lawEnforcement?.length !== 0 && !showEscalation && (
           <LawInfo lawEnforcement={lawEnforcement} />
         )}
-        {session?.userLevel !== 1 && smsDetails?.length !== 0 && (
+        {session?.userLevel !== 1 && smsDetails?.length !== 0 && !showEscalation && (
           <DotCom smsDetails={smsDetails} />
         )}
 
@@ -678,6 +671,8 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
               handleSuspicious={handleSuspicious}
               monitoringData={monitoringData}
               actionsTaken={actionsTaken}
+              audio={audio}
+              play={play}
             />
           </div>
         )}

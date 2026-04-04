@@ -5,7 +5,7 @@
   font-size: 16px;
 }
 
-.close-btn{
+.close-btn {
   position: absolute;
   top: 5px;
   right: 5px;
@@ -19,10 +19,10 @@
   z-index: 999;
 }
 
-.close-btn:hover{
+.close-btn:hover {
   cursor: pointer;
-  border: 1px solid #ED3237;
-  background-color: #ED3237;
+  border: 1px solid #ed3237;
+  background-color: #ed3237;
   color: white;
 }
 
@@ -40,7 +40,7 @@
 }
 
 .radio-group input[type="radio"] {
-  accent-color: #ED3237;
+  accent-color: #ed3237;
   /* modern browsers support this */
   width: 18px;
   height: 18px;
@@ -57,8 +57,8 @@
   transition: color 0.2s;
 }
 
-.radio-group input[type="radio"]:checked+span {
-  color: #ED3237;
+.radio-group input[type="radio"]:checked + span {
+  color: #ed3237;
 }
 
 .form-group {
@@ -83,7 +83,7 @@
 }
 
 .form-group select:focus {
-  border-color: #ED3237;
+  border-color: #ed3237;
 }
 
 .button-group {
@@ -101,33 +101,32 @@
   border: none;
   cursor: pointer;
   background-color: #fff;
-
 }
 
 .btn-primary {
-  border: 1px solid #ED3237;
-  color: #ED3237;
+  border: 1px solid #ed3237;
+  color: #ed3237;
 }
 
 .btn-primary:hover {
-  background: #ED3237;
+  background: #ed3237;
   color: white;
 }
 
 .btn-secondary {
-  border: 1px solid #ED3237;
-  color: #ED3237;
+  border: 1px solid #ed3237;
+  color: #ed3237;
 }
 
 .btn-secondary:hover {
-  background: #ED3237;
-  color: white
+  background: #ed3237;
+  color: white;
 }
 
 /* Right Section */
 .alert-preview {
   position: relative;
-  background: #ED32370D;
+  /* background: #ED32370D; */
   padding: 10px;
   width: 60%;
   /* box-shadow: 0 4px 10px rgba(0,0,0,0.05); */
@@ -135,21 +134,19 @@
   overflow-y: auto; */
 }
 
-
-
 .alert-header {
-  color: #ED3237;
+  color: #ed3237;
   font-weight: 600;
   font-size: 14px;
   text-align: center;
-  border: 1px solid #ED3237;
+  border: 1px solid #ed3237;
   padding: 6px;
   border-radius: 4px;
   margin-bottom: 10px;
 }
 
 .mail-btn {
-  background: #ED3237;
+  background: #ed3237;
   color: white;
   border: none;
   padding: 6px 12px;
@@ -163,7 +160,7 @@
 }
 
 .mail-btn:hover {
-  background: #ED3237;
+  background: #ed3237;
 }
 
 .alert-message {
@@ -220,16 +217,8 @@ td:first-child {
   /* make stroke match */
 }
 
-
-
-
-
-
 .button-group1 {
-
   border-radius: 50px;
-
-
 }
 
 .toggle-button {
@@ -237,29 +226,26 @@ td:first-child {
   width: 100px;
   border: 1px solid #e0e0e0;
   cursor: pointer;
-  background-color: #FFFFFF;
+  background-color: #ffffff;
   color: #aaa;
   font-size: 12px;
   outline: none;
-  transition: background-color 0.3s, color 0.3s;
+  transition:
+    background-color 0.3s,
+    color 0.3s;
   border-radius: 20px;
-
 }
 
-
-
 .toggle-button.active {
-  background-color: #ED3237;
+  background-color: #ed3237;
   color: white;
   z-index: 1000;
-
 }
 
 .toggle-button.activerej {
-  background-color: #ED3237;
+  background-color: #ed3237;
   color: white;
   z-index: 1000;
-
 }
 
 .flex-group {

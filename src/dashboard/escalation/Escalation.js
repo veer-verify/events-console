@@ -2,11 +2,11 @@ import "./Escalation.css";
 import { useState, useEffect, Fragment, memo } from "react";
 import { useAuth } from "../Dashboard";
 import ErrorInfo from "../../utilities/error-info/ErrorInfo";
-import { eventsGenericEmail, getAlertCategoriesForSiteId, getEmailDataForVMSEvents } from "../../utilities/services/ApiService";
-import { getStorage, getTimeByTimezone } from "../../utilities/services/StorageService";
+import { eventsGenericEmail, getAlertCategoriesForSiteId, getEmailDataForVMSEvents, playSiren } from "../../utilities/services/ApiService";
+import { getHour, getStorage, getTimeByTimezone } from "../../utilities/services/StorageService";
 
 
-const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleSuspicious, monitoringData, actionsTaken }) => {
+const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleSuspicious, monitoringData, actionsTaken, audio, play }) => {
   // console.log(monitoringData)
   // const data = useAuth();
 
@@ -38,9 +38,35 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
   };
 
   const session = getStorage('session');
-  const handle = (type) => {
+  const handle = async (type) => {
     const currentTime = getTimeByTimezone(currentEvent?.timezone);
     if (type === 'escalate') {
+      // const hours = JSON.parse(audio?.audioHours ?? '[]');
+      // const currentHour = getHour(currentEvent?.timezone);
+      // if (hours.includes(currentHour)) return;
+
+      // const actions = [
+      //   {
+      //     name: 'Deterrent',
+      //     selected: audio?.audioConfigured === 'F' ? false : true,
+      //     status: audio?.audioConfigured === 'F' && hours.includes(currentHour) ? false : true,
+      //     time: audio?.audioConfigured === 'F' && hours.includes(currentHour) ? null : this.storageSer.getTimeWithTimezone(currentEvent?.timezone)
+      //   }
+      // ];
+
+      if (currentEvent) {
+        currentEvent.playing = true;
+        currentEvent.audioPlayed = true;
+        currentEvent.activityDetTime = getTimeByTimezone(currentEvent?.timezone);
+      }
+
+      const res = await playSiren(currentEvent);
+      // res?.statusCode === 200 ? true : false;
+
+      if (currentEvent) {
+        currentEvent.playing = false;
+      }
+
       handleSuspicious(
         {
           ...currentEvent,
@@ -69,7 +95,16 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
 
     if (session?.userLevel === 2) {
       eventsGenericEmail(
-        { ...currentEvent, actionTag: emaildata?.alertTag, alertTypeId: selectedAlertType, alertSubTypeId: selectedSubType, objectName: selection, ...emaildata, userSendMailLevel: type, address: monitoringData?.address }
+        {
+          ...currentEvent,
+          actionTag: emaildata?.alertTag,
+          alertTypeId: selectedAlertType,
+          alertSubTypeId: selectedSubType,
+          objectName: selection,
+          ...emaildata,
+          userSendMailLevel: type,
+          address: monitoringData?.address
+        }
       );
     }
     closeEscalation();
