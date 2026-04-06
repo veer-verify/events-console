@@ -39,6 +39,7 @@ const Dashboard = () => {
    * to handle false activity
    */
   const handleFalse = async (item) => {
+    // if (session?.userLevel === 3 && (item?.userLevelAlarmInfo?.actionsTakenInfo?.length ?? 0 < 3)) return alert('Please take nessary actions!');
     const subAction = getStorage('sub_action');
     const customAction = getStorage('custom_action');
 
@@ -47,7 +48,7 @@ const Dashboard = () => {
         level: getSession()?.userLevel,
         user: getSession()?.UserId,
         userName: getSession()?.UserName,
-        alarm: item.audioPlayed ? 'P' : 'N',
+        alarm: item.audioStatus,
         activityDetTime: item.activityDetTime ?? '',
         landingTime: item?.landingTime ?? '',
         reviewStart: item?.landingTime ?? '',
@@ -57,9 +58,8 @@ const Dashboard = () => {
         alertTag: parseInt(item?.alertTypeId),
         subAlertTag: parseInt(item?.alertSubTypeId),
         notes: item.notes ?? '',
-        actionsTakenInfo: item?.actionsTaken.filter((el) => {
+        actionsTakenInfo: item?.actionsTaken ?? item?.actionsTaken.forEach((el) => {
           delete el.editing;
-          return el.selected;
         })
       }
     );
@@ -98,7 +98,7 @@ const Dashboard = () => {
         ...first,
         monitoringInfo,
         landingTime: getTimeByTimezone(first.timezone),
-        audioPlayed: false,
+        audioStatus: 'F',
         timer: 60,
       };
       writetoRedisQueueData(event);
@@ -119,6 +119,8 @@ const Dashboard = () => {
    * to handel suspicious activity
    */
   const handleSuspicious = async (item) => {
+    // if (session?.userLevel === 3 && (item?.userLevelAlarmInfo?.actionsTakenInfo?.length ?? 0 < 3)) return alert('Please take nessary actions!');
+
     const customAction = getStorage('custom_action');
     const subAction = getStorage('sub_action');
 
@@ -127,7 +129,7 @@ const Dashboard = () => {
         level: getSession()?.userLevel,
         user: getSession()?.UserId,
         userName: getSession()?.UserName,
-        alarm: item.audioPlayed ? 'P' : 'N',
+        alarm: item.audioStatus,
         activityDetTime: item.activityDetTime ?? '',
         landingTime: item?.landingTime ?? '',
         reviewStart: item?.landingTime ?? '',
@@ -137,9 +139,8 @@ const Dashboard = () => {
         alertTag: parseInt(item?.alertTypeId),
         subAlertTag: parseInt(item?.alertSubTypeId),
         notes: item.notes ?? '',
-        actionsTakenInfo: item?.actionsTaken.filter((el) => {
+        actionsTakenInfo: item?.actionsTaken ?? item?.actionsTaken.forEach((el) => {
           delete el.editing;
-          return el.selected;
         })
       }
     );
@@ -179,7 +180,7 @@ const Dashboard = () => {
         ...first,
         monitoringInfo,
         landingTime: getTimeByTimezone(first.timezone),
-        audioPlayed: false,
+        audioStatus: 'F',
         timer: 60,
       };
 
@@ -222,7 +223,7 @@ const Dashboard = () => {
         const event = {
           ...rawEvent,
           landingTime: getTimeByTimezone(rawEvent.timezone),
-          audioPlayed: false,
+          audioStatus: 'F',
           timer: 60,
         };
 
@@ -352,7 +353,7 @@ const Dashboard = () => {
           ...first,
           monitoringInfo,
           landingTime: getTimeByTimezone(first.timezone),
-          audioPlayed: false,
+          audioStatus: 'F',
           timer: 60,
         };
 

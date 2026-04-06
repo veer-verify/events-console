@@ -74,18 +74,25 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
 
   const play = async () => {
     // if (monitoringData?.audioUrl === '') return toast.warn('No URL Found!');
+    const hours = JSON.parse(audio?.audioHours ?? '[]');
+    const currentHour = getHour(currentEvent?.timezone);
 
     setShowTags(false);
     if (currentEvent) {
       currentEvent.playing = true;
-      currentEvent.audioPlayed = true;
-      currentEvent.activityDetTime = getTimeByTimezone(currentEvent?.timezone);
     }
 
     const res = await playSiren(currentEvent);
 
     if (currentEvent) {
       currentEvent.playing = false;
+      currentEvent.audioStatus =
+        (audio?.audioConfigured === 'F')
+          ? 'N'
+          : (audio?.audioConfigured === 'T' && hours.includes(currentHour))
+            ? (res?.statusCode === 200 ? 'P' : 'R')
+            : 'F';
+      currentEvent.activityDetTime = (audio?.audioConfigured === 'T' && !hours.includes(currentHour)) ? getTimeByTimezone(currentEvent?.timezone) : '';
     }
 
     if (res) {
@@ -99,27 +106,65 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
   const [imgSrc, setImgSrc] = useState(currentEvent?.image_list[0]);
   const [audio, setAudio] = useState('');
 
-  const handleAction = (data) => {
+  const handleAction = async (data) => {
+    // if (session?.userLevel === 3 && (currentEvent?.userLevelAlarmInfo?.actionsTakenInfo?.length ?? 0 < 3)) return alert('Please take nessary actions!');
 
-    const session = getStorage("session");
     const customAction = getStorage("custom_action");
     const currentTime = getTimeByTimezone(currentEvent?.timezone);
     setStorage("sub_action", data);
 
     if (customAction === 1) {
       setImgSrc(null);
-      handleFalse({ ...currentEvent, index, actionTagTime: currentTime, actionsTaken });
+      handleFalse({ ...currentEvent, index, actionTagTime: currentTime, actionsTaken: [] });
     } else {
       if (session?.userLevel !== 1) {
         setShowEscalation(true);
       } else {
+
+        const hours = JSON.parse(audio?.audioHours ?? '[]');
+        const currentHour = getHour(currentEvent?.timezone);
+
+        setShowTags(false);
+        if (currentEvent) {
+          currentEvent.playing = true;
+        }
+
+        let res;
+        if (session?.userLevel === 1) {
+          if (audio?.audioConfigured === 'T' && !hours.includes(currentHour)) {
+            res = await playSiren(currentEvent)
+          }
+        }
+
+        if (currentEvent) {
+          currentEvent.playing = false;
+          currentEvent.audioStatus =
+            (audio?.audioConfigured === 'F')
+              ? 'N'
+              : (audio?.audioConfigured === 'T' && hours.includes(currentHour))
+                ? (res?.statusCode === 200 ? 'P' : 'R')
+                : 'F';
+          currentEvent.activityDetTime = (audio?.audioConfigured === 'T' && !hours.includes(currentHour)) ? getTimeByTimezone(currentEvent?.timezone) : '';
+        }
+
+        const actions = [
+          {
+            name: 'Deterrent',
+            selected: audio?.audioConfigured === 'T' ? true : false,
+            status: audio?.audioConfigured === 'T' && !hours.includes(currentHour) && res.statusCode === 200 ? true : false,
+            time: audio?.audioConfigured === 'T' && !hours.includes(currentHour) ? getTimeByTimezone(currentEvent?.timezone) : null
+          }
+        ];
+        const output = [...actionsTaken, ...actions];
+
+
         setImgSrc(null);
         handleSuspicious({
           ...currentEvent,
           index,
           actionTagTime: currentTime,
           ...monitoringData,
-          actionsTaken
+          actionsTaken: output
         });
       }
     }
@@ -372,7 +417,7 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
                 <button
                   className="custom-action"
                   onClick={openLiveDialog}
-                  // disabled={session?.userLevel === 1}
+                  disabled={session?.userLevel === 1}
                   style={{ opacity: session?.userLevel === 1 ? 0.5 : 1 }}
                 >
                   <img
@@ -394,24 +439,27 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
                   />
                 </button> */}
 
-                <button
-                  className={
-                    currentEvent?.playing
-                      ? "custom-action blink"
-                      : "custom-action"
-                  }
-                  onClick={play}
-                  disabled={currentEvent?.playing || audio?.audioConfigured === 'F'}
-                >
-                  <img
-                    src="icons/siren.png"
-                    alt="icon"
-                    width={20}
-                    title="Play Siren"
-                    disabled={audio?.audioConfigured === 'F'}
-                    style={{ opacity: audio?.audioConfigured === 'F' ? 0.5 : 1 }}
-                  />
-                </button>
+                {audio && audio.audioConfigured === 'T' &&
+                  <button
+                    className={
+                      currentEvent?.playing
+                        ? "custom-action blink"
+                        : "custom-action"
+                    }
+                    onClick={play}
+                    disabled={currentEvent?.playing || audio?.audioConfigured === 'F'}
+                  >
+                    <img
+                      src="icons/siren.png"
+                      alt="icon"
+                      width={20}
+                      title="Play Siren"
+                      disabled={audio?.audioConfigured === 'F'}
+                      style={{ opacity: audio?.audioConfigured === 'F' ? 0.5 : 1 }}
+                    />
+                  </button>
+                }
+
 
                 <button
                   className="custom-action"
@@ -672,7 +720,6 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
               monitoringData={monitoringData}
               actionsTaken={actionsTaken}
               audio={audio}
-              play={play}
             />
           </div>
         )}

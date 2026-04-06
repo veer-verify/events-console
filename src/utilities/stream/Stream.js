@@ -95,7 +95,7 @@ const Stream = ({ site, streamUrl, screenshot, currentCamera, getCamera }) => {
       // }, 2000);
 
       if (sessionUrlRef.current) {
-        fetch(sessionUrlRef.current, { method: "DELETE" });
+        fetch(sessionUrlRef.current, { method: "DELETE" }).catch((err) => console.log(err));
       }
 
       sessionUrlRef.current = "";

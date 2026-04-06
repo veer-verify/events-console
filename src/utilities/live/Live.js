@@ -25,13 +25,14 @@ const Live = ({ currentEvent, closeLiveDialog }) => {
         }
     };
 
+    const [currentCam, setCurrentCam] = useState(null);
     const getCamera = (data) => {
         const event = { ...currentEvent, cameraId: data?.cameraId };
-        currentEvent = event;
-        console.log(currentEvent)
+        setCurrentCam(event);
+        console.log(currentCam)
         const playback = async () => {
             setLoader(true)
-            const response = await getPlayback(currentEvent);
+            const response = await getPlayback(event);
             setLoader(false)
             if (response) {
                 setVideos(response);
@@ -95,7 +96,7 @@ const Live = ({ currentEvent, closeLiveDialog }) => {
         <div className="cam-container" ref={liveRef} onMouseDown={handleMouseDown}>
 
             <div className="header">
-                <p>{currentEvent?.siteName}</p>
+                <p>{currentEvent?.siteName} - {currentCam?.cameraId ?? currentEvent?.cameraId}</p>
                 <button onClick={() => closeLiveDialog()}>x</button>
             </div>
             <div style={{ display: 'flex' }}>
@@ -111,7 +112,7 @@ const Live = ({ currentEvent, closeLiveDialog }) => {
                                     key={videos[currentIndex]}
                                     src={videos[currentIndex]}
                                     className="video"
-                                    controls
+                                    controls={loader ? false : true}
                                     autoPlay
                                     loop
                                 />

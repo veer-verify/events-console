@@ -1,14 +1,11 @@
 import "./Escalation.css";
 import { useState, useEffect, Fragment, memo } from "react";
-import { useAuth } from "../Dashboard";
 import ErrorInfo from "../../utilities/error-info/ErrorInfo";
 import { eventsGenericEmail, getAlertCategoriesForSiteId, getEmailDataForVMSEvents, playSiren } from "../../utilities/services/ApiService";
 import { getHour, getStorage, getTimeByTimezone } from "../../utilities/services/StorageService";
 
 
-const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleSuspicious, monitoringData, actionsTaken, audio, play }) => {
-  // console.log(monitoringData)
-  // const data = useAuth();
+const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleSuspicious, monitoringData, actionsTaken, audio }) => {
 
   const [alerts, setAlerts] = useState([]);
   // const [actionTags, setActionTags] = useState([]);
@@ -39,34 +36,47 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
 
   const session = getStorage('session');
   const handle = async (type) => {
+    // if (session?.userLevel === 3 && (currentEvent?.userLevelAlarmInfo?.actionsTakenInfo?.length ?? 0 < 3)) return alert('Please take nessary actions!');
+
     const currentTime = getTimeByTimezone(currentEvent?.timezone);
+    const hours = JSON.parse(audio?.audioHours ?? '[]');
+    const currentHour = getHour(currentEvent?.timezone);
+    // if (hours.includes(currentHour)) return;
+
+    if (currentEvent) {
+      currentEvent.playing = true;
+    }
+
+    let res;
+    if (session?.userLevel === 1) {
+      if (audio?.audioConfigured === 'T' && !hours.includes(currentHour)) {
+        res = await playSiren(currentEvent)
+      }
+    }
+
+
+    if (currentEvent) {
+      currentEvent.playing = false;
+      currentEvent.audioStatus =
+        (audio?.audioConfigured === 'F')
+          ? 'N'
+          : (audio?.audioConfigured === 'T' && hours.includes(currentHour))
+            ? (res?.statusCode === 200 ? 'P' : 'R')
+            : 'F';
+      currentEvent.activityDetTime = (audio?.audioConfigured === 'T' && !hours.includes(currentHour)) ? getTimeByTimezone(currentEvent?.timezone) : '';
+    }
+
+    const actions = [
+      {
+        name: 'Deterrent',
+        selected: audio?.audioConfigured === 'T' ? true : false,
+        status: audio?.audioConfigured === 'T' && !hours.includes(currentHour) && res.statusCode === 200 ? true : false,
+        time: audio?.audioConfigured === 'T' && !hours.includes(currentHour) ? getTimeByTimezone(currentEvent?.timezone) : null
+      }
+    ];
+    const output = [...actionsTaken, ...actions];
+
     if (type === 'escalate') {
-      // const hours = JSON.parse(audio?.audioHours ?? '[]');
-      // const currentHour = getHour(currentEvent?.timezone);
-      // if (hours.includes(currentHour)) return;
-
-      // const actions = [
-      //   {
-      //     name: 'Deterrent',
-      //     selected: audio?.audioConfigured === 'F' ? false : true,
-      //     status: audio?.audioConfigured === 'F' && hours.includes(currentHour) ? false : true,
-      //     time: audio?.audioConfigured === 'F' && hours.includes(currentHour) ? null : this.storageSer.getTimeWithTimezone(currentEvent?.timezone)
-      //   }
-      // ];
-
-      if (currentEvent) {
-        currentEvent.playing = true;
-        currentEvent.audioPlayed = true;
-        currentEvent.activityDetTime = getTimeByTimezone(currentEvent?.timezone);
-      }
-
-      const res = await playSiren(currentEvent);
-      // res?.statusCode === 200 ? true : false;
-
-      if (currentEvent) {
-        currentEvent.playing = false;
-      }
-
       handleSuspicious(
         {
           ...currentEvent,
@@ -76,7 +86,7 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
           alertSubTypeId: selectedSubType,
           ...monitoringData,
           notes,
-          actionsTaken
+          actionsTaken: output
         }
       );
     } else {
@@ -85,10 +95,10 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
           ...currentEvent,
           alertTypeId: selectedAlertType,
           alertSubTypeId: selectedSubType,
-          index, actionTagTime:
-            currentTime,
+          index,
+          actionTagTime: currentTime,
           notes,
-          actionsTaken
+          actionsTaken: output
         }
       );
     }
