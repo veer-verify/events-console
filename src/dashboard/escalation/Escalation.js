@@ -1,11 +1,14 @@
 import "./Escalation.css";
 import { useState, useEffect, Fragment, memo } from "react";
 import ErrorInfo from "../../utilities/error-info/ErrorInfo";
-import { eventsGenericEmail, getAlertCategoriesForSiteId, getEmailDataForVMSEvents, playSiren } from "../../utilities/services/ApiService";
+import { eventsGenericEmail, getAlertCategoriesForSiteId, getEmailDataForVMSEvents } from "../../utilities/services/ApiService";
 import { getHour, getStorage, getTimeByTimezone } from "../../utilities/services/StorageService";
+import Swal from "sweetalert2";
 
 
 const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleSuspicious, monitoringData, actionsTaken, audio }) => {
+
+  const customAction = getStorage("custom_action");
 
   const [alerts, setAlerts] = useState([]);
   // const [actionTags, setActionTags] = useState([]);
@@ -36,45 +39,52 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
 
   const session = getStorage('session');
   const handle = async (type) => {
-    // if (session?.userLevel === 3 && (currentEvent?.userLevelAlarmInfo?.actionsTakenInfo?.length ?? 0 < 3)) return alert('Please take nessary actions!');
+    if (customAction === 2 && session?.userLevel === 3) {
+      if (actionsTaken.length === 0) return alert('No actions found!');
+      const allChecked = actionsTaken.every((item) => item?.selected);
+      if (!allChecked)
+        return Swal.fire(
+          'All actions are mandatory please update them!'
+        );
+    }
 
     const currentTime = getTimeByTimezone(currentEvent?.timezone);
     const hours = JSON.parse(audio?.audioHours ?? '[]');
     const currentHour = getHour(currentEvent?.timezone);
     // if (hours.includes(currentHour)) return;
 
-    if (currentEvent) {
-      currentEvent.playing = true;
-    }
+    // if (currentEvent) {
+    //   currentEvent.playing = true;
+    // }
 
-    let res;
-    if (session?.userLevel === 1) {
-      if (audio?.audioConfigured === 'T' && !hours.includes(currentHour)) {
-        res = await playSiren(currentEvent)
-      }
-    }
+    // let res;
+    // if (session?.userLevel === 1) {
+    //   if (audio?.audioConfigured === 'T' && !hours.includes(currentHour)) {
+    //     res = await playSiren(currentEvent)
+    //   }
+    // }
 
 
-    if (currentEvent) {
-      currentEvent.playing = false;
-      currentEvent.audioStatus =
-        (audio?.audioConfigured === 'F')
-          ? 'N'
-          : (audio?.audioConfigured === 'T' && hours.includes(currentHour))
-            ? (res?.statusCode === 200 ? 'P' : 'R')
-            : 'F';
-      currentEvent.activityDetTime = (audio?.audioConfigured === 'T' && !hours.includes(currentHour)) ? getTimeByTimezone(currentEvent?.timezone) : '';
-    }
+    // if (currentEvent) {
+    //   currentEvent.playing = false;
+    //   currentEvent.audioStatus =
+    //     (audio?.audioConfigured === 'F')
+    //       ? 'N'
+    //       : (audio?.audioConfigured === 'T' && hours.includes(currentHour))
+    //         ? (res?.statusCode === 200 ? 'P' : 'R')
+    //         : 'F';
+    //   currentEvent.activityDetTime = (audio?.audioConfigured === 'T' && !hours.includes(currentHour)) ? getTimeByTimezone(currentEvent?.timezone) : '';
+    // }
 
-    const actions = [
-      {
-        name: 'Deterrent',
-        selected: audio?.audioConfigured === 'T' ? true : false,
-        status: audio?.audioConfigured === 'T' && !hours.includes(currentHour) && res.statusCode === 200 ? true : false,
-        time: audio?.audioConfigured === 'T' && !hours.includes(currentHour) ? getTimeByTimezone(currentEvent?.timezone) : null
-      }
-    ];
-    const output = [...actionsTaken, ...actions];
+    // const actions = [
+    //   {
+    //     name: 'Deterrent',
+    //     selected: audio?.audioConfigured === 'T' ? true : false,
+    //     status: audio?.audioConfigured === 'T' && !hours.includes(currentHour) && res.statusCode === 200 ? true : false,
+    //     time: audio?.audioConfigured === 'T' && !hours.includes(currentHour) ? getTimeByTimezone(currentEvent?.timezone) : null
+    //   }
+    // ];
+    // const output = [...actionsTaken, ...actions];
 
     if (type === 'escalate') {
       handleSuspicious(
@@ -86,7 +96,7 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
           alertSubTypeId: selectedSubType,
           ...monitoringData,
           notes,
-          actionsTaken: output
+          actionsTaken
         }
       );
     } else {
@@ -98,12 +108,15 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
           index,
           actionTagTime: currentTime,
           notes,
-          actionsTaken: output
+          actionsTaken
         }
       );
     }
 
     if (session?.userLevel === 2) {
+      const output = currentEvent?.userLevelAlarmInfo?.flatMap(
+        (item) => item?.actionsTakenInfo?.filter(Boolean) ?? []
+      ) ?? [];
       eventsGenericEmail(
         {
           ...currentEvent,
@@ -113,7 +126,8 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
           objectName: selection,
           ...emaildata,
           userSendMailLevel: type,
-          address: monitoringData?.address
+          address: monitoringData?.address,
+          actionTaken: output,
         }
       );
     }

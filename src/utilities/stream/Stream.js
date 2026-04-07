@@ -1,7 +1,7 @@
 import './Stream.css';
 import { memo, useEffect, useRef, useState } from "react";
 
-const Stream = ({ site, streamUrl, screenshot, currentCamera, getCamera }) => {
+const Stream = ({ streamUrl, screenshot, currentCamera, getCamera }) => {
   const videoRef = useRef(null);
 
   const peerConnectionRef = useRef(null);
@@ -305,6 +305,7 @@ const Stream = ({ site, streamUrl, screenshot, currentCamera, getCamera }) => {
   return (
     <div
       className="minscreen"
+      style={screenshot ? { height: '250px' } : { height: '350px' }}
       onMouseEnter={() => setShowOverlay(true)}
       onMouseLeave={() => setShowOverlay(false)}
       onDoubleClick={(e) => screenshot && max(e)}

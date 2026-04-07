@@ -25,6 +25,7 @@
   align-items: center;
   background-color: #ed3237;
   font-size: 12px;
+  padding: 0 10px;
 }
 
 .header p {
@@ -45,9 +46,9 @@
 .video-container {
   position: relative;
   width: 30vw;
-  height: 100%;
-  margin: auto;
-  border: 1px solid #fff;
+  /* height: 100%; */
+  /* margin: auto;
+  border: 1px solid #fff; */
 }
 
 .video {

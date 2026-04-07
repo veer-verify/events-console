@@ -11,7 +11,7 @@
 .config-btn {
   position: fixed;
   z-index: 9;
-  right: 160px;
+  right: 180px;
   top: 20px;
   cursor: pointer;
   border: none;

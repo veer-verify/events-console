@@ -18,7 +18,6 @@ export const environment = {
     // events_url: `https://prodmq.ivisecurity.com/queueManagement`,
     // event_process_url: `${prod}/events_data`,
 
-
     // login_url: `${prod}/userDetails_test`,
     // site_url: `${prod}/vipsites_test`,
     // metadata_url: `${prod}/metadata`,

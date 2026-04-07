@@ -8,7 +8,8 @@ const Live = ({ currentEvent, closeLiveDialog }) => {
     const [cameras, setCameras] = useState([]);
     const [videos, setVideos] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [loader, setLoader] = useState(false);
+    // const [loader, setLoader] = useState(false);
+    const [state, setState] = useState("loading"); // loading | empty | data
 
     const liveRef = useRef(null);
     const pos = useRef({ x: 0, y: 0, offsetX: 0, offsetY: 0 });
@@ -29,19 +30,22 @@ const Live = ({ currentEvent, closeLiveDialog }) => {
     const getCamera = (data) => {
         const event = { ...currentEvent, cameraId: data?.cameraId };
         setCurrentCam(event);
-        console.log(currentCam)
         const playback = async () => {
-            setLoader(true)
+            setState('loading')
             const response = await getPlayback(event);
-            setLoader(false)
-            if (response) {
+
+            if (response && response.statusCode === 200) {
+                setState("data");
                 setVideos(response);
+            } else {
+                setState("empty");
             }
         }
         playback();
     }
 
     useEffect(() => {
+        setCurrentCam(currentEvent);
         const getLive = async () => {
             const response = await getLiveInfoForSiteAndCamera(currentEvent);
             if (response) {
@@ -51,12 +55,14 @@ const Live = ({ currentEvent, closeLiveDialog }) => {
         getLive();
 
         const playback = async () => {
-            setLoader(true)
-
+            setState('loading')
             const response = await getPlayback(currentEvent);
-            setLoader(false)
-            if (response) {
+
+            if (response && response.statusCode === 200) {
+                setState("data");
                 setVideos(response);
+            } else {
+                setState("empty");
             }
         }
         playback();
@@ -66,7 +72,6 @@ const Live = ({ currentEvent, closeLiveDialog }) => {
             setVideos([]);
         };
     }, [currentEvent]);
-
 
     const handleMouseDown = (e) => {
         const element = liveRef.current;
@@ -101,48 +106,63 @@ const Live = ({ currentEvent, closeLiveDialog }) => {
             </div>
             <div style={{ display: 'flex' }}>
                 <div className='cameras'>
-                    {cameras && cameras.map((item, i) => <Stream key={i} streamUrl={`${item.httpUrl}/`} screenshot={true} currentCamera={item} getCamera={getCamera} />)}
+                    {
+                        cameras && cameras.map((item, i) => <div key={i} style={currentCam?.cameraId === item?.cameraId ? { border: '2px solid red' } : { border: '2px solid transparent' }}>
+                            <Stream streamUrl={`${item.httpUrl}/`} screenshot={true} currentCamera={item} getCamera={getCamera} />
+                        </div>)
+                    }
                 </div>
 
-                <div style={{ with: '24vw' }}>
-                    <div className="video-container">
-                        {!loader &&
-                            <Fragment>
-                                <video
-                                    key={videos[currentIndex]}
-                                    src={videos[currentIndex]}
-                                    className="video"
-                                    controls={loader ? false : true}
-                                    autoPlay
-                                    loop
-                                />
+                {/* <div style={{ with: '24vw' }}> */}
+                <div className="video-container">
+                    {
+                        (() => {
+                            switch (state) {
+                                case 'loading':
+                                    // return <Fragment>
+                                    //     <img src='gif/loading-gif.gif' alt='' style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }} />
+                                    // </Fragment>
+                                    return <p className='position-center' style={{ color: '#fff', textTransform: 'uppercase' }}>loading...</p>
+                                case 'empty':
+                                    return <p className='position-center' style={{ color: '#fff', textTransform: 'uppercase' }}>no footage found!</p>
+                                case 'data':
+                                    return <Fragment>
+                                        <p style={{ background: '#ffffff', borderRadius: '4px', position: 'absolute', top: '4px', left: '4px' }}>
+                                            {currentIndex + 1} of {videos.length}
+                                        </p>
+                                        <video
+                                            key={videos[currentIndex]}
+                                            src={videos[currentIndex]}
+                                            className="video"
+                                            controls={state === 'data' ? false : true}
+                                            autoPlay
+                                            loop
+                                        />
 
-                                {/* Prev */}
-                                {currentIndex > 0 && (
-                                    <button className="nav-btn prev" onClick={handlePrev}>
-                                        ⬅
-                                    </button>
-                                )}
+                                        {/* Prev */}
+                                        {currentIndex > 0 && (
+                                            <button className="nav-btn prev" onClick={handlePrev}>
+                                                ⬅
+                                            </button>
+                                        )}
 
-                                {/* Next */}
-                                {currentIndex < videos.length - 1 && (
-                                    <button className="nav-btn next" onClick={handleNext}>
-                                        ➡
-                                    </button>
-                                )}
-                            </Fragment>
-                        }
-                        {loader &&
-                            <Fragment>
-                                <img src='gif/loading-gif.gif' alt='' style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }} />
-                            </Fragment>
-                        }
-                    </div>
+                                        {/* Next */}
+                                        {currentIndex < videos.length - 1 && (
+                                            <button className="nav-btn next" onClick={handleNext}>
+                                                ➡
+                                            </button>
+                                        )}
+                                    </Fragment>;
+                                default:
+                                    return null;
+                            }
+                        })()
+                    }
                 </div>
+                {/* </div> */}
             </div>
 
         </div>
-
     )
 }
 

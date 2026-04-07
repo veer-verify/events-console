@@ -36,7 +36,6 @@
   color: #ed3237;
   font-weight: bold;
   text-transform: uppercase;
-
 }
 
 .page-title .bar {
@@ -75,6 +74,10 @@
 .profile-info .username {
   font-size: 14px;
   font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  width: 100px;
+  text-overflow: ellipsis;
 }
 
 .profile-info .role {

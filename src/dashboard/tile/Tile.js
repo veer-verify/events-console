@@ -8,6 +8,7 @@ import { useSelector, shallowEqual } from "react-redux";
 import ErrorInfo from "../../utilities/error-info/ErrorInfo";
 import { getHour, getStorage, getTimeByTimezone, getZone, isValid, setStorage, timeFormat } from "../../utilities/services/StorageService";
 import { checkCameraAudio, getImagesForCameraId, loadImageWithAuth, playSiren } from "../../utilities/services/ApiService";
+import dayjs from "dayjs";
 
 const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => {
   // console.log(currentEvent)
@@ -89,8 +90,8 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
       currentEvent.audioStatus =
         (audio?.audioConfigured === 'F')
           ? 'N'
-          : (audio?.audioConfigured === 'T' && hours.includes(currentHour))
-            ? (res?.statusCode === 200 ? 'P' : 'R')
+          : (audio?.audioConfigured === 'T' && !hours.includes(currentHour))
+            ? (res && res?.statusCode === 200 ? 'P' : 'R')
             : 'F';
       currentEvent.activityDetTime = (audio?.audioConfigured === 'T' && !hours.includes(currentHour)) ? getTimeByTimezone(currentEvent?.timezone) : '';
     }
@@ -120,6 +121,14 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
       if (session?.userLevel !== 1) {
         setShowEscalation(true);
       } else {
+        if (customAction === 2 && session?.userLevel === 3) {
+          if (actionsTaken.length === 0) return;
+          const allChecked = actionsTaken.every((item) => item?.selected);
+          if (!allChecked)
+            return alert(
+              'All actions are mandatory please update them!',
+            );
+        }
 
         const hours = JSON.parse(audio?.audioHours ?? '[]');
         const currentHour = getHour(currentEvent?.timezone);
@@ -141,17 +150,23 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
           currentEvent.audioStatus =
             (audio?.audioConfigured === 'F')
               ? 'N'
-              : (audio?.audioConfigured === 'T' && hours.includes(currentHour))
-                ? (res?.statusCode === 200 ? 'P' : 'R')
+              : (audio?.audioConfigured === 'T' && !hours.includes(currentHour))
+                ? (res && res?.statusCode === 200 ? 'P' : 'R')
                 : 'F';
           currentEvent.activityDetTime = (audio?.audioConfigured === 'T' && !hours.includes(currentHour)) ? getTimeByTimezone(currentEvent?.timezone) : '';
         }
+
+        toast.warn((audio?.audioConfigured === 'No Deterant AvailableF')
+          ? 'N'
+          : (audio?.audioConfigured === 'T' && !hours.includes(currentHour))
+            ? (res && res?.statusCode === 200 ? 'Activated On-site Deterant' : 'Deterant Activated No Response')
+            : 'Remote Deterant Disabled As Per Your Request')
 
         const actions = [
           {
             name: 'Deterrent',
             selected: audio?.audioConfigured === 'T' ? true : false,
-            status: audio?.audioConfigured === 'T' && !hours.includes(currentHour) && res.statusCode === 200 ? true : false,
+            status: audio?.audioConfigured === 'T' && !hours.includes(currentHour) && (res && res.statusCode === 200) ? true : false,
             time: audio?.audioConfigured === 'T' && !hours.includes(currentHour) ? getTimeByTimezone(currentEvent?.timezone) : null
           }
         ];
@@ -201,19 +216,14 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
    * actions taken
    */
   useEffect(() => {
-    const [actionsTakenTypes] = metadata.filter((item) => item.typeName === 'ActionsTaken');
-    // const actionsTakenTypes = monitoringData?.actionsTaken?.filter((item) => item.typeName === 'ActionsTaken');
+    // const [actionsTakenTypes] = metadata?.filter((item) => item.typeName === 'ActionsTaken') ?? [];
+    // const actionsTakenTypes = monitoringData?.actionsTaken?.filter((item) => item?.typeName === 'ActionsTaken') ?? [];
+    // console.log(actionsTakenTypes)
+    setActionsTaken(() => Array.from(monitoringData?.actionsTaken ?? [], (el) => ({ name: el.value, selected: false, time: null, status: false, editing: false })));
 
-    setActionsTaken(() => {
-      return Array.from(actionsTakenTypes?.metadata, (el) => ({ name: el.value, selected: false, time: null, status: false, editing: false }));
-    })
-  }, [currentEvent])
-
-
-  useEffect(() => {
     const fetchAudio = async () => {
       const audioRes = await checkCameraAudio(currentEvent);
-      if (audioRes?.statusCode === 200) {
+      if (audioRes && audioRes.statusCode === 200) {
         setAudio(audioRes)
       }
     };
@@ -317,7 +327,7 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
     // updated[index].responded = !updated[index].responded;
     updated[index].status = !updated[index].status;
     setActionsTaken(updated);
-    console.log(actionsTaken)
+    // console.log(actionsTaken);
   };
 
   const enableEdit = (index, e) => {
@@ -329,7 +339,8 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
 
   const updateTime = (index, value) => {
     const updated = [...actionsTaken];
-    updated[index].time = new Date(value);
+    const modifiedTime = new Date(value);
+    updated[index].time = dayjs(modifiedTime).format('YYYY-MM-DD HH:mm:ss');
     setActionsTaken(updated);
   };
 
@@ -507,6 +518,7 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
                           onMouseEnter={() => setHoverIndex(i)}
                           onMouseLeave={() => setHoverIndex(null)}
                           onClick={() => handleAction(tag)}
+                          disabled={currentEvent?.playing}
                         >
                           {tag.subCategoryName}
                         </button>
@@ -534,64 +546,68 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
                     <p>{addressParts.join(", ")}</p>
                   </div>
 
-                  <div style={{ display: "flex", gap: "4px", userSelect: 'none' }}>
-                    {actionsTaken.map((item, index) => (
-                      <div
-                        key={index}
-                        onClick={() => toggleSelect(index)}
-                        style={{
-                          padding: "4px 8px",
-                          borderRadius: "20px",
-                          border: item.selected ? "2px solid red" : "1px solid gray",
-                          cursor: "pointer"
-                        }}
-                      >
-                        <span style={{ fontSize: '10px', whiteSpace: 'nowrap' }}>{item.name}</span>
 
-                        {/* TIME VIEW */}
-                        {item.selected && !item.editing && (
-                          <span style={{ fontSize: '10px' }}>
-                            {" "}
-                            - {new Date(item.time).toLocaleString()}
-                            <span
-                              style={{ marginLeft: 5, cursor: "pointer" }}
-                              onClick={(e) => enableEdit(index, e)}
-                            >
-                              ✏️
+                  {
+                    session?.userLevel === 3 &&
+                    <div style={{ display: "flex", gap: "4px", userSelect: 'none' }}>
+                      {actionsTaken.map((item, index) => (
+                        <div
+                          key={index}
+                          onClick={() => toggleSelect(index)}
+                          style={{
+                            padding: "4px 8px",
+                            borderRadius: "20px",
+                            border: item.selected ? "2px solid red" : "1px solid gray",
+                            cursor: "pointer"
+                          }}
+                        >
+                          <span style={{ fontSize: '10px', whiteSpace: 'nowrap' }}>{item.name}</span>
+
+                          {/* TIME VIEW */}
+                          {item.selected && !item.editing && (
+                            <span style={{ fontSize: '10px' }}>
+                              {" "}
+                              - {new Date(item.time).toLocaleString()}
+                              <span
+                                style={{ marginLeft: 5, cursor: "pointer" }}
+                                onClick={(e) => enableEdit(index, e)}
+                              >
+                                ✏️
+                              </span>
                             </span>
-                          </span>
-                        )}
+                          )}
 
-                        {/* TIME EDIT */}
-                        {item.editing && (
-                          <span>
-                            <input
-                              type="datetime-local"
-                              onClick={(e) => e.stopPropagation()}
-                              onChange={(e) => updateTime(index, e.target.value)}
-                            />
-                            <span
-                              style={{ marginLeft: 5 }}
-                              onClick={(e) => saveEdit(index, e)}
-                            >
-                              ✔️
+                          {/* TIME EDIT */}
+                          {item.editing && (
+                            <span>
+                              <input
+                                type="datetime-local"
+                                onClick={(e) => e.stopPropagation()}
+                                onChange={(e) => updateTime(index, e.target.value)}
+                              />
+                              <span
+                                style={{ marginLeft: 5 }}
+                                onClick={(e) => saveEdit(index, e)}
+                              >
+                                ✔️
+                              </span>
                             </span>
-                          </span>
-                        )}
+                          )}
 
-                        {/* RESPONDED */}
-                        {item.selected &&
-                          <span
-                            style={{ marginLeft: 4, fontSize: '12px' }}
-                            onClick={(e) => toggleResponded(index, e)}
-                          >
-                            {item.status ? "✅" : "⚪"}
-                          </span>
-                        }
+                          {/* RESPONDED */}
+                          {item.selected &&
+                            <span
+                              style={{ marginLeft: 4, fontSize: '12px' }}
+                              onClick={(e) => toggleResponded(index, e)}
+                            >
+                              {item.status ? "✅" : "⚪"}
+                            </span>
+                          }
 
-                      </div>
-                    ))}
-                  </div>
+                        </div>
+                      ))}
+                    </div>
+                  }
                 </div>
 
                 {plannedActivities.length !== 0 && (
@@ -856,7 +872,7 @@ export const BoundariesDialog = forwardRef(
         setImgSrc(null);
 
         const res = await getImagesForCameraId(currentEvent);
-        if (res?.statusCode === 200) {
+        if (res && res?.statusCode === 200) {
           const url = res?.data?.monitoringImage;
           const base64 = await loadImageWithAuth(url);
           setImgSrc(base64);
@@ -914,7 +930,7 @@ export const MaskDialog = forwardRef(
         setImgSrc(null);
 
         const res = await getImagesForCameraId(currentEvent);
-        if (res?.statusCode === 200) {
+        if (res && res?.statusCode === 200) {
           const url = res?.data?.eventsImage;
           const base64 = await loadImageWithAuth(url);
           setImgSrc(base64);

@@ -182,6 +182,7 @@ export const eventsGenericEmail = async (payload) => {
   formData.append("Cc", payload?.Cc?.join(','));
   formData.append('callingSystemDetail', 'events-console');
   formData.append('resolutionNotes', payload?.emailResolution);
+  formData.append('actionTaken', JSON.stringify(payload?.actionTaken));
   formData.append("textDetails", JSON.stringify(payload?.smsDetails));
   formData.append('userSendMailLevel', payload?.userSendMailLevel);
   formData.append('address', JSON.stringify(payload?.address));
