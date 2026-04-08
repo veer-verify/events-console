@@ -41,10 +41,11 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
   const handle = async (type) => {
     if (customAction === 2 && session?.userLevel === 3) {
       if (actionsTaken.length === 0) return alert('No actions found!');
-      const allChecked = actionsTaken.every((item) => item?.selected);
+
+      const allChecked = actionsTaken.some((item) => item?.selected);
       if (!allChecked)
         return Swal.fire(
-          'All actions are mandatory please update them!'
+          'Actions are mandatory please update atleast one of them!'
         );
     }
 

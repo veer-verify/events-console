@@ -123,10 +123,10 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
       } else {
         if (customAction === 2 && session?.userLevel === 3) {
           if (actionsTaken.length === 0) return;
-          const allChecked = actionsTaken.every((item) => item?.selected);
+          const allChecked = actionsTaken.some((item) => item?.selected);
           if (!allChecked)
             return alert(
-              'All actions are mandatory please update them!',
+              'Actions are mandatory please update atleast one of them!',
             );
         }
 
@@ -219,7 +219,13 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
     // const [actionsTakenTypes] = metadata?.filter((item) => item.typeName === 'ActionsTaken') ?? [];
     // const actionsTakenTypes = monitoringData?.actionsTaken?.filter((item) => item?.typeName === 'ActionsTaken') ?? [];
     // console.log(actionsTakenTypes)
-    setActionsTaken(() => Array.from(monitoringData?.actionsTaken ?? [], (el) => ({ name: el.value, selected: false, time: null, status: false, editing: false })));
+    setActionsTaken(() => Array.from(monitoringData?.actionsTaken ?? [], (el) => ({
+      name: el.value,
+      selected: el.selected ?? false,
+      time: el.time ?? null,
+      status: el.status ?? false,
+      editing: false,
+    })));
 
     const fetchAudio = async () => {
       const audioRes = await checkCameraAudio(currentEvent);

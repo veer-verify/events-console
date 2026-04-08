@@ -58,7 +58,7 @@ const Dashboard = () => {
         alertTag: parseInt(item?.alertTypeId),
         subAlertTag: parseInt(item?.alertSubTypeId),
         notes: item.notes ?? '',
-        actionsTakenInfo: (item?.actionsTaken ?? []).map(({ editing, ...rest }) => rest)
+        actionsTakenInfo: session?.userLevel === 3 ? (item?.actionsTaken ?? []).map(({ editing, ...rest }) => rest) : []
 
       }
     );
@@ -138,7 +138,7 @@ const Dashboard = () => {
         alertTag: parseInt(item?.alertTypeId),
         subAlertTag: parseInt(item?.alertSubTypeId),
         notes: item.notes ?? '',
-        actionsTakenInfo: (item?.actionsTaken ?? []).map(({ editing, ...rest }) => rest)
+        actionsTakenInfo: session?.userLevel === 3 ? (item?.actionsTaken ?? []).map(({ editing, ...rest }) => rest) : []
       }
     );
     write2VmsDispatchQueue({ ...item, actionTag: customAction, subActionTag: subAction?.subCategoryId, queue_name: item?.nextQueueName });
