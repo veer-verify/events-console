@@ -107,7 +107,7 @@ const Live = ({ currentEvent, closeLiveDialog }) => {
             <div style={{ display: 'flex' }}>
                 <div className='cameras'>
                     {
-                        cameras && cameras.map((item, i) => <div key={i} style={currentCam?.cameraId === item?.cameraId ? { border: '2px solid red' } : { border: '2px solid transparent' }}>
+                        cameras && cameras.map((item, i) => <div key={i} >
                             <Stream streamUrl={`${item.httpUrl}/`} screenshot={true} currentCamera={item} getCamera={getCamera} />
                         </div>)
                     }
@@ -127,8 +127,11 @@ const Live = ({ currentEvent, closeLiveDialog }) => {
                                     return <p className='position-center' style={{ color: '#fff', textTransform: 'uppercase' }}>no footage found!</p>
                                 case 'data':
                                     return <Fragment>
-                                        <p style={{ background: '#ffffff', borderRadius: '4px', position: 'absolute', top: '4px', left: '4px' }}>
+                                        <p style={{ background: '#ffffff', borderRadius: '4px', position: 'absolute', top: '4px', left: '4px', fontSize: '14px' }}>
                                             {currentIndex + 1} of {videos.length}
+                                        </p>
+                                        <p style={{ background: '#ffffff', borderRadius: '4px', position: 'absolute', top: '4px', right: '4px', fontSize: '14px' }}>
+                                            {currentCam?.cameraId}
                                         </p>
                                         <video
                                             key={videos[currentIndex]}

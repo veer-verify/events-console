@@ -80,6 +80,7 @@ video {
   height: 70vh !important;
   position: absolute !important;
   z-index: 1 !important;
+  left: 0 !important;
 }
 
 .minscreen {

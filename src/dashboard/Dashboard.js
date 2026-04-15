@@ -20,14 +20,14 @@ const Dashboard = () => {
   const session = getStorage('session');
   const tempAction = getStorage('actionTags');
 
-  if (!sessionStore.data) {
-    setStorage('session', session);
-    setStorage('actionTags', tempAction);
-  }
-  if (!session) {
-    setStorage('session', sessionStore.data);
-    setStorage('actionTags', actionStore.data)
-  }
+  // if (!sessionStore.data) {
+  //   setStorage('session', session);
+  //   setStorage('actionTags', tempAction);
+  // }
+  // if (!session) {
+  //   setStorage('session', sessionStore.data);
+  //   setStorage('actionTags', actionStore.data)
+  // }
 
   const [eventData, setEventData] = useState([]);
   const [config, setConfig] = useState(false);
@@ -58,7 +58,7 @@ const Dashboard = () => {
         alertTag: parseInt(item?.alertTypeId),
         subAlertTag: parseInt(item?.alertSubTypeId),
         notes: item.notes ?? '',
-        actionsTakenInfo: session?.userLevel === 3 ? (item?.actionsTaken ?? []).map(({ editing, ...rest }) => rest) : []
+        actionsTakenInfo: (session?.userLevel === 1 || session?.userLevel === 3) ? (item?.actionsTaken ?? []).map(({ editing, ...rest }) => rest) : []
 
       }
     );
@@ -66,13 +66,13 @@ const Dashboard = () => {
     consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: '' });
 
     const filtered = eventData.filter((_, i) => item?.index !== i);
-    if (actionStore.isLogoutClicked) {
-      setEventData(filtered);
-      if (eventData.length === 1) {
-        logout();
-      }
-      return;
-    }
+    // if (actionStore.isLogoutClicked) {
+    //   setEventData(filtered);
+    //   if (eventData.length === 1) {
+    //     logout();
+    //   }
+    //   return;
+    // }
 
     if (actionStore.isConfigOpened) {
       setEventData(filtered);
@@ -81,7 +81,6 @@ const Dashboard = () => {
       }
       return;
     }
-
 
     setEventData(prev => {
       const copy = [...prev];
@@ -138,20 +137,20 @@ const Dashboard = () => {
         alertTag: parseInt(item?.alertTypeId),
         subAlertTag: parseInt(item?.alertSubTypeId),
         notes: item.notes ?? '',
-        actionsTakenInfo: session?.userLevel === 3 ? (item?.actionsTaken ?? []).map(({ editing, ...rest }) => rest) : []
+        actionsTakenInfo: (session?.userLevel === 1 || session?.userLevel === 3) ? (item?.actionsTaken ?? []).map(({ editing, ...rest }) => rest) : []
       }
     );
     write2VmsDispatchQueue({ ...item, actionTag: customAction, subActionTag: subAction?.subCategoryId, queue_name: item?.nextQueueName });
     consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: '' });
 
     const filtered = eventData.filter((_, i) => item?.index !== i);
-    if (actionStore.isLogoutClicked) {
-      setEventData(filtered);
-      if (eventData.length === 1) {
-        logout()
-      }
-      return;
-    }
+    // if (actionStore.isLogoutClicked) {
+    //   setEventData(filtered);
+    //   if (eventData.length === 1) {
+    //     logout()
+    //   }
+    //   return;
+    // }
 
     if (actionStore.isConfigOpened) {
       setEventData(filtered);
@@ -187,10 +186,10 @@ const Dashboard = () => {
         copy[item.index] = event;
         return copy;
       });
-      dispatch(setLoader(false))
+      dispatch(setLoader(false));
     } else {
       setEventData(filtered);
-      dispatch(setLoader(false))
+      dispatch(setLoader(false));
     }
   }
 
@@ -319,13 +318,13 @@ const Dashboard = () => {
       consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: "", });
 
       const filtered = eventData.filter((_, i) => index !== i);
-      if (actionStore.isLogoutClicked) {
-        setEventData(filtered);
-        if (eventData.length === 1) {
-          logout();
-        }
-        return;
-      }
+      // if (actionStore.isLogoutClicked) {
+      //   setEventData(filtered);
+      //   if (eventData.length === 1) {
+      //     logout();
+      //   }
+      //   return;
+      // }
 
       if (actionStore.isConfigOpened) {
         setEventData(filtered);
@@ -388,7 +387,7 @@ const Dashboard = () => {
     return () => {
       clearInterval(interval);
     };
-  }, [actionStore.isLogoutClicked, actionStore.isConfigOpened, dispatch, eventData, logout, session?.UserId, session.queueName, session?.userLevel]);
+  }, [actionStore.isLogoutClicked, actionStore.isConfigOpened, dispatch, eventData, logout, session?.UserId, session?.queueName, session?.userLevel]);
 
   const handleConfig = () => {
     if (eventData.length !== 0) {

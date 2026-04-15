@@ -24,14 +24,14 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
     loaderStore: state.loaderStore,
   }), shallowEqual);
 
-  if (!sessionStore.data) {
-    setStorage("session", session);
-    setStorage("actionTags", actionTags);
-  }
-  if (!session) {
-    setStorage("session", sessionStore.data);
-    setStorage("actionTags", actionStore.data);
-  }
+  // if (!sessionStore.data) {
+  //   setStorage("session", session);
+  //   setStorage("actionTags", actionTags);
+  // }
+  // if (!session) {
+  //   setStorage("session", sessionStore.data);
+  //   setStorage("actionTags", actionStore.data);
+  // }
 
   const [showTags, setShowTags] = useState(false);
   const [categories, setCategories] = useState([]);
@@ -160,7 +160,7 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
           ? 'N'
           : (audio?.audioConfigured === 'T' && !hours.includes(currentHour))
             ? (res && res?.statusCode === 200 ? 'Activated On-site Deterant' : 'Deterant Activated No Response')
-            : 'Remote Deterant Disabled As Per Your Request')
+            : 'No Actions Necessary')
 
         const actions = [
           {

@@ -12,8 +12,8 @@ export const useLogout = () => {
     dispatch(setMainLoader(true));
     await manageUserSession("logOut");
     dispatch(setMainLoader(false));
-    clearStorage();
     navigate("/");
+    clearStorage();
   };
 
   return logout;

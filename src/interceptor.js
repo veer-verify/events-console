@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useLogout } from "./utilities/hooks/logout";
-import { getStorage, setStorage } from "./utilities/services/StorageService";
+import { clearStorage, getStorage, setStorage } from "./utilities/services/StorageService";
 import { getAccessforRefreshToken } from "./utilities/services/ApiService";
 
 
@@ -38,15 +38,12 @@ api.interceptors.response.use((response) => response, async (error) => {
   // If 401 error and we haven’t retried yet
   if (error.response?.status === 401 && !originalRequest._retry) {
     if (isRefreshing) {
-      // Queue requests until refresh is done
       return new Promise((resolve, reject) => {
         failedQueue.push({ resolve, reject });
-      })
-        .then((token) => {
-          originalRequest.headers["Authorization"] = `Bearer ${token}`;
-          return api(originalRequest);
-        })
-        .catch((err) => Promise.reject(err));
+      }).then((token) => {
+        originalRequest.headers["Authorization"] = `Bearer ${token}`;
+        return api(originalRequest);
+      }).catch((err) => Promise.reject(err));
     }
 
     originalRequest._retry = true;
@@ -77,16 +74,15 @@ api.interceptors.response.use((response) => response, async (error) => {
       isRefreshing = false;
 
       // Optional logout if refresh fails
-      // clearStorage();
-      // window.location.href = "/events-console";
-      Logout();
+      alert('Session data missing!');
+      window.location.href = "/events-console";
+      clearStorage();
+      // Logout();
       return Promise.reject(err);
     }
   }
   return Promise.reject(error);
 }
 );
-
-
 
 export default api;

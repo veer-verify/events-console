@@ -2,14 +2,13 @@ import api from '../../interceptor';
 import { environment } from '../../environment';
 import { getDay, getHour, getStorage, getTimeByTimezone, formatTimestamp } from './StorageService';
 import axios from 'axios';
-import { Navigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 
 
 export const getAccessforRefreshToken = async () => {
   const url = `${environment.login_url}/getAccessforRefreshToken`;
   const user = getStorage('session');
-  // if(!user) return;
+  // if (!user) return alert('');
 
   return api.post(url, null, {
     params: {
