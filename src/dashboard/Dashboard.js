@@ -63,7 +63,7 @@ const Dashboard = () => {
       }
     );
     updateEventFullDetails({ ...item, actionTag: customAction, subActionTag: subAction?.subCategoryId });
-    consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: '' });
+    consumeConsoleEvents({ ...item, userId: 0, eventTime: [item.eventTime], consoleType: '' });
 
     const filtered = eventData.filter((_, i) => item?.index !== i);
     // if (actionStore.isLogoutClicked) {
@@ -88,64 +88,69 @@ const Dashboard = () => {
       return copy;
     });
 
-    // dispatch(setLoader(true));
-    // const eventResponse = await getVmsEventsQueueData();
-    // if (eventResponse && eventResponse.length) {
-    //   const [first] = eventResponse;
-    //   const monitoringInfo = await getMonitoringInfo(first);
-    //   const event = {
-    //     ...first,
-    //     monitoringInfo,
-    //     landingTime: getTimeByTimezone(first.timezone),
-    //     audioStatus: 'F',
-    //     timer: 60,
-    //   };
-    //   writetoRedisQueueData(event);
-    //   setEventData(prev => {
-    //     const copy = [...prev];
-    //     copy[item.index] = event;
-    //     return copy;
-    //   });
-    //   dispatch(setLoader(false));
-    // } else {
-    //   setEventData(filtered);
-    //   dispatch(setLoader(false));
-    // }
-
     dispatch(setLoader(true));
-    try {
-      const eventResponse = await getVmsEventsQueueData();
-      if (eventResponse?.length) {
-        const [first] = eventResponse;
-        const monitoringInfo = await getMonitoringInfo(first);
-        const event = {
-          ...first,
-          monitoringInfo,
-          landingTime: getTimeByTimezone(first.timezone),
-          audioStatus: 'F',
-          timer: 60,
-        };
-
-        writetoRedisQueueData(event);
-        setEventData(prev => {
-          const copy = [...prev];
-          copy[item.index] = event;
-          return copy;
-        });
+    const eventResponse = await getVmsEventsQueueData();
+    if (eventResponse && eventResponse.length) {
+      const [first] = eventResponse;
+      const monitoringInfo = await getMonitoringInfo(first);
+      const event = {
+        ...first,
+        monitoringInfo,
+        landingTime: getTimeByTimezone(first.timezone),
+        audioStatus: 'F',
+        timer: 60,
+      };
+      writetoRedisQueueData(event);
+      setEventData(prev => {
+        const copy = [...prev];
+        copy[item.index] = event;
+        return copy;
+      });
+      dispatch(setLoader(false));
+    } else {
+      const cleaned = filtered.filter(Boolean);
+      if (cleaned.length === 0) {
+        setEventData([]);
       } else {
-        const cleaned = filtered.filter(Boolean);
-        if (cleaned.length === 0) {
-          setEventData([]);
-        } else {
-          setEventData(cleaned);
-        }
+        setEventData(cleaned);
       }
-    } catch (err) {
-      console.error(err);
-      setEventData(filtered);
-    } finally {
       dispatch(setLoader(false));
     }
+
+    // dispatch(setLoader(true));
+    // try {
+    //   const eventResponse = await getVmsEventsQueueData();
+    //   if (eventResponse?.length) {
+    //     const [first] = eventResponse;
+    //     const monitoringInfo = await getMonitoringInfo(first);
+    //     const event = {
+    //       ...first,
+    //       monitoringInfo,
+    //       landingTime: getTimeByTimezone(first.timezone),
+    //       audioStatus: 'F',
+    //       timer: 60,
+    //     };
+
+    //     writetoRedisQueueData(event);
+    //     setEventData(prev => {
+    //       const copy = [...prev];
+    //       copy[item.index] = event;
+    //       return copy;
+    //     });
+    //   } else {
+    //     const cleaned = filtered.filter(Boolean);
+    //     if (cleaned.length === 0) {
+    //       setEventData([]);
+    //     } else {
+    //       setEventData(cleaned);
+    //     }
+    //   }
+    // } catch (err) {
+    //   console.error(err);
+    //   setEventData(filtered);
+    // } finally {
+    //   dispatch(setLoader(false));
+    // }
   };
 
 
@@ -175,7 +180,7 @@ const Dashboard = () => {
       }
     );
     write2VmsDispatchQueue({ ...item, actionTag: customAction, subActionTag: subAction?.subCategoryId, queue_name: item?.nextQueueName });
-    consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: '' });
+    consumeConsoleEvents({ ...item, userId: 0, eventTime: [item.eventTime], consoleType: '' });
 
     const filtered = eventData.filter((_, i) => item?.index !== i);
     // if (actionStore.isLogoutClicked) {
@@ -202,65 +207,70 @@ const Dashboard = () => {
     });
 
 
-    // dispatch(setLoader(true));
-    // const eventResponse = await getVmsEventsQueueData();
-    // if (eventResponse.length) {
-    //   const [first] = eventResponse;
-    //   const monitoringInfo = await getMonitoringInfo(first);
-    //   const event = {
-    //     ...first,
-    //     monitoringInfo,
-    //     landingTime: getTimeByTimezone(first.timezone),
-    //     audioStatus: 'F',
-    //     timer: 60,
-    //   };
-
-    //   writetoRedisQueueData(event);
-    //   setEventData(prev => {
-    //     const copy = [...prev];
-    //     copy[item.index] = event;
-    //     return copy;
-    //   });
-    //   dispatch(setLoader(false));
-    // } else {
-    //   setEventData(filtered);
-    //   dispatch(setLoader(false));
-    // }
-
     dispatch(setLoader(true));
-    try {
-      const eventResponse = await getVmsEventsQueueData();
-      if (eventResponse?.length) {
-        const [first] = eventResponse;
-        const monitoringInfo = await getMonitoringInfo(first);
-        const event = {
-          ...first,
-          monitoringInfo,
-          landingTime: getTimeByTimezone(first.timezone),
-          audioStatus: 'F',
-          timer: 60,
-        };
+    const eventResponse = await getVmsEventsQueueData();
+    if (eventResponse.length) {
+      const [first] = eventResponse;
+      const monitoringInfo = await getMonitoringInfo(first);
+      const event = {
+        ...first,
+        monitoringInfo,
+        landingTime: getTimeByTimezone(first.timezone),
+        audioStatus: 'F',
+        timer: 60,
+      };
 
-        writetoRedisQueueData(event);
-        setEventData(prev => {
-          const copy = [...prev];
-          copy[item.index] = event;
-          return copy;
-        });
+      writetoRedisQueueData(event);
+      setEventData(prev => {
+        const copy = [...prev];
+        copy[item.index] = event;
+        return copy;
+      });
+      dispatch(setLoader(false));
+    } else {
+      const cleaned = filtered.filter(Boolean);
+      if (cleaned.length === 0) {
+        setEventData([]);
       } else {
-        const cleaned = filtered.filter(Boolean);
-        if (cleaned.length === 0) {
-          setEventData([]);
-        } else {
-          setEventData(cleaned);
-        }
+        setEventData(cleaned);
       }
-    } catch (err) {
-      console.error(err);
-      setEventData(filtered);
-    } finally {
       dispatch(setLoader(false));
     }
+
+    // dispatch(setLoader(true));
+    // try {
+    //   const eventResponse = await getVmsEventsQueueData();
+    //   if (eventResponse?.length) {
+    //     const [first] = eventResponse;
+    //     const monitoringInfo = await getMonitoringInfo(first);
+    //     const event = {
+    //       ...first,
+    //       monitoringInfo,
+    //       landingTime: getTimeByTimezone(first.timezone),
+    //       audioStatus: 'F',
+    //       timer: 60,
+    //     };
+
+    //     writetoRedisQueueData(event);
+    //     setEventData(prev => {
+    //       const copy = [...prev];
+    //       copy[item.index] = event;
+    //       return copy;
+    //     });
+    //   } else {
+    //     const cleaned = filtered.filter(Boolean);
+    //     if (cleaned.length === 0) {
+    //       setEventData([]);
+    //     } else {
+    //       setEventData(cleaned);
+    //     }
+    //   }
+    // } catch (err) {
+    //   console.error(err);
+    //   setEventData(filtered);
+    // } finally {
+    //   dispatch(setLoader(false));
+    // }
   }
 
 
@@ -385,7 +395,7 @@ const Dashboard = () => {
       });
 
       write2VmsDispatchQueue({ ...item, actionTag: 0, subActionTag: 0, queue_name: "timed-out", });
-      consumeConsoleEvents({ userId: 0, eventTime: [item.eventTime], consoleType: "", });
+      consumeConsoleEvents({ ...item, userId: 0, eventTime: [item.eventTime], consoleType: '' });
 
       const filtered = eventData.filter((_, i) => index !== i);
       // if (actionStore.isLogoutClicked) {
@@ -410,67 +420,71 @@ const Dashboard = () => {
         return copy;
       });
 
-      // dispatch(setLoader(true));
-      // const eventResponse = await getVmsEventsQueueData();
-      // if (eventResponse && eventResponse.length) {
-      //   const [first] = eventResponse;
-      //   const monitoringInfo = await getMonitoringInfo(first);
-      //   const event = {
-      //     ...first,
-      //     monitoringInfo,
-      //     landingTime: getTimeByTimezone(first.timezone),
-      //     audioStatus: 'F',
-      //     timer: 60,
-      //   };
-
-      //   writetoRedisQueueData(event);
-      //   setEventData(prev => {
-      //     const copy = [...prev];
-      //     copy[index] = event;
-      //     return copy;
-      //   });
-      //   dispatch(setLoader(false));
-      // } else {
-      //   setEventData(filtered);
-      //   dispatch(setLoader(false))
-      // }
-
       dispatch(setLoader(true));
-      try {
-        const eventResponse = await getVmsEventsQueueData();
-        if (eventResponse?.length) {
-          const [first] = eventResponse;
-          const monitoringInfo = await getMonitoringInfo(first);
-          const event = {
-            ...first,
-            monitoringInfo,
-            landingTime: getTimeByTimezone(first.timezone),
-            audioStatus: 'F',
-            timer: 60,
-          };
+      const eventResponse = await getVmsEventsQueueData();
+      if (eventResponse && eventResponse.length) {
+        const [first] = eventResponse;
+        const monitoringInfo = await getMonitoringInfo(first);
+        const event = {
+          ...first,
+          monitoringInfo,
+          landingTime: getTimeByTimezone(first.timezone),
+          audioStatus: 'F',
+          timer: 60,
+        };
 
-          writetoRedisQueueData(event);
-          setEventData(prev => {
-            const copy = [...prev];
-            copy[item.index] = event;
-            return copy;
-          });
-        } else {
-          const cleaned = filtered.filter(Boolean);
-          if (cleaned.length === 0) {
-            setEventData([]);
-          } else {
-            setEventData(cleaned);
-          }
-          // console.log(filtered)
-          // setEventData(filtered);
-        }
-      } catch (err) {
-        console.error(err);
-        setEventData(filtered);
-      } finally {
+        writetoRedisQueueData(event);
+        setEventData(prev => {
+          const copy = [...prev];
+          copy[index] = event;
+          return copy;
+        });
         dispatch(setLoader(false));
+      } else {
+        const cleaned = filtered.filter(Boolean);
+        if (cleaned.length === 0) {
+          setEventData([]);
+        } else {
+          setEventData(cleaned);
+        }
+        // setEventData(filtered);
+        dispatch(setLoader(false))
       }
+
+      // dispatch(setLoader(true));
+      // try {
+      //   const eventResponse = await getVmsEventsQueueData();
+      //   if (eventResponse?.length) {
+      //     const [first] = eventResponse;
+      //     const monitoringInfo = await getMonitoringInfo(first);
+      //     const event = {
+      //       ...first,
+      //       monitoringInfo,
+      //       landingTime: getTimeByTimezone(first.timezone),
+      //       audioStatus: 'F',
+      //       timer: 60,
+      //     };
+
+      //     writetoRedisQueueData(event);
+      //     setEventData(prev => {
+      //       const copy = [...prev];
+      //       copy[item.index] = event;
+      //       return copy;
+      //     });
+      //   } else {
+      //     const cleaned = filtered.filter(Boolean);
+      //     if (cleaned.length === 0) {
+      //       setEventData([]);
+      //     } else {
+      //       setEventData(cleaned);
+      //     }
+      //   }
+      // } catch (err) {
+      //   console.error(err);
+      //   setEventData(filtered);
+      // } finally {
+      //   dispatch(setLoader(false));
+      // }
     };
 
     const interval = setInterval(() => {
@@ -623,7 +637,8 @@ const Reload = () => {
       event.returnValue = "Are you sure you want to leave this page?";
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
-    consumeConsoleEvents({ userId: 0, consoleType: '', consumeType: 'refresh' });
+    consumeConsoleEvents({ userId: 0, consoleType: '', consumeType: 'refresh', cameraId: '', });
+
 
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);

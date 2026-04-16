@@ -272,12 +272,21 @@ export async function consumeConsoleEvents(payload) {
   const url = `${environment.event_process_url}/consumeConsoleEvents_1_0`;
   const user = getStorage('session');
 
-  payload.userId = user?.UserId;
-  payload.sessionId = user?.sessionId;
-  payload.consoleType = 'events-console';
+  const obj = {
+    userId: user?.UserId,
+    sessionId: user?.sessionId,
+    eventTime: payload?.eventTime,
+    consoleType: 'events-console',
+    cameraId: [payload?.cameraId],
+    consumeType: payload?.consumeType ?? ''
+  }
+
+  // payload.userId = user?.UserId;
+  // payload.sessionId = user?.sessionId;
+  // payload.consoleType = 'events-console';
 
   try {
-    const res = await api.put(url, payload);
+    const res = await api.put(url, obj);
     return res.data;
   } catch (err) {
     return console.log(err);
