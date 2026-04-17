@@ -346,6 +346,7 @@ const Dashboard = () => {
   const queueRef = useRef([]);
   useEffect(() => {
     if (session.queueName === 'timed-out') return;
+    if (session.queueName === 'verifai-TimedOut-CE') return;
     if (session?.userLevel !== 1 || eventData.length === 0) return;
 
     // const processQueue = async () => {
@@ -394,7 +395,9 @@ const Dashboard = () => {
         actionsTakenInfo: []
       });
 
-      write2VmsDispatchQueue({ ...item, actionTag: 0, subActionTag: 0, queue_name: "timed-out", });
+
+      // write2VmsDispatchQueue({ ...item, actionTag: 0, subActionTag: 0, queue_name: "timed-out", });
+      write2VmsDispatchQueue({ ...item, actionTag: 0, subActionTag: 0, queue_name: "verifai-TimedOut-CE", });
       consumeConsoleEvents({ ...item, userId: 0, eventTime: [item.eventTime], consoleType: '' });
 
       const filtered = eventData.filter((_, i) => index !== i);
