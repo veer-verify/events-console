@@ -91,8 +91,15 @@ export const timeFormat = (monitoringData) => {
 
 export const isValid = (data) => {
   if (!data) return;
+
+  const metadata = getStorage('metadata');
+  const [delay] = metadata?.filter(
+    (item) => item.typeName === 'Events_View_Action_Delay'
+  ) ?? [];
+
+  const [time] = delay?.metadata ?? [];
   const landing = new Date(data.landingTime);
-  const landingPlus10 = landing.setSeconds(landing.getSeconds() + 5);
+  const landingPlus10 = landing.setSeconds(landing.getSeconds() + Number(time?.value) ?? 10);
   return (
     moment(new Date(landingPlus10))?.format("YYYY-MM-DD HH:mm:ss") >
     moment().tz(data.timezone)?.format("YYYY-MM-DD HH:mm:ss")

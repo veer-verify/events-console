@@ -19,6 +19,9 @@ const Dashboard = () => {
 
   const session = getStorage('session');
   const tempAction = getStorage('actionTags');
+  const metadata = getStorage('metadata');
+  const [timeout] = metadata?.filter((item) => item.typeName === 'Event_Console_TimeOut_Time') ?? [];
+  const [timerData] = timeout?.metadata ?? [];
 
   // if (!sessionStore.data) {
   //   setStorage('session', session);
@@ -39,7 +42,6 @@ const Dashboard = () => {
    * to handle false activity
    */
   const handleFalse = async (item) => {
-    // if (session?.userLevel === 3 && (item?.userLevelAlarmInfo?.actionsTakenInfo?.length ?? 0 < 3)) return alert('Please take nessary actions!');
     const subAction = getStorage('sub_action');
     const customAction = getStorage('custom_action');
 
@@ -98,7 +100,7 @@ const Dashboard = () => {
         monitoringInfo,
         landingTime: getTimeByTimezone(first.timezone),
         audioStatus: 'F',
-        timer: 60,
+        timer: Number(timerData?.value) ?? 60,
       };
       writetoRedisQueueData(event);
       setEventData(prev => {
@@ -116,41 +118,6 @@ const Dashboard = () => {
       }
       dispatch(setLoader(false));
     }
-
-    // dispatch(setLoader(true));
-    // try {
-    //   const eventResponse = await getVmsEventsQueueData();
-    //   if (eventResponse?.length) {
-    //     const [first] = eventResponse;
-    //     const monitoringInfo = await getMonitoringInfo(first);
-    //     const event = {
-    //       ...first,
-    //       monitoringInfo,
-    //       landingTime: getTimeByTimezone(first.timezone),
-    //       audioStatus: 'F',
-    //       timer: 60,
-    //     };
-
-    //     writetoRedisQueueData(event);
-    //     setEventData(prev => {
-    //       const copy = [...prev];
-    //       copy[item.index] = event;
-    //       return copy;
-    //     });
-    //   } else {
-    //     const cleaned = filtered.filter(Boolean);
-    //     if (cleaned.length === 0) {
-    //       setEventData([]);
-    //     } else {
-    //       setEventData(cleaned);
-    //     }
-    //   }
-    // } catch (err) {
-    //   console.error(err);
-    //   setEventData(filtered);
-    // } finally {
-    //   dispatch(setLoader(false));
-    // }
   };
 
 
@@ -217,7 +184,7 @@ const Dashboard = () => {
         monitoringInfo,
         landingTime: getTimeByTimezone(first.timezone),
         audioStatus: 'F',
-        timer: 60,
+        timer: Number(timerData?.value) ?? 60,
       };
 
       writetoRedisQueueData(event);
@@ -236,41 +203,6 @@ const Dashboard = () => {
       }
       dispatch(setLoader(false));
     }
-
-    // dispatch(setLoader(true));
-    // try {
-    //   const eventResponse = await getVmsEventsQueueData();
-    //   if (eventResponse?.length) {
-    //     const [first] = eventResponse;
-    //     const monitoringInfo = await getMonitoringInfo(first);
-    //     const event = {
-    //       ...first,
-    //       monitoringInfo,
-    //       landingTime: getTimeByTimezone(first.timezone),
-    //       audioStatus: 'F',
-    //       timer: 60,
-    //     };
-
-    //     writetoRedisQueueData(event);
-    //     setEventData(prev => {
-    //       const copy = [...prev];
-    //       copy[item.index] = event;
-    //       return copy;
-    //     });
-    //   } else {
-    //     const cleaned = filtered.filter(Boolean);
-    //     if (cleaned.length === 0) {
-    //       setEventData([]);
-    //     } else {
-    //       setEventData(cleaned);
-    //     }
-    //   }
-    // } catch (err) {
-    //   console.error(err);
-    //   setEventData(filtered);
-    // } finally {
-    //   dispatch(setLoader(false));
-    // }
   }
 
 
@@ -300,7 +232,7 @@ const Dashboard = () => {
           ...rawEvent,
           landingTime: getTimeByTimezone(rawEvent.timezone),
           audioStatus: 'F',
-          timer: 60,
+          timer: Number(timerData?.value) ?? 60,
         };
 
         writetoRedisQueueData(event);
@@ -345,8 +277,11 @@ const Dashboard = () => {
   const isHandlingRef = useRef(false);
   const queueRef = useRef([]);
   useEffect(() => {
-    if (session.queueName === 'timed-out') return;
-    if (session.queueName === 'verifai-TimedOut-CE') return;
+    // if (session.queueName === 'timed-out') return;
+    // if (session.queueName === 'verifai-TimedOut-CE') return;
+    const [timedQueue] = metadata?.filter((item) => item.typeName === 'Event_Console_TimeOut_Queue') ?? [];
+    const [queueName] = timedQueue?.metadata ?? [];
+    if (session.queueName === queueName?.value ?? '') return;
     if (session?.userLevel !== 1 || eventData.length === 0) return;
 
     // const processQueue = async () => {
@@ -397,7 +332,8 @@ const Dashboard = () => {
 
 
       // write2VmsDispatchQueue({ ...item, actionTag: 0, subActionTag: 0, queue_name: "timed-out", });
-      write2VmsDispatchQueue({ ...item, actionTag: 0, subActionTag: 0, queue_name: "verifai-TimedOut-CE", });
+      // write2VmsDispatchQueue({ ...item, actionTag: 0, subActionTag: 0, queue_name: "verifai-TimedOut-CE", });
+      write2VmsDispatchQueue({ ...item, actionTag: 0, subActionTag: 0, queue_name: queueName?.value, });
       consumeConsoleEvents({ ...item, userId: 0, eventTime: [item.eventTime], consoleType: '' });
 
       const filtered = eventData.filter((_, i) => index !== i);
@@ -433,7 +369,7 @@ const Dashboard = () => {
           monitoringInfo,
           landingTime: getTimeByTimezone(first.timezone),
           audioStatus: 'F',
-          timer: 60,
+          timer: Number(timerData?.value) ?? 60,
         };
 
         writetoRedisQueueData(event);
@@ -453,41 +389,6 @@ const Dashboard = () => {
         // setEventData(filtered);
         dispatch(setLoader(false))
       }
-
-      // dispatch(setLoader(true));
-      // try {
-      //   const eventResponse = await getVmsEventsQueueData();
-      //   if (eventResponse?.length) {
-      //     const [first] = eventResponse;
-      //     const monitoringInfo = await getMonitoringInfo(first);
-      //     const event = {
-      //       ...first,
-      //       monitoringInfo,
-      //       landingTime: getTimeByTimezone(first.timezone),
-      //       audioStatus: 'F',
-      //       timer: 60,
-      //     };
-
-      //     writetoRedisQueueData(event);
-      //     setEventData(prev => {
-      //       const copy = [...prev];
-      //       copy[item.index] = event;
-      //       return copy;
-      //     });
-      //   } else {
-      //     const cleaned = filtered.filter(Boolean);
-      //     if (cleaned.length === 0) {
-      //       setEventData([]);
-      //     } else {
-      //       setEventData(cleaned);
-      //     }
-      //   }
-      // } catch (err) {
-      //   console.error(err);
-      //   setEventData(filtered);
-      // } finally {
-      //   dispatch(setLoader(false));
-      // }
     };
 
     const interval = setInterval(() => {
@@ -511,7 +412,7 @@ const Dashboard = () => {
     return () => {
       clearInterval(interval);
     };
-  }, [actionStore.isLogoutClicked, actionStore.isConfigOpened, dispatch, eventData, logout, session?.UserId, session?.queueName, session?.userLevel]);
+  }, [actionStore.isLogoutClicked, actionStore.isConfigOpened, dispatch, eventData, logout, session?.UserId, session.queueName, session?.userLevel, metadata, timerData?.value]);
 
   const handleConfig = () => {
     if (eventData.length !== 0) {

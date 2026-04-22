@@ -29,12 +29,14 @@ const SignIn = () => {
     dispatch(setMainLoader(false));
 
     if (loginData?.Status === 'Success') {
-
       setStorage('session', loginData);
       dispatch(saveSession(loginData));
 
       dispatch(setMainLoader(true));
       const activeSession = await manageUserSession('logIn');
+      const metadata = await getMetadata();
+      if (!metadata) return alert('Failed to fetch metadata!');
+      setStorage('metadata', metadata);
       dispatch(setMainLoader(false));
 
       if (activeSession?.statusCode === 200) {
@@ -42,7 +44,7 @@ const SignIn = () => {
         setStorage('session', { ...temp, sessionId: activeSession?.sessionId });
         dispatch(saveSession({ ...temp, sessionId: activeSession?.sessionId }));
 
-        if (loginData.userLevel) {
+        if (loginData?.userLevel) {
           dispatch(handleApiForLogout(false));
           dispatch(handleApiForConfig(false));
           navigate('/dashboard');
@@ -53,8 +55,6 @@ const SignIn = () => {
             icon: "warning",
           })
         }
-        const metadata = await getMetadata();
-        setStorage('metadata', metadata);
       }
     } else {
       Swal.fire({

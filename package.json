@@ -2,7 +2,7 @@
   "name": "events-console",
   "version": "0.1.0",
   "private": true,
-  "homepage": "/events",
+  "homepage": "/",
   "dependencies": {
     "@reduxjs/toolkit": "^2.10.1",
     "@testing-library/dom": "^10.4.1",
