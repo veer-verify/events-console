@@ -3,7 +3,7 @@ import { useState, useEffect, Fragment, memo } from "react";
 import ErrorInfo from "../../utilities/error-info/ErrorInfo";
 import { eventsGenericEmail, getAlertCategoriesForSiteId, getEmailDataForVMSEvents } from "../../utilities/services/ApiService";
 import { formatTimestamp, getStorage, getTimeByTimezone } from "../../utilities/services/StorageService";
-import Swal from "sweetalert2";
+import { toast } from "react-toastify";
 
 
 const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleSuspicious, monitoringData, actionsTaken, audio }) => {
@@ -19,14 +19,15 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
   const [selection, setSelection] = useState("person");
   const [emaildata, setEmailData] = useState(null);
   const [completeEmailPreview, setCompleteEmailPreview] = useState(null);
-  const [isCompleting, setIsCompleting] = useState(false);
   const [notes, setNotes] = useState('');
 
+  const session = getStorage('session');
 
   const fetchEmailData = async (val) => {
     setSelectedSubType(val)
     setEmailData('load');
-    const response = await getEmailDataForVMSEvents({ ...currentEvent, ...{ alertTypeId: selectedAlertType }, ...{ subTypeId: val }, callingSystemDetail: 'events-console' });
+    const callingSystemDetail = session?.userLevel === 3 ? 'dashboard' : 'events-console';
+    const response = await getEmailDataForVMSEvents({ ...currentEvent, ...{ alertTypeId: selectedAlertType }, ...{ subTypeId: val }, callingSystemDetail });
     setEmailData(response);
   }
 
@@ -37,15 +38,13 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
     setSubAlerts(x);
   };
 
-  const session = getStorage('session');
-
   const handle = async (type) => {
     if (customAction === 2 && session?.userLevel === 3 && type !== 'complete') {
-      if (actionsTaken.length === 0) return alert('No actions found!');
+      if (actionsTaken.length === 0) return toast.warn('No actions found!');
 
       const allChecked = actionsTaken.some((item) => item?.selected);
       if (!allChecked)
-        return Swal.fire(
+        return toast.warn(
           'Actions are mandatory please update atleast one of them!'
         );
     }
@@ -53,16 +52,17 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
     const currentTime = getTimeByTimezone(currentEvent?.timezone);
 
     if (type === 'complete' && session?.userLevel === 3) {
-      setIsCompleting(true);
-      const response = await getEmailDataForVMSEvents({ ...currentEvent, ...{ alertTypeId: selectedAlertType }, ...{ subTypeId: selectedSubType }, callingSystemDetail: 'dashboard' });
+      if (!emaildata || emaildata === 'load') {
+        return toast.warn('Please select alert subtype and wait for email data!');
+      }
+
       setCompleteEmailPreview({
-        email: response,
+        email: emaildata,
         event: currentEvent,
         actionTime: currentTime,
         notes,
         actionsTaken,
       });
-      setIsCompleting(false);
       return;
     }
 
@@ -240,8 +240,7 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
         {/* Action Buttons */}
         {check() &&
           <div className="button-group">
-            <button className="btn-secondary" onClick={() => handle('complete')} disabled={isCompleting}>COMPLETE</button>
-            {isCompleting && <span className="escalation-loading">Loading email...</span>}
+            <button className="btn-secondary" onClick={() => handle('complete')}>COMPLETE</button>
             {monitoringData && monitoringData.nextQueueName && <button className="btn-primary" onClick={() => handle('escalate')}>ESCALATE</button>}
           </div>
         }
@@ -421,7 +420,7 @@ const CompleteEmailDialog = ({ preview, onCancel, onSubmit }) => {
       : editableActions;
 
     if (!finalActions.length) {
-      Swal.fire('Actions are mandatory please update atleast one of them!');
+      toast.warn('Actions are mandatory please update atleast one of them!');
       return;
     }
 
