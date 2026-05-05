@@ -2,7 +2,7 @@ import "./Escalation.css";
 import { useState, useEffect, Fragment, memo } from "react";
 import ErrorInfo from "../../utilities/error-info/ErrorInfo";
 import { eventsGenericEmail, getAlertCategoriesForSiteId, getEmailDataForVMSEvents } from "../../utilities/services/ApiService";
-import { getHour, getStorage, getTimeByTimezone } from "../../utilities/services/StorageService";
+import { formatTimestamp, getStorage, getTimeByTimezone } from "../../utilities/services/StorageService";
 import Swal from "sweetalert2";
 
 
@@ -18,7 +18,8 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
   const [selectedSubType, setSelectedSubType] = useState("");
   const [selection, setSelection] = useState("person");
   const [emaildata, setEmailData] = useState(null);
-  const [newEmaildata, setNewEmailData] = useState(null);
+  const [completeEmailPreview, setCompleteEmailPreview] = useState(null);
+  const [isCompleting, setIsCompleting] = useState(false);
   const [notes, setNotes] = useState('');
 
 
@@ -39,7 +40,7 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
   const session = getStorage('session');
 
   const handle = async (type) => {
-    if (customAction === 2 && session?.userLevel === 3) {
+    if (customAction === 2 && session?.userLevel === 3 && type !== 'complete') {
       if (actionsTaken.length === 0) return alert('No actions found!');
 
       const allChecked = actionsTaken.some((item) => item?.selected);
@@ -50,6 +51,20 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
     }
 
     const currentTime = getTimeByTimezone(currentEvent?.timezone);
+
+    if (type === 'complete' && session?.userLevel === 3) {
+      setIsCompleting(true);
+      const response = await getEmailDataForVMSEvents({ ...currentEvent, ...{ alertTypeId: selectedAlertType }, ...{ subTypeId: selectedSubType }, callingSystemDetail: 'dashboard' });
+      setCompleteEmailPreview({
+        email: response,
+        event: currentEvent,
+        actionTime: currentTime,
+        notes,
+        actionsTaken,
+      });
+      setIsCompleting(false);
+      return;
+    }
 
     if (type === 'escalate') {
       handleSuspicious(
@@ -65,10 +80,6 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
         }
       );
     } else {
-      if (session?.userLevel === 3) {
-        const response = await getEmailDataForVMSEvents({ ...currentEvent, ...{ alertTypeId: selectedAlertType }, ...{ subTypeId: selectedSubType }, callingSystemDetail: 'dashboard' });
-        setNewEmailData(response)
-      }
       handleFalse(
         {
           ...currentEvent,
@@ -110,6 +121,21 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
     setEmailData(null);
   }
 
+  const submitCompletePreview = ({ notes: previewNotes, actionsTaken: previewActions }) => {
+    handleFalse(
+      {
+        ...currentEvent,
+        alertTypeId: selectedAlertType,
+        alertSubTypeId: selectedSubType,
+        index,
+        actionTagTime: completeEmailPreview?.actionTime,
+        notes: previewNotes,
+        actionsTaken: previewActions
+      }
+    );
+    closeEscalation();
+  };
+
   useEffect(() => {
     const fetchMetadata = async () => {
       // const actionTagsResponse = await listActionTags(currentEvent);
@@ -142,7 +168,7 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
       <div className="alert-input">
         <p className="section-title">SUSPICIOUS INPUT</p>
 
-        {session?.userLevel === 2 &&
+        {(session?.userLevel === 2 || session?.userLevel === 3) &&
           <Fragment>
             {/* Person / Vehicle radio buttons */}
             <div className="radio-group">
@@ -214,7 +240,8 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
         {/* Action Buttons */}
         {check() &&
           <div className="button-group">
-            <button className="btn-secondary" onClick={() => handle('complete')}>COMPLETE</button>
+            <button className="btn-secondary" onClick={() => handle('complete')} disabled={isCompleting}>COMPLETE</button>
+            {isCompleting && <span className="escalation-loading">Loading email...</span>}
             {monitoringData && monitoringData.nextQueueName && <button className="btn-primary" onClick={() => handle('escalate')}>ESCALATE</button>}
           </div>
         }
@@ -314,8 +341,199 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
               </Fragment>
           }
         </div>}
+
+      {completeEmailPreview && (
+        <CompleteEmailDialog
+          preview={completeEmailPreview}
+          onCancel={() => setCompleteEmailPreview(null)}
+          onSubmit={submitCompletePreview}
+        />
+      )}
     </Fragment>
   );
 }
 
 export default memo(Escalation);
+
+const toList = (value) => Array.isArray(value) ? value.filter(Boolean).join(', ') : value || '-';
+
+const getPreviewDateTime = (email, event, actionTime) => {
+  const fields = email?.emailFields ?? {};
+  const fieldDateTime = [fields?.DATE, fields?.TIME].filter(Boolean).join(' - ');
+  if (fieldDateTime) return fieldDateTime;
+  if (event?.eventTime) return formatTimestamp(event.eventTime);
+  return actionTime || '-';
+};
+
+const getSelectedActions = (actions) => (actions ?? [])
+  .filter((item) => item?.selected)
+  .map((item) => ({ ...item }));
+
+const CompleteEmailDialog = ({ preview, onCancel, onSubmit }) => {
+  const { email, event, actionTime, notes, actionsTaken } = preview;
+  const [editableActions, setEditableActions] = useState(() => getSelectedActions(actionsTaken));
+  const [actionInput, setActionInput] = useState('');
+  const [draftNotes, setDraftNotes] = useState(notes || '');
+  const [files, setFiles] = useState([]);
+  const fields = email?.emailFields ?? {};
+  const description = email?.emailBody || fields?.DESCRIPTION || '-';
+  const camera = fields?.CAMERA || event?.cameraId || '-';
+  const dateTime = getPreviewDateTime(email, event, actionTime);
+
+  const addAction = () => {
+    const name = actionInput.trim();
+    if (!name) return;
+    if (editableActions.some((item) => item.name.toLowerCase() === name.toLowerCase())) {
+      setActionInput('');
+      return;
+    }
+    setEditableActions((prev) => [
+      ...prev,
+      {
+        name,
+        selected: true,
+        status: false,
+        time: actionTime,
+        editing: false,
+      }
+    ]);
+    setActionInput('');
+  };
+
+  const removeAction = (index) => {
+    setEditableActions((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const submit = () => {
+    const pendingActionName = actionInput.trim();
+    const pendingActionExists = pendingActionName && editableActions.some((item) => item.name.toLowerCase() === pendingActionName.toLowerCase());
+    const finalActions = pendingActionName && !pendingActionExists
+      ? [
+        ...editableActions,
+        {
+          name: pendingActionName,
+          selected: true,
+          status: false,
+          time: actionTime,
+          editing: false,
+        }
+      ]
+      : editableActions;
+
+    if (!finalActions.length) {
+      Swal.fire('Actions are mandatory please update atleast one of them!');
+      return;
+    }
+
+    onSubmit({
+      notes: draftNotes,
+      actionsTaken: finalActions.map(({ editing, ...item }) => ({
+        ...item,
+        selected: true,
+      })),
+    });
+  };
+
+  return (
+    <div className="complete-email-backdrop">
+      <div className="complete-email-dialog">
+        <button className="complete-email-close" onClick={onCancel}>x</button>
+
+        <div className="complete-email-content">
+          <div className="complete-email-logo">
+            <span>IVIS</span>
+            <span>SECURITY</span>
+          </div>
+
+          <p className="complete-email-site">{event?.siteName || fields?.LOCATION || '-'}</p>
+
+          <div className="complete-email-alert">
+            {email?.emailSubject || `ALERT @ ${event?.siteName || '-'} - [ Unauthorized Entry Detected ]`}
+          </div>
+
+          <table className="complete-email-table">
+            <tbody>
+              <tr>
+                <td>To</td>
+                <td>{toList(email?.recipientEmails)}</td>
+              </tr>
+              <tr>
+                <td>Cc</td>
+                <td>{toList(email?.Cc)}</td>
+              </tr>
+              <tr>
+                <td>Bcc</td>
+                <td>{toList(email?.BCC)}</td>
+              </tr>
+              <tr>
+                <td>Date & Time</td>
+                <td>{dateTime}</td>
+              </tr>
+              <tr>
+                <td>Description</td>
+                <td>{description}</td>
+              </tr>
+              <tr>
+                <td>Camera</td>
+                <td>{camera}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p className="complete-email-info">Please review the Information above.</p>
+          <p className="complete-email-contact">Call <strong>(844) 438-4847 (ext. 1)</strong> or email support@ivisecurity.com</p>
+        </div>
+
+        <div className="resolution-divider"></div>
+
+        <div className="resolution-details">
+          <p className="resolution-title">Resolution Details</p>
+
+          <label className="resolution-label">Actions Taken</label>
+          <div className="action-editor">
+            {editableActions.map((item, i) => (
+              <span className="action-chip" key={`${item.name}-${i}`}>
+                {item.name}
+                <button type="button" onClick={() => removeAction(i)}>x</button>
+              </span>
+            ))}
+            <input
+              value={actionInput}
+              placeholder="Describe action taken"
+              onBlur={addAction}
+              onChange={(e) => setActionInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  addAction();
+                }
+              }}
+            />
+          </div>
+
+          <label className="resolution-label">Notes</label>
+          <input
+            className="resolution-notes"
+            value={draftNotes}
+            placeholder="Additional notes"
+            onChange={(e) => setDraftNotes(e.target.value)}
+          />
+
+          <label className="upload-box">
+            <input
+              type="file"
+              multiple
+              onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
+            />
+            <span>{files.length ? files.map((file) => file.name).join(', ') : 'Click to upload Images/videos'}</span>
+          </label>
+
+          <div className="resolution-actions">
+            <button type="button" className="preview-btn">Preview</button>
+            <button type="button" className="submit-close-btn" onClick={submit}>Submit and close event</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};

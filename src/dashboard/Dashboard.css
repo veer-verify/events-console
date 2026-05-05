@@ -5,7 +5,7 @@
   /* flex-direction: row; */
   margin: 4px;
   gap: 4px;
-  height: calc(100vh - 82px);
+  height: calc(100vh - 76px);
 }
 
 .config-btn {
