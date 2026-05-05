@@ -147,7 +147,7 @@ export const getEmailDataForVMSEvents = async (payload) => {
   params.append('currentTime', formatTimestamp(payload?.eventTime));
   // params.append('timer', 120);
   params.append('imageName', payload?.image_list.toString());
-  params.append('callingSystemDetail', 'events-console');
+  params.append('callingSystemDetail', payload?.callingSystemDetail);
   return api.get(url, { params: params }).then((res) => res.data.statusCode === 200 ? { ...res.data.emailDetails, ...{ smsDetails: res.data.smsDetails } } : null).catch((err) => console.log(err));
 }
 

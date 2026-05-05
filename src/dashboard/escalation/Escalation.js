@@ -13,31 +13,31 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
   const [alerts, setAlerts] = useState([]);
   // const [actionTags, setActionTags] = useState([]);
   const [subAlerts, setSubAlerts] = useState([]);
-
   // const [selectedActionTag, setSelectedActionTag] = useState("");
   const [selectedAlertType, setSelectedAlertType] = useState("");
   const [selectedSubType, setSelectedSubType] = useState("");
   const [selection, setSelection] = useState("person");
   const [emaildata, setEmailData] = useState(null);
+  const [newEmaildata, setNewEmailData] = useState(null);
   const [notes, setNotes] = useState('');
 
 
   const fetchEmailData = async (val) => {
     setSelectedSubType(val)
     setEmailData('load');
-    const response = await getEmailDataForVMSEvents({ ...currentEvent, ...{ alertTypeId: selectedAlertType }, ...{ subTypeId: val } });
+    const response = await getEmailDataForVMSEvents({ ...currentEvent, ...{ alertTypeId: selectedAlertType }, ...{ subTypeId: val }, callingSystemDetail: 'events-console' });
     setEmailData(response);
-
   }
 
   const getSubAlerts = (val) => {
-    clearFields()
-    setSelectedAlertType(val)
+    clearFields();
+    setSelectedAlertType(val);
     const x = alerts.filter((item) => item.guardAlertTypeId === parseInt(val)).flatMap((el) => el.subAlerts);
     setSubAlerts(x);
   };
 
   const session = getStorage('session');
+
   const handle = async (type) => {
     if (customAction === 2 && session?.userLevel === 3) {
       if (actionsTaken.length === 0) return alert('No actions found!');
@@ -50,42 +50,6 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
     }
 
     const currentTime = getTimeByTimezone(currentEvent?.timezone);
-    const hours = JSON.parse(audio?.audioHours ?? '[]');
-    const currentHour = getHour(currentEvent?.timezone);
-    // if (hours.includes(currentHour)) return;
-
-    // if (currentEvent) {
-    //   currentEvent.playing = true;
-    // }
-
-    // let res;
-    // if (session?.userLevel === 1) {
-    //   if (audio?.audioConfigured === 'T' && !hours.includes(currentHour)) {
-    //     res = await playSiren(currentEvent)
-    //   }
-    // }
-
-
-    // if (currentEvent) {
-    //   currentEvent.playing = false;
-    //   currentEvent.audioStatus =
-    //     (audio?.audioConfigured === 'F')
-    //       ? 'N'
-    //       : (audio?.audioConfigured === 'T' && hours.includes(currentHour))
-    //         ? (res?.statusCode === 200 ? 'P' : 'R')
-    //         : 'F';
-    //   currentEvent.activityDetTime = (audio?.audioConfigured === 'T' && !hours.includes(currentHour)) ? getTimeByTimezone(currentEvent?.timezone) : '';
-    // }
-
-    // const actions = [
-    //   {
-    //     name: 'Deterrent',
-    //     selected: audio?.audioConfigured === 'T' ? true : false,
-    //     status: audio?.audioConfigured === 'T' && !hours.includes(currentHour) && res.statusCode === 200 ? true : false,
-    //     time: audio?.audioConfigured === 'T' && !hours.includes(currentHour) ? getTimeByTimezone(currentEvent?.timezone) : null
-    //   }
-    // ];
-    // const output = [...actionsTaken, ...actions];
 
     if (type === 'escalate') {
       handleSuspicious(
@@ -101,6 +65,10 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
         }
       );
     } else {
+      if (session?.userLevel === 3) {
+        const response = await getEmailDataForVMSEvents({ ...currentEvent, ...{ alertTypeId: selectedAlertType }, ...{ subTypeId: selectedSubType }, callingSystemDetail: 'dashboard' });
+        setNewEmailData(response)
+      }
       handleFalse(
         {
           ...currentEvent,
@@ -112,6 +80,7 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
           actionsTaken
         }
       );
+
     }
 
     if (session?.userLevel === 2) {
