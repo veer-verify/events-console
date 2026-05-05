@@ -199,6 +199,35 @@ export const eventsGenericEmail = async (payload) => {
   return api.post(url, formData, { params: params }).then((res) => res).catch((err) => console.log(err));
 }
 
+export const sendResolutionEmail = async (payload) => {
+  const url = `${environment.guard_monitoring_url}/sendResolutionEmail_1_0`;
+  const user = getStorage('session');
+  const formData = new FormData();
+
+  formData.append('senderEmail', payload?.senderEmail);
+  formData.append('recipientEmails', JSON.stringify(payload?.recipientEmails ?? []));
+  formData.append('bcc', JSON.stringify(payload?.bcc ?? payload?.BCC ?? []));
+  formData.append('cc', JSON.stringify(payload?.cc ?? payload?.Cc ?? []));
+  formData.append('subject', payload?.subject);
+  formData.append('body', payload?.body);
+  formData.append('fields', JSON.stringify(payload?.fields ?? payload?.emailFields ?? {}));
+  formData.append('siteId', payload?.siteId);
+  formData.append('cameraId', payload?.cameraId);
+  formData.append('actionsTaken', payload?.actionsTaken);
+  formData.append('notes', payload?.notes);
+  formData.append('eventId', payload?.eventId);
+  formData.append('createdBy', payload?.createdBy ?? user?.UserId);
+  formData.append('alerTagId', payload?.alerTagId ?? payload?.alertTagId ?? payload?.alertTypeId);
+  formData.append('subAlertTagId', payload?.subAlertTagId ?? payload?.subTypeId ?? payload?.alertSubTypeId);
+  formData.append('timeZone', payload?.timeZone ?? payload?.timezone);
+
+  for (var i = 0; i < payload?.files?.length; i++) {
+    formData.append('files', payload.files[i]);
+  }
+
+  return api.post(url, formData).then((res) => res).catch((err) => console.log(err));
+}
+
 export const getMonitoringInfo = async (payload) => {
   const url = `${environment.guard_monitoring_url}/getMonitoringInfo_1_0`;
   const user = getStorage('session');

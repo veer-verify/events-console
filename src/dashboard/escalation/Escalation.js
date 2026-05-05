@@ -1,7 +1,7 @@
 import "./Escalation.css";
 import { useState, useEffect, Fragment, memo } from "react";
 import ErrorInfo from "../../utilities/error-info/ErrorInfo";
-import { eventsGenericEmail, getAlertCategoriesForSiteId, getEmailDataForVMSEvents } from "../../utilities/services/ApiService";
+import { eventsGenericEmail, getAlertCategoriesForSiteId, getEmailDataForVMSEvents, sendResolutionEmail } from "../../utilities/services/ApiService";
 import { formatTimestamp, getStorage, getTimeByTimezone } from "../../utilities/services/StorageService";
 import { toast } from "react-toastify";
 
@@ -121,7 +121,35 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
     setEmailData(null);
   }
 
-  const submitCompletePreview = ({ notes: previewNotes, actionsTaken: previewActions }) => {
+  const submitCompletePreview = async ({ notes: previewNotes, actionsTaken: previewActions, files }) => {
+    if (session?.userLevel === 3) {
+      const email = completeEmailPreview?.email;
+      const response = await sendResolutionEmail({
+        senderEmail: email?.senderEmail,
+        recipientEmails: email?.recipientEmails,
+        bcc: email?.BCC,
+        cc: email?.Cc,
+        subject: email?.emailSubject,
+        body: email?.emailBody,
+        files,
+        fields: email?.emailFields,
+        siteId: currentEvent?.siteId,
+        cameraId: currentEvent?.cameraId,
+        actionsTaken: formatPreviewActions(previewActions),
+        notes: previewNotes,
+        eventId: currentEvent?.eventId,
+        createdBy: session?.UserId,
+        alerTagId: selectedAlertType,
+        subAlertTagId: selectedSubType,
+        timeZone: currentEvent?.timezone,
+      });
+
+      if (!response) {
+        toast.error('Failed to send resolution email!');
+        return false;
+      }
+    }
+
     handleFalse(
       {
         ...currentEvent,
@@ -134,6 +162,7 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
       }
     );
     closeEscalation();
+    return true;
   };
 
   useEffect(() => {
@@ -356,6 +385,10 @@ export default memo(Escalation);
 
 const toList = (value) => Array.isArray(value) ? value.filter(Boolean).join(', ') : value || '-';
 
+const hasEmails = (value) => Array.isArray(value)
+  ? value.some((item) => item && item.trim())
+  : Boolean(value?.trim?.());
+
 const getPreviewDateTime = (email, event, actionTime) => {
   const fields = email?.emailFields ?? {};
   const fieldDateTime = [fields?.DATE, fields?.TIME].filter(Boolean).join(' - ');
@@ -380,6 +413,7 @@ const CompleteEmailDialog = ({ preview, onCancel, onSubmit }) => {
   const [draftNotes, setDraftNotes] = useState(notes || '');
   const [files, setFiles] = useState([]);
   const [showPreview, setShowPreview] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const fields = email?.emailFields ?? {};
   const description = email?.emailBody || fields?.DESCRIPTION || '-';
   const camera = fields?.CAMERA || event?.cameraId || '-';
@@ -426,7 +460,7 @@ const CompleteEmailDialog = ({ preview, onCancel, onSubmit }) => {
       : editableActions;
   };
 
-  const submit = () => {
+  const submit = async () => {
     const finalActions = getFinalActions();
 
     if (!finalActions.length) {
@@ -434,13 +468,28 @@ const CompleteEmailDialog = ({ preview, onCancel, onSubmit }) => {
       return;
     }
 
-    onSubmit({
+    if (!draftNotes.trim()) {
+      toast.warn('Resolution notes are mandatory!');
+      return;
+    }
+
+    if (!hasEmails(email?.recipientEmails)) {
+      toast.warn('Recipient email is mandatory!');
+      return;
+    }
+
+    setIsSubmitting(true);
+    const submitted = await onSubmit({
       notes: draftNotes,
       actionsTaken: finalActions.map(({ editing, ...item }) => ({
         ...item,
         selected: true,
       })),
+      files,
     });
+    if (!submitted) {
+      setIsSubmitting(false);
+    }
   };
 
   if (showPreview) {
@@ -553,7 +602,9 @@ const CompleteEmailDialog = ({ preview, onCancel, onSubmit }) => {
 
           <div className="resolution-actions">
             <button type="button" className="preview-btn" onClick={() => setShowPreview(true)}>Preview</button>
-            <button type="button" className="submit-close-btn" onClick={submit}>Submit and close event</button>
+            <button type="button" className="submit-close-btn" onClick={submit} disabled={isSubmitting}>
+              {isSubmitting ? 'Submitting...' : 'Submit and close event'}
+            </button>
           </div>
         </div>
       </div>
