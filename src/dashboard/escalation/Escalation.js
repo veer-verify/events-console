@@ -368,12 +368,18 @@ const getSelectedActions = (actions) => (actions ?? [])
   .filter((item) => item?.selected)
   .map((item) => ({ ...item }));
 
+const formatPreviewActions = (actions) => {
+  if (!actions?.length) return '-';
+  return actions.map((item) => item?.name).filter(Boolean).join(', ');
+};
+
 const CompleteEmailDialog = ({ preview, onCancel, onSubmit }) => {
   const { email, event, actionTime, notes, actionsTaken } = preview;
   const [editableActions, setEditableActions] = useState(() => getSelectedActions(actionsTaken));
   const [actionInput, setActionInput] = useState('');
   const [draftNotes, setDraftNotes] = useState(notes || '');
   const [files, setFiles] = useState([]);
+  const [showPreview, setShowPreview] = useState(false);
   const fields = email?.emailFields ?? {};
   const description = email?.emailBody || fields?.DESCRIPTION || '-';
   const camera = fields?.CAMERA || event?.cameraId || '-';
@@ -403,10 +409,10 @@ const CompleteEmailDialog = ({ preview, onCancel, onSubmit }) => {
     setEditableActions((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const submit = () => {
+  const getFinalActions = () => {
     const pendingActionName = actionInput.trim();
     const pendingActionExists = pendingActionName && editableActions.some((item) => item.name.toLowerCase() === pendingActionName.toLowerCase());
-    const finalActions = pendingActionName && !pendingActionExists
+    return pendingActionName && !pendingActionExists
       ? [
         ...editableActions,
         {
@@ -418,6 +424,10 @@ const CompleteEmailDialog = ({ preview, onCancel, onSubmit }) => {
         }
       ]
       : editableActions;
+  };
+
+  const submit = () => {
+    const finalActions = getFinalActions();
 
     if (!finalActions.length) {
       toast.warn('Actions are mandatory please update atleast one of them!');
@@ -433,6 +443,21 @@ const CompleteEmailDialog = ({ preview, onCancel, onSubmit }) => {
     });
   };
 
+  if (showPreview) {
+    return (
+      <PreviewEmailDialog
+        email={email}
+        event={event}
+        description={description}
+        camera={camera}
+        dateTime={dateTime}
+        actionsTaken={getFinalActions()}
+        notes={draftNotes}
+        onClose={() => setShowPreview(false)}
+      />
+    );
+  }
+
   return (
     <div className="complete-email-backdrop">
       <div className="complete-email-dialog">
@@ -440,8 +465,7 @@ const CompleteEmailDialog = ({ preview, onCancel, onSubmit }) => {
 
         <div className="complete-email-content">
           <div className="complete-email-logo">
-            <span>IVIS</span>
-            <span>SECURITY</span>
+            <img src="images/ivis.png" alt="logo" />
           </div>
 
           <p className="complete-email-site">{event?.siteName || fields?.LOCATION || '-'}</p>
@@ -528,10 +552,71 @@ const CompleteEmailDialog = ({ preview, onCancel, onSubmit }) => {
           </label>
 
           <div className="resolution-actions">
-            <button type="button" className="preview-btn">Preview</button>
+            <button type="button" className="preview-btn" onClick={() => setShowPreview(true)}>Preview</button>
             <button type="button" className="submit-close-btn" onClick={submit}>Submit and close event</button>
           </div>
         </div>
+      </div>
+    </div>
+  );
+};
+
+const PreviewEmailDialog = ({ email, event, description, camera, dateTime, actionsTaken, notes, onClose }) => {
+  return (
+    <div className="preview-email-backdrop">
+      <div className="preview-email-dialog">
+        <button className="preview-email-close" onClick={onClose}>x</button>
+
+        <div className="preview-email-logo">
+          <img src="images/ivis.png" alt="logo" />
+        </div>
+
+        <p className="preview-email-site">{event?.siteName || email?.emailFields?.LOCATION || '-'}</p>
+
+        <div className="preview-email-alert">
+          {email?.emailSubject || `ALERT @ ${event?.siteName || '-'} - [ Unauthorized Entry Detected ]`}
+        </div>
+
+        <table className="preview-email-table">
+          <tbody>
+            <tr>
+              <td>To</td>
+              <td>{toList(email?.recipientEmails)}</td>
+            </tr>
+            <tr>
+              <td>Cc</td>
+              <td>{toList(email?.Cc)}</td>
+            </tr>
+            <tr>
+              <td>Bcc</td>
+              <td>{toList(email?.BCC)}</td>
+            </tr>
+            <tr>
+              <td>Date & Time</td>
+              <td>{dateTime}</td>
+            </tr>
+            <tr>
+              <td>Description</td>
+              <td>{description}</td>
+            </tr>
+            <tr>
+              <td>Camera</td>
+              <td>{camera}</td>
+            </tr>
+            <tr>
+              <td>Actions Taken</td>
+              <td>{formatPreviewActions(actionsTaken)}</td>
+            </tr>
+            <tr>
+              <td>Notes</td>
+              <td>{notes || '-'}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p className="preview-email-info">Please review the information above.</p>
+        <p className="preview-email-contact">Call <strong>(844) 438-4847 (ext. 1)</strong> or email support@ivisecurity.com</p>
+        <div className="preview-email-divider"></div>
       </div>
     </div>
   );
