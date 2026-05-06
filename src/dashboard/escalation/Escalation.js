@@ -52,12 +52,24 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
     const currentTime = getTimeByTimezone(currentEvent?.timezone);
 
     if (type === 'complete' && session?.userLevel === 3) {
-      if (!emaildata || emaildata === 'load') {
-        return toast.warn('Please select alert subtype and wait for email data!');
+      const levelTwoAlarmInfo = getAlarmInfoByLevel(currentEvent?.userLevelAlarmInfo, 2);
+      const alertTypeId = levelTwoAlarmInfo?.alertTag ?? selectedAlertType;
+      const subTypeId = levelTwoAlarmInfo?.subAlertTag ?? selectedSubType;
+      let emailDetails = emaildata;
+
+      if (!emailDetails || emailDetails === 'load') {
+        setEmailData('load');
+        const callingSystemDetail = 'dashboard';
+        emailDetails = await getEmailDataForVMSEvents({ ...currentEvent, alertTypeId, subTypeId, callingSystemDetail });
+        setEmailData(emailDetails);
+      }
+
+      if (!emailDetails) {
+        return toast.warn('Email data not found!');
       }
 
       setCompleteEmailPreview({
-        email: emaildata,
+        email: emailDetails,
         event: currentEvent,
         actionTime: currentTime,
         notes,
@@ -122,6 +134,10 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
   }
 
   const submitCompletePreview = async ({ notes: previewNotes, actionsTaken: previewActions, files }) => {
+    const levelTwoAlarmInfo = getAlarmInfoByLevel(currentEvent?.userLevelAlarmInfo, 2);
+    const alertTypeId = levelTwoAlarmInfo?.alertTag ?? selectedAlertType;
+    const subTypeId = levelTwoAlarmInfo?.subAlertTag ?? selectedSubType;
+
     if (session?.userLevel === 3) {
       const email = completeEmailPreview?.email;
       const response = await sendResolutionEmail({
@@ -139,8 +155,8 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
         notes: previewNotes,
         eventId: currentEvent?.eventId,
         createdBy: session?.UserId,
-        alerTagId: selectedAlertType,
-        subAlertTagId: selectedSubType,
+        alerTagId: alertTypeId,
+        subAlertTagId: subTypeId,
         timeZone: currentEvent?.timezone,
       });
 
@@ -153,8 +169,8 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
     handleFalse(
       {
         ...currentEvent,
-        alertTypeId: selectedAlertType,
-        alertSubTypeId: selectedSubType,
+        alertTypeId,
+        alertSubTypeId: subTypeId,
         index,
         actionTagTime: completeEmailPreview?.actionTime,
         notes: previewNotes,
@@ -197,7 +213,7 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
       <div className="alert-input">
         <p className="section-title">SUSPICIOUS INPUT</p>
 
-        {(session?.userLevel === 2 || session?.userLevel === 3) &&
+        {(session?.userLevel === 2) &&
           <Fragment>
             {/* Person / Vehicle radio buttons */}
             <div className="radio-group">
@@ -400,6 +416,14 @@ const getPreviewDateTime = (email, event, actionTime) => {
 const getSelectedActions = (actions) => (actions ?? [])
   .filter((item) => item?.selected)
   .map((item) => ({ ...item }));
+
+const getAlarmInfoByLevel = (alarmInfo, level) => {
+  const items = alarmInfo ?? [];
+  for (let i = items.length - 1; i >= 0; i--) {
+    if (Number(items[i]?.level) === level) return items[i];
+  }
+  return null;
+};
 
 const formatPreviewActions = (actions) => {
   if (!actions?.length) return '-';
