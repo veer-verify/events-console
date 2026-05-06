@@ -126,7 +126,7 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
           const allChecked = actionsTaken.some((item) => item?.selected);
           if (!allChecked)
             return alert(
-              'Actions are mandatory please update atleast one of them!',
+              'Choose at least one action, or select No Action Necessary.',
             );
         }
 
@@ -159,7 +159,7 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
         toast.warn((audio?.audioConfigured === 'No Deterant AvailableF')
           ? 'N'
           : (audio?.audioConfigured === 'T' && !hours.includes(currentHour))
-            ? (res && res?.statusCode === 200 ? 'Activated On-site Deterant' : 'Deterant Activated No Response')
+            ? (res && res?.statusCode === 200 ? 'On-site deterrent activated.' : 'Deterrent activation did not return a response.')
             : 'No Actions Necessary')
 
         const actions = [
@@ -317,18 +317,52 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
     ?.map((item) => item.notes || 'None')
     .join(" - ");
 
+  const hasSelectedNoActionNecessary = actionsTaken.some(
+    (item) => item?.selected && isNoActionNecessary(item?.name)
+  );
+
+  const hasSelectedAction = actionsTaken.some(
+    (item) => item?.selected && !isNoActionNecessary(item?.name)
+  );
+
+  const isActionDisabled = (item) => {
+    if (isNoActionNecessary(item?.name)) return hasSelectedAction;
+    return hasSelectedNoActionNecessary;
+  };
 
 
   const toggleSelect = (index) => {
-    const updated = [...actionsTaken];
-    updated[index].status = false;
-    updated[index].selected = !updated[index].selected;
-    updated[index].time = getTimeByTimezone(currentEvent?.timezone);
+    const action = actionsTaken[index];
+    if (isActionDisabled(action)) return;
+
+    const isNoAction = isNoActionNecessary(action?.name);
+    const updated = actionsTaken.map((item, i) => {
+      if (i === index) {
+        return {
+          ...item,
+          status: false,
+          selected: !item.selected,
+          time: getTimeByTimezone(currentEvent?.timezone),
+        };
+      }
+
+      if (isNoAction || isNoActionNecessary(item?.name)) {
+        return {
+          ...item,
+          status: false,
+          selected: false,
+          editing: false,
+        };
+      }
+
+      return item;
+    });
     setActionsTaken(updated);
   };
 
   const toggleResponded = (index, e) => {
     e.stopPropagation();
+    if (isActionDisabled(actionsTaken[index])) return;
     const updated = [...actionsTaken];
     // updated[index].responded = !updated[index].responded;
     updated[index].status = !updated[index].status;
@@ -338,6 +372,7 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
 
   const enableEdit = (index, e) => {
     e.stopPropagation();
+    if (isActionDisabled(actionsTaken[index])) return;
     const updated = [...actionsTaken];
     updated[index].editing = true;
     setActionsTaken(updated);
@@ -556,15 +591,21 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
                   {
                     session?.userLevel === 3 &&
                     <div style={{ display: "flex", gap: "4px", userSelect: 'none' }}>
-                      {actionsTaken.map((item, index) => (
+                      {actionsTaken.map((item, index) => {
+                        const disabled = isActionDisabled(item);
+
+                        return (
                         <div
                           key={index}
+                          aria-disabled={disabled}
                           onClick={() => toggleSelect(index)}
                           style={{
                             padding: "4px 8px",
                             borderRadius: "20px",
                             border: item.selected ? "2px solid red" : "1px solid gray",
-                            cursor: "pointer"
+                            cursor: disabled ? "not-allowed" : "pointer",
+                            opacity: disabled ? 0.45 : 1,
+                            pointerEvents: disabled ? "none" : "auto"
                           }}
                         >
                           <span style={{ fontSize: '10px', whiteSpace: 'nowrap' }}>{item.name}</span>
@@ -611,7 +652,8 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
                           }
 
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   }
                 </div>
@@ -755,6 +797,11 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
 };
 
 export default memo(Tile);
+
+const isNoActionNecessary = (name = '') => {
+  const normalizedName = name.toLowerCase().replace(/[^a-z]/g, '');
+  return normalizedName.includes('noaction') && normalizedName.includes('necess');
+};
 
 // =============================
 // Monitoring Info Component

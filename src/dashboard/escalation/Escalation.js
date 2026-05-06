@@ -23,6 +23,39 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
 
   const session = getStorage('session');
 
+  const validateLevelTwoInput = () => {
+    if (selectedAlertType === '') {
+      toast.warn('Select an alert type to continue.');
+      return false;
+    }
+
+    if (selectedSubType === '') {
+      toast.warn('Select an alert subtype to continue.');
+      return false;
+    }
+
+    if (!emaildata || emaildata === 'load') {
+      toast.warn('Please wait while the email preview is prepared.');
+      return false;
+    }
+
+    return true;
+  };
+
+  const validateLevelThreeActions = () => {
+    if (actionsTaken.length === 0) {
+      toast.warn('No actions are available for this event.');
+      return false;
+    }
+
+    if (!hasSelectedAction(actionsTaken)) {
+      toast.warn('Choose at least one action, or select No Action Necessary.');
+      return false;
+    }
+
+    return true;
+  };
+
   const fetchEmailData = async (val) => {
     setSelectedSubType(val)
     setEmailData('load');
@@ -39,14 +72,12 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
   };
 
   const handle = async (type) => {
-    if (customAction === 2 && session?.userLevel === 3 && type !== 'complete') {
-      if (actionsTaken.length === 0) return toast.warn('No actions found!');
+    if (session?.userLevel === 2 && !validateLevelTwoInput()) {
+      return;
+    }
 
-      const allChecked = actionsTaken.some((item) => item?.selected);
-      if (!allChecked)
-        return toast.warn(
-          'Actions are mandatory please update atleast one of them!'
-        );
+    if (customAction === 2 && session?.userLevel === 3 && !validateLevelThreeActions()) {
+      return;
     }
 
     const currentTime = getTimeByTimezone(currentEvent?.timezone);
@@ -65,7 +96,7 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
       }
 
       if (!emailDetails) {
-        return toast.warn('Email data not found!');
+        return toast.warn('Email details could not be prepared. Please try again.');
       }
 
       setCompleteEmailPreview({
@@ -161,7 +192,7 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
       });
 
       if (!response) {
-        toast.error('Failed to send resolution email!');
+        toast.error('Resolution email could not be sent. Please try again.');
         return false;
       }
     }
@@ -415,6 +446,8 @@ const getSelectedActions = (actions) => (actions ?? [])
   .filter((item) => item?.selected)
   .map((item) => ({ ...item }));
 
+const hasSelectedAction = (actions) => (actions ?? []).some((item) => item?.selected);
+
 const getAlarmInfoByLevel = (alarmInfo, level) => {
   const items = alarmInfo ?? [];
   for (let i = items.length - 1; i >= 0; i--) {
@@ -486,17 +519,17 @@ const CompleteEmailDialog = ({ preview, onCancel, onSubmit }) => {
     const finalActions = getFinalActions();
 
     if (!finalActions.length) {
-      toast.warn('Actions are mandatory please update atleast one of them!');
+      toast.warn('Choose at least one action before submitting.');
       return;
     }
 
     if (!draftNotes.trim()) {
-      toast.warn('Resolution notes are mandatory!');
+      toast.warn('Add resolution notes before submitting.');
       return;
     }
 
     if (!hasEmails(email?.recipientEmails)) {
-      toast.warn('Recipient email is mandatory!');
+      toast.warn('Add at least one recipient email before submitting.');
       return;
     }
 
