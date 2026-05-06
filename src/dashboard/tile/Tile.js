@@ -604,7 +604,7 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
                             borderRadius: "20px",
                             border: item.selected ? "2px solid red" : "1px solid gray",
                             cursor: disabled ? "not-allowed" : "pointer",
-                            opacity: disabled ? 0.45 : 1,
+                            opacity: disabled ? 0.65 : 1,
                             pointerEvents: disabled ? "none" : "auto"
                           }}
                         >
