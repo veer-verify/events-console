@@ -197,13 +197,13 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
     fetchMetadata();
   }, [currentEvent]);
 
-  const check = () => {
-    if (session.userLevel === 2) {
-      if (emaildata) return true
-    } else {
-      return true;
-    }
-  }
+  // const check = () => {
+  //   if (session.userLevel === 2) {
+  //     if (emaildata) return true
+  //   } else {
+  //     return true;
+  //   }
+  // }
 
   return (
     <Fragment>
@@ -283,12 +283,10 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
         </div>
 
         {/* Action Buttons */}
-        {check() &&
-          <div className="button-group">
-            <button className="btn-secondary" onClick={() => handle('complete')}>COMPLETE</button>
-            {monitoringData && monitoringData.nextQueueName && <button className="btn-primary" onClick={() => handle('escalate')}>ESCALATE</button>}
-          </div>
-        }
+        <div className="button-group">
+          <button className="btn-secondary" onClick={() => handle('complete')}>COMPLETE</button>
+          {monitoringData && monitoringData.nextQueueName && <button className="btn-primary" onClick={() => handle('escalate')}>ESCALATE</button>}
+        </div>
       </div>
 
 
