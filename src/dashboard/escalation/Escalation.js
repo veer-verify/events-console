@@ -76,7 +76,7 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
       return;
     }
 
-    if (type !== 'complete' && customAction === 2 && session?.userLevel === 3 && !validateLevelThreeActions()) {
+    if (customAction === 2 && session?.userLevel === 3 && !validateLevelThreeActions()) {
       return;
     }
 
@@ -88,23 +88,39 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
       const subTypeId = levelTwoAlarmInfo?.subAlertTag ?? selectedSubType;
       let emailDetails = emaildata;
 
-      if (!emailDetails || emailDetails === 'load') {
-        setEmailData('load');
-        const callingSystemDetail = 'dashboard';
-        emailDetails = await getEmailDataForVMSEvents({ ...currentEvent, alertTypeId, subTypeId, callingSystemDetail });
-        setEmailData(emailDetails);
-      }
+      setEmailData('load');
+      const callingSystemDetail = 'dashboard';
+      const freshEmailDetails = await getEmailDataForVMSEvents({ ...currentEvent, alertTypeId, subTypeId, callingSystemDetail });
+      emailDetails = freshEmailDetails || emailDetails;
+      setEmailData(emailDetails);
 
       if (!emailDetails) {
         return toast.warn('Email details could not be prepared. Please try again.');
       }
+
+      const selectedTileActions = formatActionsForPreview(getSelectedActions(actionsTaken), currentTime);
+      const apiActionsTakenInfo = emailDetails?.actionsTakenInfo
+        ?? emailDetails?.ActionsTakenInfo
+        ?? emailDetails?.ACTIONS_TAKEN_INFO
+        ?? emailDetails?.emailFields?.actionsTakenInfo
+        ?? emailDetails?.emailFields?.ActionsTakenInfo
+        ?? emailDetails?.emailFields?.ACTIONS_TAKEN_INFO
+        ?? currentEvent?.userLevelAlarmInfo?.map((item) => item?.actionsTakenInfo)
+        ?? [];
+      const emailActions = formatEmailActionsTakenInfo(apiActionsTakenInfo, currentTime);
 
       setCompleteEmailPreview({
         email: emailDetails,
         event: currentEvent,
         actionTime: currentTime,
         notes,
-        actionsTaken: formatEmailActionsTakenInfo(getEmailActionsTakenInfo(emailDetails), currentTime),
+        selectedActionsTaken: selectedTileActions,
+        emailActionsTaken: emailActions,
+        emailActionsTakenInfo: apiActionsTakenInfo,
+        actionsTaken: combinePreviewActions(
+          selectedTileActions,
+          emailActions
+        ),
       });
       return;
     }
@@ -446,7 +462,80 @@ const getSelectedActions = (actions) => (actions ?? [])
   .filter((item) => item?.selected)
   .map((item) => ({ ...item }));
 
+const getPreviewActions = (actions, actionTime) => {
+  return getActionsTakenInfoList(actions)
+    .map((item) => {
+      if (typeof item === 'string') {
+        return {
+          name: item,
+          selected: true,
+          status: false,
+          time: actionTime,
+          editing: false,
+        };
+      }
+
+      const name = item?.name ?? item?.value ?? item?.actionName ?? item?.actionTaken;
+      if (!name) return null;
+
+      return {
+        ...item,
+        name,
+        selected: true,
+        status: item?.status ?? false,
+        time: item?.time ?? actionTime,
+        editing: false,
+      };
+    })
+    .filter(Boolean);
+};
+
 const hasSelectedAction = (actions) => (actions ?? []).some((item) => item?.selected);
+
+const formatActionsForPreview = (actions, actionTime) => {
+  return (actions ?? [])
+    .map((item) => {
+      const name = item?.name ?? item?.value ?? item?.actionName ?? item?.actionTaken;
+      if (!name) return null;
+
+      return {
+        ...item,
+        name,
+        selected: true,
+        status: item?.status ?? false,
+        time: item?.time ?? actionTime,
+        editing: false,
+      };
+    })
+    .filter(Boolean);
+};
+
+const combinePreviewActions = (...actionGroups) => {
+  const seen = new Set();
+
+  return actionGroups
+    .flat()
+    .filter((item) => {
+      const name = item?.name?.trim?.().replace(/\s+/g, ' ');
+      if (!name) return false;
+
+      const key = getActionDedupeKey(name);
+      if (seen.has(key)) return false;
+
+      seen.add(key);
+      item.name = name;
+      return true;
+    });
+};
+
+const getActionDedupeKey = (name) => {
+  return name
+    .toLowerCase()
+    .replace(/\([^)]*\)/g, '')
+    .replace(/\bno\s*response\b/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
 
 const getActionsTakenInfoList = (actionsTakenInfo) => {
   const flattenActions = (value) => {
@@ -474,43 +563,8 @@ const getActionsTakenInfoList = (actionsTakenInfo) => {
   return flattenActions(actionsTakenInfo);
 };
 
-const getEmailActionsTakenInfo = (emailDetails) => {
-  return emailDetails?.actionsTakenInfo
-    ?? emailDetails?.actionTakenInfo
-    ?? emailDetails?.actionTaken
-    ?? emailDetails?.actionsTaken
-    ?? emailDetails?.emailFields?.actionsTakenInfo
-    ?? emailDetails?.emailFields?.ACTIONSTAKENINFO
-    ?? emailDetails?.emailFields?.ACTIONS_TAKEN_INFO
-    ?? emailDetails?.emailFields?.ACTIONS_TAKEN;
-};
-
 const formatEmailActionsTakenInfo = (actionsTakenInfo, actionTime) => {
-  return getActionsTakenInfoList(actionsTakenInfo)
-    .map((item) => {
-      if (typeof item === 'string') {
-        return {
-          name: item,
-          selected: true,
-          status: false,
-          time: actionTime,
-          editing: false,
-        };
-      }
-
-      const name = item?.name ?? item?.value ?? item?.actionName ?? item?.actionTaken;
-      if (!name) return null;
-
-      return {
-        ...item,
-        name,
-        selected: true,
-        status: item?.status ?? false,
-        time: item?.time ?? actionTime,
-        editing: false,
-      };
-    })
-    .filter(Boolean);
+  return getPreviewActions(actionsTakenInfo, actionTime);
 };
 
 const getAlarmInfoByLevel = (alarmInfo, level) => {
@@ -527,8 +581,12 @@ const formatPreviewActions = (actions) => {
 };
 
 const CompleteEmailDialog = ({ preview, onCancel, onSubmit }) => {
-  const { email, event, actionTime, notes, actionsTaken } = preview;
-  const [editableActions, setEditableActions] = useState(() => getSelectedActions(actionsTaken));
+  const { email, event, actionTime, notes, actionsTaken, selectedActionsTaken, emailActionsTaken, emailActionsTakenInfo } = preview;
+  const [editableActions, setEditableActions] = useState(() => combinePreviewActions(
+    selectedActionsTaken ?? [],
+    emailActionsTaken ?? getPreviewActions(emailActionsTakenInfo, actionTime),
+    (!selectedActionsTaken && !emailActionsTaken) ? actionsTaken : []
+  ));
   const [actionInput, setActionInput] = useState('');
   const [draftNotes, setDraftNotes] = useState(notes || '');
   const [files, setFiles] = useState([]);

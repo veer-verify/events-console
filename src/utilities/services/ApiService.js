@@ -99,7 +99,7 @@ export const updateEventFullDetails = async (payload) => {
     objectName: payload?.objectName,
     cameraId: payload?.cameraId,
     eventTag: 'events-console',
-    eventType: 'Event_Wall',
+    eventType: payload?.eventType ?? 'Event_Wall',
     actionTag: payload?.actionTag,
     subActionTag: payload?.subActionTag,
     userLevels: user.userLevel,
