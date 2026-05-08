@@ -76,7 +76,7 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
       return;
     }
 
-    if (customAction === 2 && session?.userLevel === 3 && !validateLevelThreeActions()) {
+    if (type !== 'complete' && customAction === 2 && session?.userLevel === 3 && !validateLevelThreeActions()) {
       return;
     }
 
@@ -104,7 +104,7 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
         event: currentEvent,
         actionTime: currentTime,
         notes,
-        actionsTaken,
+        actionsTaken: formatEmailActionsTakenInfo(getEmailActionsTakenInfo(emailDetails), currentTime),
       });
       return;
     }
@@ -447,6 +447,71 @@ const getSelectedActions = (actions) => (actions ?? [])
   .map((item) => ({ ...item }));
 
 const hasSelectedAction = (actions) => (actions ?? []).some((item) => item?.selected);
+
+const getActionsTakenInfoList = (actionsTakenInfo) => {
+  const flattenActions = (value) => {
+    if (Array.isArray(value)) return value.flatMap(flattenActions);
+
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (!trimmed) return [];
+
+      try {
+        return flattenActions(JSON.parse(trimmed));
+      } catch {
+        return trimmed.split(',').map((item) => item.trim()).filter(Boolean);
+      }
+    }
+
+    if (!value || typeof value !== 'object') return [];
+
+    const namedAction = value?.name ?? value?.value ?? value?.actionName ?? value?.actionTaken;
+    if (namedAction) return [value];
+
+    return Object.values(value).flatMap(flattenActions);
+  };
+
+  return flattenActions(actionsTakenInfo);
+};
+
+const getEmailActionsTakenInfo = (emailDetails) => {
+  return emailDetails?.actionsTakenInfo
+    ?? emailDetails?.actionTakenInfo
+    ?? emailDetails?.actionTaken
+    ?? emailDetails?.actionsTaken
+    ?? emailDetails?.emailFields?.actionsTakenInfo
+    ?? emailDetails?.emailFields?.ACTIONSTAKENINFO
+    ?? emailDetails?.emailFields?.ACTIONS_TAKEN_INFO
+    ?? emailDetails?.emailFields?.ACTIONS_TAKEN;
+};
+
+const formatEmailActionsTakenInfo = (actionsTakenInfo, actionTime) => {
+  return getActionsTakenInfoList(actionsTakenInfo)
+    .map((item) => {
+      if (typeof item === 'string') {
+        return {
+          name: item,
+          selected: true,
+          status: false,
+          time: actionTime,
+          editing: false,
+        };
+      }
+
+      const name = item?.name ?? item?.value ?? item?.actionName ?? item?.actionTaken;
+      if (!name) return null;
+
+      return {
+        ...item,
+        name,
+        selected: true,
+        status: item?.status ?? false,
+        time: item?.time ?? actionTime,
+        editing: false,
+      };
+    })
+    .filter(Boolean);
+};
 
 const getAlarmInfoByLevel = (alarmInfo, level) => {
   const items = alarmInfo ?? [];

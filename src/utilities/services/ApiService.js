@@ -148,7 +148,15 @@ export const getEmailDataForVMSEvents = async (payload) => {
   // params.append('timer', 120);
   params.append('imageName', payload?.image_list.toString());
   params.append('callingSystemDetail', payload?.callingSystemDetail);
-  return api.get(url, { params: params }).then((res) => res.data.statusCode === 200 ? { ...res.data.emailDetails, ...{ smsDetails: res.data.smsDetails } } : null).catch((err) => console.log(err));
+  return api.get(url, { params: params }).then((res) => {
+    if (res.data.statusCode !== 200) return null;
+
+    return {
+      ...res.data.emailDetails,
+      smsDetails: res.data.smsDetails,
+      actionsTakenInfo: res.data.actionsTakenInfo ?? res.data.emailDetails?.actionsTakenInfo,
+    };
+  }).catch((err) => console.log(err));
 }
 
 export const eventsGenericEmail = async (payload) => {
