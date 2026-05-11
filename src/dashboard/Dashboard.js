@@ -104,6 +104,10 @@ const Dashboard = () => {
       };
       writetoRedisQueueData(event);
       setEventData(prev => {
+        if (hasDuplicateEventTime(prev, event, item.index)) {
+          return prev.filter(Boolean);
+        }
+
         const copy = [...prev];
         copy[item.index] = event;
         return copy;
@@ -189,6 +193,10 @@ const Dashboard = () => {
 
       writetoRedisQueueData(event);
       setEventData(prev => {
+        if (hasDuplicateEventTime(prev, event, item.index)) {
+          return prev.filter(Boolean);
+        }
+
         const copy = [...prev];
         copy[item.index] = event;
         return copy;
@@ -238,7 +246,7 @@ const Dashboard = () => {
         writetoRedisQueueData(event);
         const monitoringInfo = await getMonitoringInfo(event);
         const merged = { ...event, monitoringInfo };
-        setEventData(prev => [...prev, merged]);
+        setEventData(prev => hasDuplicateEventTime(prev, merged) ? prev : [...prev, merged]);
       }
 
       isFetching = false;
@@ -374,6 +382,10 @@ const Dashboard = () => {
 
         writetoRedisQueueData(event);
         setEventData(prev => {
+          if (hasDuplicateEventTime(prev, event, index)) {
+            return prev.filter(Boolean);
+          }
+
           const copy = [...prev];
           copy[index] = event;
           return copy;
@@ -480,6 +492,18 @@ const Dashboard = () => {
 }
 
 export default Dashboard;
+
+const getEventTimeKey = (event) => {
+  const eventTime = event?.eventTime;
+  return eventTime === undefined || eventTime === null ? '' : String(eventTime).trim();
+};
+
+const hasDuplicateEventTime = (events, event, ignoreIndex = -1) => {
+  const eventTime = getEventTimeKey(event);
+  if (!eventTime) return false;
+
+  return events.some((item, index) => index !== ignoreIndex && getEventTimeKey(item) === eventTime);
+};
 
 const Configure = ({ handleCount, closeConfig }) => {
   const layouts = [
