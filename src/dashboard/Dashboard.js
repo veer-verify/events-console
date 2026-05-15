@@ -42,7 +42,6 @@ const Dashboard = () => {
    * to handle false activity
    */
   const handleFalse = async (item) => {
-    console.log(item)
     const subAction = getStorage('sub_action');
     const customAction = getStorage('custom_action');
 
@@ -100,7 +99,7 @@ const Dashboard = () => {
         ...first,
         monitoringInfo,
         landingTime: getTimeByTimezone(first.timezone),
-        audioStatus: 'F',
+        audioStatus: 'N',
         timer: Number(timerData?.value) ?? 60,
       };
       writetoRedisQueueData(event);
@@ -188,7 +187,7 @@ const Dashboard = () => {
         ...first,
         monitoringInfo,
         landingTime: getTimeByTimezone(first.timezone),
-        audioStatus: 'F',
+        audioStatus: 'N',
         timer: Number(timerData?.value) ?? 60,
       };
 
@@ -240,7 +239,7 @@ const Dashboard = () => {
         const event = {
           ...rawEvent,
           landingTime: getTimeByTimezone(rawEvent.timezone),
-          audioStatus: 'F',
+          audioStatus: 'N',
           timer: Number(timerData?.value) ?? 60,
         };
 
@@ -377,7 +376,7 @@ const Dashboard = () => {
           ...first,
           monitoringInfo,
           landingTime: getTimeByTimezone(first.timezone),
-          audioStatus: 'F',
+          audioStatus: 'N',
           timer: Number(timerData?.value) ?? 60,
         };
 

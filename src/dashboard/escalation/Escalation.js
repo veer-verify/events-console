@@ -126,10 +126,12 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
     }
 
     if (type === 'escalate') {
+      const audioStatus = getSubmittedAudioStatus(currentEvent, audio);
       handleSuspicious(
         {
           ...currentEvent,
-          audioStatus: audio?.audioConfigured === 'T' ? '' : 'N',
+          audioStatus,
+          activityDetTime: audioStatus === 'P' || audioStatus === 'F' ? currentEvent?.activityDetTime ?? '' : '',
           index,
           actionTagTime: currentTime,
           alertTypeId: selectedAlertType,
@@ -140,10 +142,12 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
         }
       );
     } else {
+      const audioStatus = getSubmittedAudioStatus(currentEvent, audio);
       handleFalse(
         {
           ...currentEvent,
-          audioStatus: audio?.audioConfigured === 'T' ? '' : 'N',
+          audioStatus,
+          activityDetTime: audioStatus === 'P' || audioStatus === 'F' ? currentEvent?.activityDetTime ?? '' : '',
           alertTypeId: selectedAlertType,
           alertSubTypeId: selectedSubType,
           index,
@@ -575,6 +579,13 @@ const getAlarmInfoByLevel = (alarmInfo, level) => {
     if (Number(items[i]?.level) === level) return items[i];
   }
   return null;
+};
+
+const getSubmittedAudioStatus = (currentEvent, audio) => {
+  if (audio?.audioConfigured !== 'T') return 'N';
+  if (currentEvent?.audioStatus === 'P') return 'P';
+  if (currentEvent?.audioStatus === 'F' && currentEvent?.activityDetTime) return 'F';
+  return 'N';
 };
 
 const formatPreviewActions = (actions) => {

@@ -99,8 +99,8 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
         (audio?.audioConfigured === 'F')
           ? 'N'
           : (audio?.audioConfigured === 'T' && !hours.includes(currentHour))
-            ? (res && res?.statusCode === 200 ? 'P' : 'R')
-            : 'F';
+            ? (res && res?.statusCode === 200 ? 'P' : 'F')
+            : 'N';
       currentEvent.activityDetTime = (audio?.audioConfigured === 'T' && !hours.includes(currentHour)) ? getTimeByTimezone(currentEvent?.timezone) : '';
     }
 
@@ -136,44 +136,35 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
             );
         }
 
-        const hours = parseAudioHours(audio?.audioHours);
-        const currentHour = getHour(currentEvent?.timezone);
-
         setShowTags(false);
-        if (currentEvent) {
-          currentEvent.playing = true;
-        }
+        const shouldPlaySiren = shouldPlaySirenForLevelOne(currentEvent, audio);
+        if (shouldPlaySiren) {
+          if (currentEvent) {
+            currentEvent.playing = true;
+          }
 
-        let res;
-        if (session?.userLevel === 1) {
-          if (audio?.audioConfigured === 'T' && !hours.includes(currentHour)) {
-            res = await playSiren(currentEvent)
+          const res = await playSiren(currentEvent);
+
+          if (currentEvent) {
+            currentEvent.playing = false;
+            currentEvent.audioStatus = res?.statusCode === 200 ? 'P' : 'F';
+            currentEvent.activityDetTime = getTimeByTimezone(currentEvent?.timezone);
           }
         }
 
-        if (currentEvent) {
-          currentEvent.playing = false;
-          currentEvent.audioStatus =
-            (audio?.audioConfigured === 'F')
-              ? 'N'
-              : (audio?.audioConfigured === 'T' && !hours.includes(currentHour))
-                ? (res && res?.statusCode === 200 ? 'P' : 'R')
-                : 'F';
-          currentEvent.activityDetTime = (audio?.audioConfigured === 'T' && !hours.includes(currentHour)) ? getTimeByTimezone(currentEvent?.timezone) : '';
-        }
+        const submittedAudioStatus = getSubmittedAudioStatus(currentEvent, audio);
+        const activityDetTime = submittedAudioStatus === 'P' || submittedAudioStatus === 'F'
+          ? currentEvent?.activityDetTime ?? ''
+          : '';
 
-        toast.warn((audio?.audioConfigured === 'No Deterant AvailableF')
-          ? 'N'
-          : (audio?.audioConfigured === 'T' && !hours.includes(currentHour))
-            ? (res && res?.statusCode === 200 ? 'On-site deterrent activated.' : 'Deterrent activation did not return a response.')
-            : 'No Actions Necessary')
+        toast.warn(getDeterrentMessage(submittedAudioStatus))
 
         const actions = [
           {
             name: 'Deterrent',
             selected: audio?.audioConfigured === 'T' ? true : false,
-            status: audio?.audioConfigured === 'T' && !hours.includes(currentHour) && (res && res.statusCode === 200) ? true : false,
-            time: audio?.audioConfigured === 'T' && !hours.includes(currentHour) ? getTimeByTimezone(currentEvent?.timezone) : null
+            status: submittedAudioStatus === 'P',
+            time: activityDetTime || null
           }
         ];
         const output = [...actionsTaken, ...actions];
@@ -182,6 +173,8 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
         setImgSrc(null);
         handleSuspicious({
           ...currentEvent,
+          audioStatus: submittedAudioStatus,
+          activityDetTime,
           index,
           actionTagTime: currentTime,
           ...monitoringData,
@@ -820,6 +813,28 @@ const parseAudioHours = (audioHours) => {
   } catch {
     return [];
   }
+};
+
+const shouldPlaySirenForLevelOne = (currentEvent, audio) => {
+  if (audio?.audioConfigured !== 'T') return false;
+  if (['P', 'F'].includes(currentEvent?.audioStatus) && currentEvent?.activityDetTime) return false;
+
+  const hours = parseAudioHours(audio?.audioHours);
+  const currentHour = getHour(currentEvent?.timezone);
+  return !hours.includes(currentHour);
+};
+
+const getSubmittedAudioStatus = (currentEvent, audio) => {
+  if (audio?.audioConfigured !== 'T') return 'N';
+  if (currentEvent?.audioStatus === 'P') return 'P';
+  if (currentEvent?.audioStatus === 'F' && currentEvent?.activityDetTime) return 'F';
+  return 'N';
+};
+
+const getDeterrentMessage = (audioStatus) => {
+  if (audioStatus === 'P') return 'On-site deterrent activated.';
+  if (audioStatus === 'F') return 'Deterrent activation did not return a response.';
+  return 'No Actions Necessary';
 };
 
 // =============================
