@@ -1,6 +1,6 @@
 const dev = "https://usstaging.ivisecurity.com";
-const local = "http://192.168.0.225";
 const prod = "https://prod.ivisecurity.com";
+const local = "http://192.168.0.225";
 
 export const environment = {
     login_url: `${dev}/userDetails`,

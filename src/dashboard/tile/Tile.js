@@ -281,7 +281,7 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
       } else {
         setImgSrc(currentEvent?.image_list[iRef.current]);
       }
-      if (iRef.current === 5) {
+      if (iRef.current === currentEvent?.image_list?.length - 1) {
         iRef.current = 0;
       } else {
         iRef.current += 1;
@@ -412,7 +412,7 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
                 if (now - lastRef.current < 300) return;
 
                 lastRef.current = now;
-                if (iRef.current === 5) dirRef.current = -1;
+                if (iRef.current === currentEvent?.image_list?.length - 1) dirRef.current = -1;
                 if (iRef.current === 1) dirRef.current = 1;
                 iRef.current += dirRef.current;
 
@@ -595,63 +595,63 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
                         const disabled = isActionDisabled(item);
 
                         return (
-                        <div
-                          key={index}
-                          aria-disabled={disabled}
-                          onClick={() => toggleSelect(index)}
-                          style={{
-                            padding: "4px 8px",
-                            borderRadius: "20px",
-                            border: item.selected ? "2px solid red" : "1px solid gray",
-                            cursor: disabled ? "not-allowed" : "pointer",
-                            opacity: disabled ? 0.65 : 1,
-                            pointerEvents: disabled ? "none" : "auto"
-                          }}
-                        >
-                          <span style={{ fontSize: '10px', whiteSpace: 'nowrap' }}>{item.name}</span>
+                          <div
+                            key={index}
+                            aria-disabled={disabled}
+                            onClick={() => toggleSelect(index)}
+                            style={{
+                              padding: "4px 8px",
+                              borderRadius: "20px",
+                              border: item.selected ? "2px solid red" : "1px solid gray",
+                              cursor: disabled ? "not-allowed" : "pointer",
+                              opacity: disabled ? 0.65 : 1,
+                              pointerEvents: disabled ? "none" : "auto"
+                            }}
+                          >
+                            <span style={{ fontSize: '10px', whiteSpace: 'nowrap' }}>{item.name}</span>
 
-                          {/* TIME VIEW */}
-                          {item.selected && !item.editing && (
-                            <span style={{ fontSize: '10px' }}>
-                              {" "}
-                              - {new Date(item.time).toLocaleString()}
-                              <span
-                                style={{ marginLeft: 5, cursor: "pointer" }}
-                                onClick={(e) => enableEdit(index, e)}
-                              >
-                                ✏️
+                            {/* TIME VIEW */}
+                            {item.selected && !item.editing && (
+                              <span style={{ fontSize: '10px' }}>
+                                {" "}
+                                - {new Date(item.time).toLocaleString()}
+                                <span
+                                  style={{ marginLeft: 5, cursor: "pointer" }}
+                                  onClick={(e) => enableEdit(index, e)}
+                                >
+                                  ✏️
+                                </span>
                               </span>
-                            </span>
-                          )}
+                            )}
 
-                          {/* TIME EDIT */}
-                          {item.editing && (
-                            <span>
-                              <input
-                                type="datetime-local"
-                                onClick={(e) => e.stopPropagation()}
-                                onChange={(e) => updateTime(index, e.target.value)}
-                              />
-                              <span
-                                style={{ marginLeft: 5 }}
-                                onClick={(e) => saveEdit(index, e)}
-                              >
-                                ✔️
+                            {/* TIME EDIT */}
+                            {item.editing && (
+                              <span>
+                                <input
+                                  type="datetime-local"
+                                  onClick={(e) => e.stopPropagation()}
+                                  onChange={(e) => updateTime(index, e.target.value)}
+                                />
+                                <span
+                                  style={{ marginLeft: 5 }}
+                                  onClick={(e) => saveEdit(index, e)}
+                                >
+                                  ✔️
+                                </span>
                               </span>
-                            </span>
-                          )}
+                            )}
 
-                          {/* RESPONDED */}
-                          {item.selected &&
-                            <span
-                              style={{ marginLeft: 4, fontSize: '12px' }}
-                              onClick={(e) => toggleResponded(index, e)}
-                            >
-                              {item.status ? "✅" : "⚪"}
-                            </span>
-                          }
+                            {/* RESPONDED */}
+                            {item.selected &&
+                              <span
+                                style={{ marginLeft: 4, fontSize: '12px' }}
+                                onClick={(e) => toggleResponded(index, e)}
+                              >
+                                {item.status ? "✅" : "⚪"}
+                              </span>
+                            }
 
-                        </div>
+                          </div>
                         );
                       })}
                     </div>
