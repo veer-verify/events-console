@@ -12,7 +12,13 @@ import dayjs from "dayjs";
 
 const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => {
   // console.log(currentEvent)
-  const isManualWall = currentEvent?.eventType !== "Manual_Wall";
+  const isManualWall = currentEvent?.eventType === "Manual_Wall";
+  const isCustomEvent = currentEvent?.eventType !== "Custom_Event";
+  const eventTypeDotClass = isManualWall
+    ? "event-type-dot manual-wall-dot"
+    : isCustomEvent
+      ? "event-type-dot custom-event-dot"
+      : "";
   const monitoringData = currentEvent?.monitoringInfo;
   const session = getStorage("session");
   const customAction = getStorage("custom_action");
@@ -536,7 +542,7 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
                   />
                 </button>
 
-                {isManualWall && <span className="manual-wall-dot" />}
+                {eventTypeDotClass && <span className={eventTypeDotClass} />}
 
                 {showTags && (
                   <div className={count > 4 ? 'tag-grid-new' : 'tag-grid'}>

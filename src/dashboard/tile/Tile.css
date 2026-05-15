@@ -146,33 +146,51 @@ iframe {
   align-items: center;
 }
 
-.manual-wall-dot {
+.event-type-dot {
   display: block;
   width: 16px;
   height: 16px;
   margin-left: 6px;
   border-radius: 50%;
-  background-color: #ed3237;
   border: 2px solid #ffffff;
   flex: 0 0 auto;
+  animation: eventTypeDotBlink 900ms ease-in-out infinite;
+}
+
+.manual-wall-dot {
+  background-color: #ed3237;
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.2),
     0 0 8px rgba(237, 50, 55, 0.55);
-  animation: manualWallBlink 900ms ease-in-out infinite;
+  --dot-color: #ed3237;
+  --dot-blink-color: #000000;
+  --dot-glow: rgba(237, 50, 55, 0.55);
+  --dot-ring: rgba(237, 50, 55, 0.45);
 }
 
-@keyframes manualWallBlink {
+.custom-event-dot {
+  background-color: #ed3237;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.2),
+    0 0 8px rgba(237, 50, 55, 0.55);
+  --dot-color: #ed3237;
+  --dot-blink-color: #ffffff;
+  --dot-glow: rgba(237, 50, 55, 0.55);
+  --dot-ring: rgba(237, 50, 55, 0.45);
+}
+
+@keyframes eventTypeDotBlink {
   0%,
   100% {
-    background-color: #ed3237;
+    background-color: var(--dot-color);
     box-shadow:
       0 0 0 1px rgba(0, 0, 0, 0.2),
-      0 0 8px rgba(237, 50, 55, 0.55);
+      0 0 8px var(--dot-glow);
   }
   50% {
-    background-color: #000000;
+    background-color: var(--dot-blink-color);
     box-shadow:
-      0 0 0 1px rgba(237, 50, 55, 0.45),
+      0 0 0 1px var(--dot-ring),
       0 0 6px rgba(0, 0, 0, 0.35);
   }
 }
