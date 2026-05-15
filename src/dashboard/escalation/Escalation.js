@@ -129,6 +129,7 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
       handleSuspicious(
         {
           ...currentEvent,
+          audioStatus: audio?.audioConfigured === 'T' ? '' : 'N',
           index,
           actionTagTime: currentTime,
           alertTypeId: selectedAlertType,
@@ -142,6 +143,7 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
       handleFalse(
         {
           ...currentEvent,
+          audioStatus: audio?.audioConfigured === 'T' ? '' : 'N',
           alertTypeId: selectedAlertType,
           alertSubTypeId: selectedSubType,
           index,

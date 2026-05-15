@@ -116,8 +116,6 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
   const [audio, setAudio] = useState('');
 
   const handleAction = async (data) => {
-    // if (session?.userLevel === 3 && (currentEvent?.userLevelAlarmInfo?.actionsTakenInfo?.length ?? 0 < 3)) return alert('Please take nessary actions!');
-
     const customAction = getStorage("custom_action");
     const currentTime = getTimeByTimezone(currentEvent?.timezone);
     setStorage("sub_action", data);

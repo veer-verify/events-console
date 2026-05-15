@@ -42,6 +42,7 @@ const Dashboard = () => {
    * to handle false activity
    */
   const handleFalse = async (item) => {
+    console.log(item)
     const subAction = getStorage('sub_action');
     const customAction = getStorage('custom_action');
 
