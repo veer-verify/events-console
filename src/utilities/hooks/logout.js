@@ -9,11 +9,14 @@ export const useLogout = () => {
   const navigate = useNavigate("");
 
   const logout = async () => {
-    dispatch(setMainLoader(true));
-    await manageUserSession("logOut");
-    dispatch(setMainLoader(false));
-    navigate("/");
-    clearStorage();
+    try {
+      dispatch(setMainLoader(true));
+      await manageUserSession("logOut");
+      navigate("/");
+      clearStorage();
+    } finally {
+      dispatch(setMainLoader(false));
+    }
   };
 
   return logout;
