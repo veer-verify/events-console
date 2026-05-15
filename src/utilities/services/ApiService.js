@@ -162,6 +162,7 @@ export const getEmailDataForVMSEvents = async (payload) => {
 
 export const eventsGenericEmail = async (payload) => {
   const url = `${environment.guard_monitoring_url}/eventsGenericEmail_1_0`;
+  const user = getStorage('session');
   const params = new URLSearchParams();
   params.append('siteId', payload?.siteId);
   params.append('day', weekdays[getDay(payload?.timezone)]);
@@ -179,7 +180,7 @@ export const eventsGenericEmail = async (payload) => {
   formData.append('eventFromTime', formatTimestamp(payload?.eventTime));
   formData.append('eventToTime', getTimeByTimezone(payload?.timezone));
   formData.append('actionTag', payload?.actionTag);
-  formData.append('createdBy', getStorage('session').UserId);
+  formData.append('createdBy', user?.UserId ?? '');
   formData.append('subject', payload?.emailSubject);
   formData.append('body', payload?.emailBody);
   formData.append('fields', JSON.stringify(payload?.emailFields));

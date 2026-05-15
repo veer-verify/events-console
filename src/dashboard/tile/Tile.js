@@ -56,8 +56,9 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
     setShowTags((prev) => !prev);
     setCategories(
       actionTags?.actionTagCategories
-        .filter((item) => item.categoryId === id)
+        ?.filter((item) => item.categoryId === id)
         .flatMap((item) => item.actionTagSubCategories)
+      ?? []
     );
     // setShowTags(true);
     closeEscalation();
@@ -76,7 +77,7 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
 
   const play = async () => {
     // if (monitoringData?.audioUrl === '') return toast.warn('No URL Found!');
-    const hours = JSON.parse(audio?.audioHours ?? '[]');
+    const hours = parseAudioHours(audio?.audioHours);
     const currentHour = getHour(currentEvent?.timezone);
 
     setShowTags(false);
@@ -131,7 +132,7 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
             );
         }
 
-        const hours = JSON.parse(audio?.audioHours ?? '[]');
+        const hours = parseAudioHours(audio?.audioHours);
         const currentHour = getHour(currentEvent?.timezone);
 
         setShowTags(false);
@@ -804,6 +805,15 @@ export default memo(Tile);
 const isNoActionNecessary = (name = '') => {
   const normalizedName = name.toLowerCase().replace(/[^a-z]/g, '');
   return normalizedName.includes('noaction') && normalizedName.includes('necess');
+};
+
+const parseAudioHours = (audioHours) => {
+  try {
+    const parsed = JSON.parse(audioHours ?? '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
 };
 
 // =============================

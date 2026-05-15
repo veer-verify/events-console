@@ -148,14 +148,16 @@ iframe {
 
 .manual-wall-dot {
   display: block;
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   margin-left: 6px;
   border-radius: 50%;
   background-color: #ed3237;
   border: 2px solid #ffffff;
   flex: 0 0 auto;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2), 0 0 8px rgba(237, 50, 55, 0.55);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.2),
+    0 0 8px rgba(237, 50, 55, 0.55);
   animation: manualWallBlink 900ms ease-in-out infinite;
 }
 
@@ -163,11 +165,15 @@ iframe {
   0%,
   100% {
     background-color: #ed3237;
-    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2), 0 0 8px rgba(237, 50, 55, 0.55);
+    box-shadow:
+      0 0 0 1px rgba(0, 0, 0, 0.2),
+      0 0 8px rgba(237, 50, 55, 0.55);
   }
   50% {
     background-color: #000000;
-    box-shadow: 0 0 0 1px rgba(237, 50, 55, 0.45), 0 0 6px rgba(0, 0, 0, 0.35);
+    box-shadow:
+      0 0 0 1px rgba(237, 50, 55, 0.45),
+      0 0 6px rgba(0, 0, 0, 0.35);
   }
 }
 

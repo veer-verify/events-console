@@ -1,88 +1,101 @@
 import axios from "axios";
-import { useLogout } from "./utilities/hooks/logout";
+import { environment } from "./environment";
 import { clearStorage, getStorage, setStorage } from "./utilities/services/StorageService";
-import { getAccessforRefreshToken } from "./utilities/services/ApiService";
 
-
-// Axios instance
 const api = axios.create();
 
-let session = null;
 let isRefreshing = false;
 let failedQueue = [];
-const Logout = () => useLogout();
 
-// Helper to resolve/reject queued requests
 const processQueue = (error, token = null) => {
   failedQueue.forEach((prom) => {
-    if (error) prom.reject(error);
-    else prom.resolve(token);
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
   });
   failedQueue = [];
 };
 
-// Request Interceptor
-api.interceptors.request.use((config) => {
-  session = getStorage("session");
-  if (session) {
-    config.headers["Authorization"] = `Bearer ${session?.AccessToken}`;
-  }
-  return config;
-}, (error) => Promise.reject(error)
+const refreshAccessToken = async () => {
+  const session = getStorage("session");
+  const url = `${environment.login_url}/getAccessforRefreshToken`;
+
+  return axios.post(url, null, {
+    params: {
+      refresh_token: session?.RefreshToken,
+      modifiedBy: session?.UserId,
+    },
+  }).then((res) => res.data);
+};
+
+api.interceptors.request.use(
+  (config) => {
+    const session = getStorage("session");
+    if (session?.AccessToken) {
+      config.headers = config.headers ?? {};
+      config.headers["Authorization"] = `Bearer ${session.AccessToken}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
 );
 
-// Response Interceptor
-api.interceptors.response.use((response) => response, async (error) => {
-  const originalRequest = error.config;
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
 
-  // If 401 error and we haven’t retried yet
-  if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status !== 401 || !originalRequest || originalRequest._retry) {
+      return Promise.reject(error);
+    }
+
     if (isRefreshing) {
       return new Promise((resolve, reject) => {
         failedQueue.push({ resolve, reject });
       }).then((token) => {
+        originalRequest.headers = originalRequest.headers ?? {};
         originalRequest.headers["Authorization"] = `Bearer ${token}`;
         return api(originalRequest);
-      }).catch((err) => Promise.reject(err));
+      });
     }
 
     originalRequest._retry = true;
     isRefreshing = true;
 
     try {
-      // const tempSession = getStorage("session");
-      if (!session) throw new Error("No user data found");
+      const session = getStorage("session");
+      if (!session?.RefreshToken) throw new Error("No refresh token found");
 
-      const response = await getAccessforRefreshToken();
-      if (!response) throw new Error("No access token returned from refresh API");
+      const response = await refreshAccessToken();
+      const accessToken = response?.access_token ?? response?.AccessToken;
+      const refreshToken = response?.refresh_token ?? response?.RefreshToken;
+      if (!accessToken) throw new Error("No access token returned from refresh API");
 
-      // Save new access token
-      session.AccessToken = response?.access_token;
-      session.RefreshToken = response?.refresh_token
-      setStorage("session", session);
+      const updatedSession = {
+        ...session,
+        AccessToken: accessToken,
+        RefreshToken: refreshToken ?? session.RefreshToken,
+      };
+      setStorage("session", updatedSession);
 
-      // Resume queued requests
-      processQueue(null, session.AccessToken);
-      isRefreshing = false;
+      processQueue(null, updatedSession.AccessToken);
 
-      // Retry original request with new token
-      originalRequest.headers["Authorization"] = `Bearer ${session.AccessToken}`;
+      originalRequest.headers = originalRequest.headers ?? {};
+      originalRequest.headers["Authorization"] = `Bearer ${updatedSession.AccessToken}`;
       return api(originalRequest);
     } catch (err) {
       console.error("Token refresh failed:", err);
       processQueue(err, null);
-      isRefreshing = false;
-
-      // Optional logout if refresh fails
-      alert('Session data missing!');
-      window.location.href = "/events-console";
+      alert("Session expired. Please log in again.");
       clearStorage();
-      // Logout();
+      window.location.href = "/events-console";
       return Promise.reject(err);
+    } finally {
+      isRefreshing = false;
     }
   }
-  return Promise.reject(error);
-}
 );
 
 export default api;

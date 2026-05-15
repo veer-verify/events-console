@@ -289,7 +289,7 @@ const Dashboard = () => {
     // if (session.queueName === 'verifai-TimedOut-CE') return;
     const [timedQueue] = metadata?.filter((item) => item.typeName === 'Event_Console_TimeOut_Queue') ?? [];
     const [queueName] = timedQueue?.metadata ?? [];
-    if (session.queueName === queueName?.value ?? '') return;
+    if ((session?.queueName ?? '') === (queueName?.value ?? '')) return;
     if (session?.userLevel !== 1 || eventData.length === 0) return;
 
     // const processQueue = async () => {
@@ -424,7 +424,7 @@ const Dashboard = () => {
     return () => {
       clearInterval(interval);
     };
-  }, [actionStore.isLogoutClicked, actionStore.isConfigOpened, dispatch, eventData, logout, session?.UserId, session.queueName, session?.userLevel, metadata, timerData?.value]);
+  }, [actionStore.isLogoutClicked, actionStore.isConfigOpened, dispatch, eventData, logout, session?.UserId, session?.queueName, session?.userLevel, metadata, timerData?.value]);
 
   const handleConfig = () => {
     if (eventData.length !== 0) {

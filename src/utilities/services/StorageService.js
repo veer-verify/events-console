@@ -17,7 +17,18 @@ export const Decrypt = (data) => AES.decrypt(data, key).toString(enc.Utf8);
  * methods to set and get data from storage
  */
 export const setStorage = (key, data) => sessionStorage.setItem(key, JSON.stringify(data));
-export const getStorage = (key) => JSON.parse(sessionStorage.getItem(key));
+export const getStorage = (key) => {
+  const value = sessionStorage.getItem(key);
+  if (value === null) return null;
+
+  try {
+    return JSON.parse(value);
+  } catch (error) {
+    console.warn(`Invalid session storage value for "${key}"`, error);
+    sessionStorage.removeItem(key);
+    return null;
+  }
+};
 export const clearStorage = () => sessionStorage.clear();
 export const getSession = () => getStorage("session");
 
@@ -109,9 +120,9 @@ export const isValid = (data) => {
 export const getTagNameById = (id) => {
   if (!id) return;
   const tags = getStorage("actionTags");
-  const temp = tags.actionTagCategories.flatMap(
+  const temp = tags?.actionTagCategories?.flatMap(
     (item) => item.actionTagSubCategories
-  );
+  ) ?? [];
   return temp.find((item) => item.subCategoryId === id);
   // return temp.filter((item) => item.subCategoryId === id)?.subCategoryName
 };
@@ -172,6 +183,8 @@ const getCountry = (zone) => {
 }
 
 export const getZone = (timezone) => {
+  if (!timezone) return '';
+
   const date = new Date();
   const tz = new Intl.DateTimeFormat(`en-${getCountry(timezone)}`, {
     timeZone: timezone.toString(),
