@@ -12,6 +12,7 @@ import dayjs from "dayjs";
 
 const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => {
   // console.log(currentEvent)
+  const isManualWall = currentEvent?.eventType !== "Manual_Wall";
   const monitoringData = currentEvent?.monitoringInfo;
   const session = getStorage("session");
   const customAction = getStorage("custom_action");
@@ -437,7 +438,7 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
             </div>
 
             <div className="camera-id">
-              <div style={{ position: "relative" }} ref={dialogRef}>
+              <div className="action-buttons" ref={dialogRef}>
 
                 {/**false activity */}
                 <button
@@ -533,6 +534,8 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
                     title="Mask-info"
                   />
                 </button>
+
+                {isManualWall && <span className="manual-wall-dot" />}
 
                 {showTags && (
                   <div className={count > 4 ? 'tag-grid-new' : 'tag-grid'}>
