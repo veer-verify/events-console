@@ -13,7 +13,7 @@ import dayjs from "dayjs";
 const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => {
   // console.log(currentEvent)
   const isManualWall = currentEvent?.eventType === "Manual_Wall";
-  const isCustomEvent = currentEvent?.eventType !== "Custom_Event";
+  const isCustomEvent = currentEvent?.eventType === "Custom_Event";
   const eventTypeDotClass = isManualWall
     ? "event-type-dot manual-wall-dot"
     : isCustomEvent
@@ -587,166 +587,193 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
 
             </div>
 
-            {/**site info */}
-            {count === 2 &&
-              <div className="store-info">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="tile-details">
+              {/**site info */}
+              {count === 2 &&
+                <div className="store-info">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
 
-                  <div>
-                    <p>{`${currentEvent?.siteId} - ${currentEvent?.siteName}`}</p>
-                    <p>{addressParts.join(", ")}</p>
+                    <div>
+                      <p>{`${currentEvent?.siteId} - ${currentEvent?.siteName}`}</p>
+                      <p>{addressParts.join(", ")}</p>
+                    </div>
+
+
+                    {
+                      session?.userLevel === 3 &&
+                      <div style={{ display: "flex", gap: "4px", userSelect: 'none' }}>
+                        {actionsTaken.map((item, index) => {
+                          const disabled = isActionDisabled(item);
+
+                          return (
+                            <div
+                              key={index}
+                              aria-disabled={disabled}
+                              onClick={() => toggleSelect(index)}
+                              style={{
+                                padding: "4px 8px",
+                                borderRadius: "20px",
+                                border: item.selected ? "2px solid red" : "1px solid gray",
+                                cursor: disabled ? "not-allowed" : "pointer",
+                                opacity: disabled ? 0.65 : 1,
+                                pointerEvents: disabled ? "none" : "auto"
+                              }}
+                            >
+                              <span style={{ fontSize: '10px', whiteSpace: 'nowrap' }}>{item.name}</span>
+
+                              {/* TIME VIEW */}
+                              {item.selected && !item.editing && (
+                                <span style={{ fontSize: '10px' }}>
+                                  {" "}
+                                  - {new Date(item.time).toLocaleString()}
+                                  <span
+                                    style={{ marginLeft: 5, cursor: "pointer" }}
+                                    onClick={(e) => enableEdit(index, e)}
+                                  >
+                                    ✏️
+                                  </span>
+                                </span>
+                              )}
+
+                              {/* TIME EDIT */}
+                              {item.editing && (
+                                <span>
+                                  <input
+                                    type="datetime-local"
+                                    onClick={(e) => e.stopPropagation()}
+                                    onChange={(e) => updateTime(index, e.target.value)}
+                                  />
+                                  <span
+                                    style={{ marginLeft: 5 }}
+                                    onClick={(e) => saveEdit(index, e)}
+                                  >
+                                    ✔️
+                                  </span>
+                                </span>
+                              )}
+
+                              {/* RESPONDED */}
+                              {item.selected &&
+                                <span
+                                  style={{ marginLeft: 4, fontSize: '12px' }}
+                                  onClick={(e) => toggleResponded(index, e)}
+                                >
+                                  {item.status ? "✅" : "⚪"}
+                                </span>
+                              }
+
+                            </div>
+                          );
+                        })}
+                      </div>
+                    }
                   </div>
 
-
-                  {
-                    session?.userLevel === 3 &&
-                    <div style={{ display: "flex", gap: "4px", userSelect: 'none' }}>
-                      {actionsTaken.map((item, index) => {
-                        const disabled = isActionDisabled(item);
-
-                        return (
-                          <div
-                            key={index}
-                            aria-disabled={disabled}
-                            onClick={() => toggleSelect(index)}
-                            style={{
-                              padding: "4px 8px",
-                              borderRadius: "20px",
-                              border: item.selected ? "2px solid red" : "1px solid gray",
-                              cursor: disabled ? "not-allowed" : "pointer",
-                              opacity: disabled ? 0.65 : 1,
-                              pointerEvents: disabled ? "none" : "auto"
-                            }}
-                          >
-                            <span style={{ fontSize: '10px', whiteSpace: 'nowrap' }}>{item.name}</span>
-
-                            {/* TIME VIEW */}
-                            {item.selected && !item.editing && (
-                              <span style={{ fontSize: '10px' }}>
-                                {" "}
-                                - {new Date(item.time).toLocaleString()}
-                                <span
-                                  style={{ marginLeft: 5, cursor: "pointer" }}
-                                  onClick={(e) => enableEdit(index, e)}
-                                >
-                                  ✏️
-                                </span>
-                              </span>
-                            )}
-
-                            {/* TIME EDIT */}
-                            {item.editing && (
-                              <span>
-                                <input
-                                  type="datetime-local"
-                                  onClick={(e) => e.stopPropagation()}
-                                  onChange={(e) => updateTime(index, e.target.value)}
-                                />
-                                <span
-                                  style={{ marginLeft: 5 }}
-                                  onClick={(e) => saveEdit(index, e)}
-                                >
-                                  ✔️
-                                </span>
-                              </span>
-                            )}
-
-                            {/* RESPONDED */}
-                            {item.selected &&
-                              <span
-                                style={{ marginLeft: 4, fontSize: '12px' }}
-                                onClick={(e) => toggleResponded(index, e)}
-                              >
-                                {item.status ? "✅" : "⚪"}
-                              </span>
-                            }
-
+                  {plannedActivities.length !== 0 && (
+                    <Fragment>
+                      {activitiesToShow.map((item, i) => (
+                        <div className="activity-box" key={i}>
+                          <div>
+                            <strong>PLANNED SITE ACTIVITY</strong>
+                            <br />
+                            <span>{`${item?.plannedActivityStart} - ${item?.plannedActivityEnd}`}</span>
                           </div>
-                        );
-                      })}
-                    </div>
-                  }
+                          <div>
+                            <strong>{item?.activityName}</strong>
+                            <br />
+                            <span>{item?.plannedActivityDescription}</span>
+                          </div>
+                        </div>
+                      ))}
+
+                      {plannedActivities.length > 1 && (
+                        <button
+                          className="show-more-btn"
+                          onClick={() => setShowAll((prev) => !prev)}
+                        >
+                          {showAll ? "Show Less" : "Show More"}
+                        </button>
+                      )}
+                    </Fragment>
+                  )}
                 </div>
+              }
 
-                {plannedActivities.length !== 0 && (
-                  <Fragment>
-                    {activitiesToShow.map((item, i) => (
-                      <div className="activity-box" key={i}>
-                        <div>
-                          <strong>PLANNED SITE ACTIVITY</strong>
-                          <br />
-                          <span>{`${item?.plannedActivityStart} - ${item?.plannedActivityEnd}`}</span>
-                        </div>
-                        <div>
-                          <strong>{item?.activityName}</strong>
-                          <br />
-                          <span>{item?.plannedActivityDescription}</span>
-                        </div>
-                      </div>
-                    ))}
+              {/**monitoring info */}
+              {monitoringData && count === 2 && !showEscalation && (
+                <div className="monitoring">
+                  <p className="monitoring-title">MONITORING INFO</p>
+                  <table>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <strong>Timezone</strong>
+                        </td>
+                        <td>{currentEvent?.timezone} ({getZone(currentEvent?.timezone)})</td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <strong>Monitoring</strong>
+                        </td>
+                        <td>{timeFormat(monitoringData)}</td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <strong>Camera</strong>
+                        </td>
+                        <td>
+                          {monitoringData.cameras?.length &&
+                            monitoringData.cameras[0]?.cameraName}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <strong>Requirements</strong>
+                        </td>
+                        <td>{monitoringData.requirements.join(", ")}</td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <strong>Info</strong>
+                        </td>
+                        <td>{userFlow}</td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <strong>Notes</strong>
+                        </td>
+                        <td>{notes || "None"}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
 
-                    {plannedActivities.length > 1 && (
-                      <button
-                        className="show-more-btn"
-                        onClick={() => setShowAll((prev) => !prev)}
-                      >
-                        {showAll ? "Show Less" : "Show More"}
-                      </button>
-                    )}
-                  </Fragment>
-                )}
-              </div>
-            }
+              {session?.userLevel !== 1 && contactDetails?.length !== 0 && !showEscalation && (
+                <ContactInfo contactDetails={contactDetails} />
+              )}
+              {session?.userLevel !== 1 && lawEnforcement?.length !== 0 && !showEscalation && (
+                <LawInfo lawEnforcement={lawEnforcement} />
+              )}
+              {session?.userLevel !== 1 && smsDetails?.length !== 0 && !showEscalation && (
+                <DotCom smsDetails={smsDetails} />
+              )}
 
-            {/**monitoring info */}
-            {monitoringData && count === 2 && !showEscalation && (
-              <div className="monitoring">
-                <p className="monitoring-title">MONITORING INFO</p>
-                <table>
-                  <tbody>
-                    <tr>
-                      <td>
-                        <strong>Timezone</strong>
-                      </td>
-                      <td>{currentEvent?.timezone} ({getZone(currentEvent?.timezone)})</td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <strong>Monitoring</strong>
-                      </td>
-                      <td>{timeFormat(monitoringData)}</td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <strong>Camera</strong>
-                      </td>
-                      <td>
-                        {monitoringData.cameras?.length &&
-                          monitoringData.cameras[0]?.cameraName}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <strong>Requirements</strong>
-                      </td>
-                      <td>{monitoringData.requirements.join(", ")}</td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <strong>Info</strong>
-                      </td>
-                      <td>{userFlow}</td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <strong>Notes</strong>
-                      </td>
-                      <td>{notes || "None"}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            )}
+              {showEscalation && (
+                <div className="escalation-container">
+                  <Escalation
+                    closeEscalation={closeEscalation}
+                    currentEvent={currentEvent}
+                    index={index}
+                    handleFalse={handleFalse}
+                    handleSuspicious={handleSuspicious}
+                    monitoringData={monitoringData}
+                    actionsTaken={actionsTaken}
+                    audio={audio}
+                  />
+                </div>
+              )}
+            </div>
 
             {showBoundaries && (
               <BoundariesDialog
@@ -771,31 +798,6 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
           <Fragment>
             <ErrorInfo message={"waiting for event"} />
           </Fragment>
-        )}
-
-        {session?.userLevel !== 1 && contactDetails?.length !== 0 && !showEscalation && (
-          <ContactInfo contactDetails={contactDetails} />
-        )}
-        {session?.userLevel !== 1 && lawEnforcement?.length !== 0 && !showEscalation && (
-          <LawInfo lawEnforcement={lawEnforcement} />
-        )}
-        {session?.userLevel !== 1 && smsDetails?.length !== 0 && !showEscalation && (
-          <DotCom smsDetails={smsDetails} />
-        )}
-
-        {showEscalation && (
-          <div className="escalation-container">
-            <Escalation
-              closeEscalation={closeEscalation}
-              currentEvent={currentEvent}
-              index={index}
-              handleFalse={handleFalse}
-              handleSuspicious={handleSuspicious}
-              monitoringData={monitoringData}
-              actionsTaken={actionsTaken}
-              audio={audio}
-            />
-          </div>
         )}
       </div>
 
