@@ -10,7 +10,7 @@ import { getHour, getStorage, getTimeByTimezone, getZone, isValid, setStorage, t
 import { checkCameraAudio, getImagesForCameraId, loadImageWithAuth, playSiren } from "../../utilities/services/ApiService";
 import dayjs from "dayjs";
 
-const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => {
+const Tile = ({ currentEvent, index, count, updateEvent, writeToVms }) => {
   // console.log(currentEvent)
   const isManualWall = currentEvent?.eventType === "Manual_Wall";
   const isCustomEvent = currentEvent?.eventType === "Custom_Event";
@@ -122,7 +122,7 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
 
     if (customAction === 1) {
       setImgSrc(null);
-      handleFalse({ ...currentEvent, index, actionTagTime: currentTime, actionsTaken: [] });
+      updateEvent({ ...currentEvent, index, actionTagTime: currentTime, actionsTaken: [] });
     } else {
       if (session?.userLevel !== 1) {
         setShowEscalation(true);
@@ -171,7 +171,7 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
 
 
         setImgSrc(null);
-        handleSuspicious({
+        writeToVms({
           ...currentEvent,
           audioStatus: submittedAudioStatus,
           activityDetTime,
@@ -756,8 +756,8 @@ const Tile = ({ currentEvent, index, count, handleFalse, handleSuspicious }) => 
                     closeEscalation={closeEscalation}
                     currentEvent={currentEvent}
                     index={index}
-                    handleFalse={handleFalse}
-                    handleSuspicious={handleSuspicious}
+                    updateEvent={updateEvent}
+                    writeToVms={writeToVms}
                     monitoringData={monitoringData}
                     actionsTaken={actionsTaken}
                     audio={audio}
@@ -836,6 +836,7 @@ const getDeterrentMessage = (audioStatus) => {
   if (audioStatus === 'F') return 'Deterrent activation did not return a response.';
   return 'No Actions Necessary';
 };
+
 
 // =============================
 // Monitoring Info Component

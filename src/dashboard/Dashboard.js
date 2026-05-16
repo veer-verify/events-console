@@ -41,7 +41,7 @@ const Dashboard = () => {
   /**
    * to handle false activity
    */
-  const handleFalse = async (item) => {
+  const updateEvent = async (item) => {
     const subAction = getStorage('sub_action');
     const customAction = getStorage('custom_action');
 
@@ -128,7 +128,7 @@ const Dashboard = () => {
   /**
    * to handel suspicious activity
    */
-  const handleSuspicious = async (item) => {
+  const writeToVms = async (item) => {
     const customAction = getStorage('custom_action');
     const subAction = getStorage('sub_action');
 
@@ -475,8 +475,8 @@ const Dashboard = () => {
               index={i}
               count={count}
               currentEvent={item}
-              handleFalse={handleFalse}
-              handleSuspicious={handleSuspicious}
+              updateEvent={updateEvent}
+              writeToVms={writeToVms}
             />
           ))
           :

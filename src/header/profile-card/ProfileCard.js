@@ -1,18 +1,18 @@
 import './ProfileCard.css';
 import { useLogout } from '../../utilities/hooks/logout';
 import Swal from "sweetalert2";
-import { useSelector } from 'react-redux';
+// import { useSelector } from 'react-redux';
 import { getStorage } from '../../utilities/services/StorageService';
 
 
 const ProfileCard = ({ eventData }) => {
     const user = getStorage('session');
     const logout = useLogout();
-    const loaderStore = useSelector((state) => state.loaderStore);
-    const isApiPending = loaderStore.mainLoader || loaderStore.eventLoader;
+    // const loaderStore = useSelector((state) => state.loaderStore);
+    // const isApiPending = loaderStore.mainLoader || loaderStore.eventLoader;
 
     const handle = async () => {
-        if (isApiPending) return;
+        // if (isApiPending) return;
 
         // if (eventData.length !== 0) {
         //     return Swal.fire({
@@ -60,7 +60,7 @@ const ProfileCard = ({ eventData }) => {
 
             <div className="logout-section">
                 <span className="version">Version : V1.01</span>
-                <button className="logout-btn" onClick={handle} disabled={isApiPending}>Logout</button>
+                <button className="logout-btn" onClick={handle}>Logout</button>
             </div>
         </div>
     )
