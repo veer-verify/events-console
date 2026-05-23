@@ -664,10 +664,10 @@ const CompleteEmailDialog = ({ preview, onCancel, onSubmit }) => {
       return;
     }
 
-    if (!hasEmails(email?.recipientEmails)) {
-      toast.warn('Add at least one recipient email before submitting.');
-      return;
-    }
+    // if (!hasEmails(email?.recipientEmails)) {
+    //   toast.warn('Add at least one recipient email before submitting.');
+    //   return;
+    // }
 
     setIsSubmitting(true);
     const submitted = await onSubmit({
