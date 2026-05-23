@@ -6,7 +6,7 @@ import { formatTimestamp, getStorage, getTimeByTimezone } from "../../utilities/
 import { toast } from "react-toastify";
 
 
-const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleSuspicious, monitoringData, actionsTaken, audio }) => {
+const Escalation = ({ closeEscalation, currentEvent, index, updateEvent, writeToVms, monitoringData, actionsTaken, audio }) => {
 
   const customAction = getStorage("custom_action");
 
@@ -127,7 +127,7 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
 
     if (type === 'escalate') {
       const audioStatus = getSubmittedAudioStatus(currentEvent, audio);
-      handleSuspicious(
+      writeToVms(
         {
           ...currentEvent,
           audioStatus,
@@ -143,7 +143,7 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
       );
     } else {
       const audioStatus = getSubmittedAudioStatus(currentEvent, audio);
-      handleFalse(
+      updateEvent(
         {
           ...currentEvent,
           audioStatus,
@@ -219,7 +219,7 @@ const Escalation = ({ closeEscalation, currentEvent, index, handleFalse, handleS
       }
     }
 
-    handleFalse(
+    updateEvent(
       {
         ...currentEvent,
         alertTypeId,
