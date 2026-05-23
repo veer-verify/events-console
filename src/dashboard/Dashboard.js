@@ -10,6 +10,8 @@ import Swal from "sweetalert2";
 import { getSession, getStorage, getTimeByTimezone, setStorage } from '../utilities/services/StorageService';
 import { aliveUser, consumeConsoleEvents, getActionTagCategories, getMonitoringInfo, getVmsEventsQueueData, updateEventFullDetails, write2VmsDispatchQueue, writetoRedisQueueData } from '../utilities/services/ApiService';
 
+const MAX_VISIBLE_EVENTS = 2;
+
 const Dashboard = () => {
   const dispatch = useDispatch();
   const { sessionStore, actionStore } = useSelector((state) => ({
@@ -34,7 +36,7 @@ const Dashboard = () => {
 
   const [eventData, setEventData] = useState([]);
   const [config, setConfig] = useState(false);
-  const [count, setCount] = useState(2);
+  const [count, setCount] = useState(MAX_VISIBLE_EVENTS);
   const logout = useLogout();
 
 
@@ -67,7 +69,6 @@ const Dashboard = () => {
     updateEventFullDetails({ ...item, actionTag: customAction, subActionTag: subAction?.subCategoryId });
     consumeConsoleEvents({ ...item, userId: 0, eventTime: [item.eventTime], consoleType: '' });
 
-    const filtered = eventData.filter((_, i) => item?.index !== i);
     // if (actionStore.isLogoutClicked) {
     //   setEventData(filtered);
     //   if (eventData.length === 1) {
@@ -77,18 +78,14 @@ const Dashboard = () => {
     // }
 
     if (actionStore.isConfigOpened) {
-      setEventData(filtered);
+      setEventData(prev => removeCompletedEvent(prev, item, item.index));
       if (eventData.length === 1) {
         setConfig((prev) => prev = !prev);
       }
       return;
     }
 
-    setEventData(prev => {
-      const copy = [...prev];
-      copy[item.index] = null;
-      return copy;
-    });
+    setEventData(prev => markEventPending(prev, item, item.index));
 
     dispatch(setLoader(true));
     const eventResponse = await getVmsEventsQueueData();
@@ -103,23 +100,10 @@ const Dashboard = () => {
         timer: Number(timerData?.value) ?? 60,
       };
       writetoRedisQueueData(event);
-      setEventData(prev => {
-        if (hasDuplicateEventTime(prev, event, item.index)) {
-          return prev.filter(Boolean);
-        }
-
-        const copy = [...prev];
-        copy[item.index] = event;
-        return copy;
-      });
+      setEventData(prev => replaceCompletedEvent(prev, item, event, item.index, count));
       dispatch(setLoader(false));
     } else {
-      const cleaned = filtered.filter(Boolean);
-      if (cleaned.length === 0) {
-        setEventData([]);
-      } else {
-        setEventData(cleaned);
-      }
+      setEventData(prev => removeCompletedEvent(prev, item, item.index));
       dispatch(setLoader(false));
     }
   };
@@ -153,7 +137,6 @@ const Dashboard = () => {
     write2VmsDispatchQueue({ ...item, actionTag: customAction, subActionTag: subAction?.subCategoryId, queue_name: item?.nextQueueName });
     consumeConsoleEvents({ ...item, userId: 0, eventTime: [item.eventTime], consoleType: '' });
 
-    const filtered = eventData.filter((_, i) => item?.index !== i);
     // if (actionStore.isLogoutClicked) {
     //   setEventData(filtered);
     //   if (eventData.length === 1) {
@@ -163,7 +146,7 @@ const Dashboard = () => {
     // }
 
     if (actionStore.isConfigOpened) {
-      setEventData(filtered);
+      setEventData(prev => removeCompletedEvent(prev, item, item.index));
       if (eventData.length === 1) {
         setConfig((prev) => prev = !prev);
       }
@@ -171,16 +154,12 @@ const Dashboard = () => {
     }
 
 
-    setEventData(prev => {
-      const copy = [...prev];
-      copy[item.index] = null;
-      return copy;
-    });
+    setEventData(prev => markEventPending(prev, item, item.index));
 
 
     dispatch(setLoader(true));
     const eventResponse = await getVmsEventsQueueData();
-    if (eventResponse.length) {
+    if (eventResponse && eventResponse.length) {
       const [first] = eventResponse;
       const monitoringInfo = await getMonitoringInfo(first);
       const event = {
@@ -192,23 +171,10 @@ const Dashboard = () => {
       };
 
       writetoRedisQueueData(event);
-      setEventData(prev => {
-        if (hasDuplicateEventTime(prev, event, item.index)) {
-          return prev.filter(Boolean);
-        }
-
-        const copy = [...prev];
-        copy[item.index] = event;
-        return copy;
-      });
+      setEventData(prev => replaceCompletedEvent(prev, item, event, item.index, count));
       dispatch(setLoader(false));
     } else {
-      const cleaned = filtered.filter(Boolean);
-      if (cleaned.length === 0) {
-        setEventData([]);
-      } else {
-        setEventData(cleaned);
-      }
+      setEventData(prev => removeCompletedEvent(prev, item, item.index));
       dispatch(setLoader(false));
     }
   }
@@ -246,7 +212,7 @@ const Dashboard = () => {
         writetoRedisQueueData(event);
         const monitoringInfo = await getMonitoringInfo(event);
         const merged = { ...event, monitoringInfo };
-        setEventData(prev => hasDuplicateEventTime(prev, merged) ? prev : [...prev, merged]);
+        setEventData(prev => addEventWithinLimit(prev, merged, count));
       }
 
       isFetching = false;
@@ -303,6 +269,7 @@ const Dashboard = () => {
 
     //   isHandlingRef.current = false;
     // };
+
     const processQueue = async () => {
       if (isHandlingRef.current) return;
 
@@ -344,7 +311,6 @@ const Dashboard = () => {
       write2VmsDispatchQueue({ ...item, actionTag: 0, subActionTag: 0, queue_name: queueName?.value, });
       consumeConsoleEvents({ ...item, userId: 0, eventTime: [item.eventTime], consoleType: '' });
 
-      const filtered = eventData.filter((_, i) => index !== i);
       // if (actionStore.isLogoutClicked) {
       //   setEventData(filtered);
       //   if (eventData.length === 1) {
@@ -354,18 +320,14 @@ const Dashboard = () => {
       // }
 
       if (actionStore.isConfigOpened) {
-        setEventData(filtered);
+        setEventData(prev => removeCompletedEvent(prev, item, index));
         if (eventData.length === 1) {
           setConfig((prev) => prev = !prev);
         }
         return;
       }
 
-      setEventData(prev => {
-        const copy = [...prev];
-        copy[index] = null;
-        return copy;
-      });
+      setEventData(prev => markEventPending(prev, item, index));
 
       dispatch(setLoader(true));
       const eventResponse = await getVmsEventsQueueData();
@@ -381,24 +343,10 @@ const Dashboard = () => {
         };
 
         writetoRedisQueueData(event);
-        setEventData(prev => {
-          if (hasDuplicateEventTime(prev, event, index)) {
-            return prev.filter(Boolean);
-          }
-
-          const copy = [...prev];
-          copy[index] = event;
-          return copy;
-        });
+        setEventData(prev => replaceCompletedEvent(prev, item, event, index, count));
         dispatch(setLoader(false));
       } else {
-        const cleaned = filtered.filter(Boolean);
-        if (cleaned.length === 0) {
-          setEventData([]);
-        } else {
-          setEventData(cleaned);
-        }
-        // setEventData(filtered);
+        setEventData(prev => removeCompletedEvent(prev, item, index));
         dispatch(setLoader(false))
       }
     };
@@ -424,7 +372,11 @@ const Dashboard = () => {
     return () => {
       clearInterval(interval);
     };
-  }, [actionStore.isLogoutClicked, actionStore.isConfigOpened, dispatch, eventData, logout, session?.UserId, session?.queueName, session?.userLevel, metadata, timerData?.value]);
+  }, [actionStore.isLogoutClicked, actionStore.isConfigOpened, count, dispatch, eventData, logout, session?.UserId, session?.queueName, session?.userLevel, metadata, timerData?.value]);
+
+  useEffect(() => {
+    setEventData(prev => prev.length > count ? prev.slice(0, count) : prev);
+  }, [count]);
 
   const handleConfig = () => {
     if (eventData.length !== 0) {
@@ -457,24 +409,31 @@ const Dashboard = () => {
   }
 
   const tileRef = useRef(null);
+  const visibleEventData = eventData.slice(0, count);
+
+
+  const isSuperAdmin = () => {
+    let a = Array.from(session?.roleList, (item) => item.category);
+    return a.includes('SuperAdmin') ? true : false;
+  }
 
   return (
     <Fragment>
-      <Header eventData={eventData}></Header>
+      <Header eventData={visibleEventData}></Header>
 
-      {session?.userLevel === 1 &&
+      {(session?.userLevel === 1 && isSuperAdmin()) &&
         <button className='config-btn' onClick={handleConfig}>configure</button>
       }
 
       <div className='tiles' ref={tileRef}>
-        {eventData.length
+        {visibleEventData.length
           ?
-          eventData.map((item, i) => (
+          visibleEventData.map((item, i) => (
             <Tile
-              key={i}
+              key={getTileKey(item, i)}
               index={i}
               count={count}
-              currentEvent={item}
+              currentEvent={item?.__pending ? null : item}
               updateEvent={updateEvent}
               writeToVms={writeToVms}
             />
@@ -498,6 +457,82 @@ const getEventTimeKey = (event) => {
   return eventTime === undefined || eventTime === null ? '' : String(eventTime).trim();
 };
 
+const getEventIdentityKey = (event) => {
+  if (!event) return '';
+  if (event.__eventKey) return event.__eventKey;
+  if (event.eventId !== undefined && event.eventId !== null) return `id:${event.eventId}`;
+
+  const eventTime = getEventTimeKey(event);
+  if (!eventTime) return '';
+
+  return [
+    event.siteId ?? '',
+    event.cameraId ?? '',
+    eventTime,
+    event.eventType ?? '',
+    event.objectName ?? '',
+  ].map((value) => String(value).trim()).join('|');
+};
+
+const isSameEvent = (left, right) => {
+  const leftKey = getEventIdentityKey(left);
+  const rightKey = getEventIdentityKey(right);
+  return Boolean(leftKey && rightKey && leftKey === rightKey);
+};
+
+const findEventIndex = (events, event, preferredIndex = -1) => {
+  if (preferredIndex >= 0 && preferredIndex < events.length && isSameEvent(events[preferredIndex], event)) {
+    return preferredIndex;
+  }
+
+  return events.findIndex((item) => isSameEvent(item, event));
+};
+
+const markEventPending = (events, event, preferredIndex = -1) => {
+  const targetIndex = findEventIndex(events, event, preferredIndex);
+  if (targetIndex === -1) return events;
+
+  const copy = [...events];
+  copy[targetIndex] = {
+    __pending: true,
+    __eventKey: getEventIdentityKey(event),
+  };
+  return copy;
+};
+
+const removeEventAtIndex = (events, index) => {
+  if (index < 0) return events;
+  return events.filter((_, itemIndex) => itemIndex !== index);
+};
+
+const removeCompletedEvent = (events, event, preferredIndex = -1) => {
+  const targetIndex = findEventIndex(events, event, preferredIndex);
+  return removeEventAtIndex(events, targetIndex);
+};
+
+const addEventWithinLimit = (events, event, maxCount) => {
+  if (hasDuplicateEventTime(events, event)) return events.slice(0, maxCount);
+  if (events.length >= maxCount) return events.slice(0, maxCount);
+  return [...events, event].slice(0, maxCount);
+};
+
+const replaceCompletedEvent = (events, completedEvent, nextEvent, preferredIndex = -1, maxCount = events.length) => {
+  const targetIndex = findEventIndex(events, completedEvent, preferredIndex);
+  if (targetIndex === -1) {
+    return addEventWithinLimit(events, nextEvent, maxCount);
+  }
+
+  if (hasDuplicateEventTime(events, nextEvent, targetIndex)) {
+    return removeEventAtIndex(events, targetIndex);
+  }
+
+  const copy = [...events];
+  copy[targetIndex] = nextEvent;
+  return copy.slice(0, maxCount);
+};
+
+const getTileKey = (event, index) => getEventIdentityKey(event) || `slot-${index}`;
+
 const hasDuplicateEventTime = (events, event, ignoreIndex = -1) => {
   const eventTime = getEventTimeKey(event);
   if (!eventTime) return false;
@@ -507,7 +542,7 @@ const hasDuplicateEventTime = (events, event, ignoreIndex = -1) => {
 
 const Configure = ({ handleCount, closeConfig }) => {
   const layouts = [
-    { id: "1x2", tiles: 2 },
+    { id: "1x2", tiles: MAX_VISIBLE_EVENTS },
     { id: "2x2", tiles: 4 },
     { id: "2x3", tiles: 6 },
     { id: "2x4", tiles: 8 }
