@@ -108,7 +108,7 @@ const Live = ({ currentEvent, closeLiveDialog }) => {
                 <div className='cameras'>
                     {
                         cameras && cameras.map((item, i) => <div key={i} >
-                            <Stream streamUrl={`${item.httpUrl}/`} screenshot={true} currentCamera={item} getCamera={getCamera} />
+                            <Stream streamUrl={`${item.httpUrl}/`} screenshot='live' currentCamera={item} getCamera={getCamera} />
                         </div>)
                     }
                 </div>

@@ -211,6 +211,7 @@ export const eventsGenericEmail = async (payload) => {
 
 export const sendResolutionEmail = async (payload) => {
   const url = `${environment.guard_monitoring_url}/sendResolutionEmail_1_0`;
+
   const user = getStorage('session');
   const formData = new FormData();
 

@@ -429,7 +429,7 @@ const Tile = ({ currentEvent, index, count, updateEvent, writeToVms }) => {
                 count === 2 &&
                 <div className="camera">
                   {currentEvent?.httpUrl && (
-                    <Stream key={index} streamUrl={`${currentEvent?.httpUrl}/`} />
+                    <Stream key={index} screenshot='tile'  streamUrl={`${currentEvent?.httpUrl}/`} />
                   )}
                 </div>
               }

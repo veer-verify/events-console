@@ -5,7 +5,6 @@ const Stream = ({ streamUrl, screenshot, currentCamera, getCamera }) => {
   const videoRef = useRef(null);
 
   const peerConnectionRef = useRef(null);
-  const restartTimeoutRef = useRef(null);
   const sessionUrlRef = useRef("");
   const queuedCandidatesRef = useRef([]);
   const offerDataRef = useRef(null);
@@ -13,28 +12,36 @@ const Stream = ({ streamUrl, screenshot, currentCamera, getCamera }) => {
   const [showOverlay, setShowOverlay] = useState(false);
   const [showLoader, setShowLoader] = useState(false);
   const [encoded, setEncoded] = useState("");
-  const [hitStream, setHitStream] = useState(false);
 
 
   useEffect(() => {
     const username = "admin";
     const password = "verifai123789";
     setEncoded(btoa(`${username}:${password}`));
-    setHitStream(true);
   }, []);
 
   useEffect(() => {
+    if (!encoded || !streamUrl) return;
+
+    let cancelled = false;
+    const abortController = new AbortController();
+    sessionUrlRef.current = "";
+    queuedCandidatesRef.current = [];
+    offerDataRef.current = null;
+
     const requestICEServers = () => {
       setShowLoader(true);
       setError(null);
 
       fetch(streamUrl + "whep", {
         method: "OPTIONS",
+        signal: abortController.signal,
         headers: {
           Authorization: `Basic ${encoded}`,
         },
       })
         .then((res) => {
+          if (cancelled) return;
           setShowLoader(false);
 
           const pc = new RTCPeerConnection({
@@ -46,15 +53,15 @@ const Stream = ({ streamUrl, screenshot, currentCamera, getCamera }) => {
           pc.addTransceiver("video", { direction: "sendrecv" });
           pc.addTransceiver("audio", { direction: "sendrecv" });
 
-          pc.onicecandidate = onLocalCandidate;
-          pc.oniceconnectionstatechange = onConnectionState;
-          pc.ontrack = onTrack;
+          pc.onicecandidate = (evt) => onLocalCandidate(evt, pc);
+          pc.oniceconnectionstatechange = () => onConnectionState(pc);
+          pc.ontrack = (evt) => onTrack(evt, pc);
 
-          createOffer();
+          createOffer(pc);
         })
         .catch((err) => {
+          if (cancelled || err.name === "AbortError") return;
           setShowLoader(false);
-          setHitStream(false)
           // clearInterval(restartTimeoutRef.current);
           // setError(err);
 
@@ -85,6 +92,7 @@ const Stream = ({ streamUrl, screenshot, currentCamera, getCamera }) => {
     };
 
     const onError = () => {
+      if (cancelled) return;
       // if (restartTimeoutRef.current) return;
 
       peerConnectionRef.current?.close();
@@ -102,47 +110,59 @@ const Stream = ({ streamUrl, screenshot, currentCamera, getCamera }) => {
       queuedCandidatesRef.current = [];
     };
 
-    const onLocalCandidate = (evt) => {
+    const onLocalCandidate = (evt, pc) => {
       // if (restartTimeoutRef.current) return;
+
+      if (cancelled || peerConnectionRef.current !== pc) return;
 
       if (evt.candidate) {
         if (!sessionUrlRef.current) {
           queuedCandidatesRef.current.push(evt.candidate);
         } else {
-          sendLocalCandidates([evt.candidate]);
+          sendLocalCandidates([evt.candidate], pc);
         }
       }
     };
 
-    const onConnectionState = () => {
-      const pc = peerConnectionRef.current;
+    const onConnectionState = (pc) => {
       // if (!pc || restartTimeoutRef.current) return;
+
+      if (cancelled || peerConnectionRef.current !== pc) return;
 
       if (pc.iceConnectionState === "disconnected") {
         onError();
       }
     };
 
-    const onTrack = (evt) => {
+    const onTrack = (evt, pc) => {
+      if (cancelled || peerConnectionRef.current !== pc) return;
+
       if (videoRef.current) {
         videoRef.current.srcObject = evt.streams[0];
 
       }
     };
 
-    const createOffer = async () => {
+    const createOffer = async (pc) => {
       try {
         setShowLoader(true);
-        const pc = peerConnectionRef.current;
+        if (cancelled || peerConnectionRef.current !== pc || pc.signalingState === "closed") return;
+
         const offer = await pc.createOffer();
+        if (cancelled || peerConnectionRef.current !== pc || pc.signalingState === "closed") return;
 
         editOffer(offer);
         offerDataRef.current = parseOffer(offer.sdp);
 
         await pc.setLocalDescription(offer);
-        sendOffer(offer);
-      } catch {
-        setShowLoader(false);
+        if (cancelled || peerConnectionRef.current !== pc || pc.signalingState !== "have-local-offer") return;
+
+        sendOffer(offer, pc);
+      } catch (err) {
+        if (!cancelled) {
+          setShowLoader(false);
+          onError(err);
+        }
       }
     };
 
@@ -193,49 +213,81 @@ const Stream = ({ streamUrl, screenshot, currentCamera, getCamera }) => {
         .join("\r\n");
     };
 
-    const sendOffer = (offer) => {
-      fetch(streamUrl + "whep", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/sdp",
-          Authorization: `Basic ${encoded}`,
-        },
-        body: offer.sdp,
-      })
-        .then((res) => {
-          if (res.status !== 201) throw new Error();
-          sessionUrlRef.current = new URL(
-            res.headers.get("location"),
-            streamUrl
-          ).toString();
-          return res.text();
-        })
-        .then(onRemoteAnswer)
-        .catch(onError)
-        .finally(() => setShowLoader(false));
+    const sendOffer = async (offer, pc) => {
+      try {
+        const res = await fetch(streamUrl + "whep", {
+          method: "POST",
+          signal: abortController.signal,
+          headers: {
+            "Content-Type": "application/sdp",
+            Authorization: `Basic ${encoded}`,
+          },
+          body: offer.sdp,
+        });
+
+        if (cancelled || peerConnectionRef.current !== pc) return;
+        if (res.status !== 201) throw new Error();
+
+        sessionUrlRef.current = new URL(
+          res.headers.get("location"),
+          streamUrl
+        ).toString();
+
+        const sdp = await res.text();
+        await onRemoteAnswer(sdp, pc);
+      } catch (err) {
+        if (!cancelled && err.name !== "AbortError") {
+          onError(err);
+        }
+      } finally {
+        if (!cancelled) setShowLoader(false);
+      }
     };
 
-    const onRemoteAnswer = (sdp) => {
-      const pc = peerConnectionRef.current;
-      if (!pc || pc.signalingState === "closed") return;
+    const onRemoteAnswer = async (sdp, pc) => {
+      if (
+        cancelled ||
+        !pc ||
+        peerConnectionRef.current !== pc ||
+        pc.signalingState !== "have-local-offer"
+      ) {
+        return;
+      }
 
-      pc.setRemoteDescription({ type: "answer", sdp });
+      try {
+        await pc.setRemoteDescription({ type: "answer", sdp });
+      } catch (err) {
+        if (!cancelled) onError(err);
+        return;
+      }
 
       if (queuedCandidatesRef.current.length) {
-        sendLocalCandidates(queuedCandidatesRef.current);
+        sendLocalCandidates(queuedCandidatesRef.current, pc);
         queuedCandidatesRef.current = [];
       }
     };
 
-    const sendLocalCandidates = (candidates) => {
+    const sendLocalCandidates = (candidates, pc) => {
+      if (
+        cancelled ||
+        peerConnectionRef.current !== pc ||
+        !sessionUrlRef.current ||
+        !offerDataRef.current
+      ) {
+        return;
+      }
+
       fetch(sessionUrlRef.current, {
         method: "PATCH",
+        signal: abortController.signal,
         headers: {
           "Content-Type": "application/trickle-ice-sdpfrag",
           "If-Match": "*",
         },
         body: generateSdpFragment(offerDataRef.current, candidates),
-      }).catch(onError);
+      }).catch((err) => {
+        if (!cancelled && err.name !== "AbortError") onError(err);
+      });
     };
 
     const generateSdpFragment = (od, candidates) => {
@@ -260,16 +312,21 @@ const Stream = ({ streamUrl, screenshot, currentCamera, getCamera }) => {
       return frag;
     };
 
-    if (hitStream && encoded) {
-      requestICEServers();
-    }
+    requestICEServers();
 
     return () => {
-      setHitStream(false);
+      cancelled = true;
+      abortController.abort();
       // clearTimeout(restartTimeoutRef.current);
-      peerConnectionRef.current?.close();
+      if (peerConnectionRef.current) {
+        peerConnectionRef.current.onicecandidate = null;
+        peerConnectionRef.current.oniceconnectionstatechange = null;
+        peerConnectionRef.current.ontrack = null;
+        peerConnectionRef.current.close();
+        peerConnectionRef.current = null;
+      }
     };
-  }, [hitStream, encoded, streamUrl]);
+  }, [encoded, streamUrl]);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -305,7 +362,7 @@ const Stream = ({ streamUrl, screenshot, currentCamera, getCamera }) => {
   return (
     <div
       className="minscreen"
-      style={screenshot ? { height: '250px' } : { height: '350px' }}
+      style={screenshot ==='live' ? { height: '250px' } : { height: '350px' }}
       onMouseEnter={() => setShowOverlay(true)}
       onMouseLeave={() => setShowOverlay(false)}
       onDoubleClick={(e) => screenshot && max(e)}
@@ -317,19 +374,22 @@ const Stream = ({ streamUrl, screenshot, currentCamera, getCamera }) => {
       }
 
 
+
       {
-        showOverlay && screenshot &&
+        showOverlay && screenshot==='live' &&
         <div className="hover-overlay">
           <div className="display-icon">
             <p>{currentCamera?.cameraId}</p>
 
             <div>
-              <img src="icons/play-back.png" alt="overlay"
-                style={{ width: "20px", height: "20px", cursor: "pointer", rotate: '180deg', marginRight: '4px' }}
-                onClick={() => getCamera(currentCamera)} title="Playback" />
+                <img src="icons/play-back.png" alt="overlay"
+                  style={{ width: "20px", height: "20px", cursor: "pointer", rotate: '180deg', marginRight: '4px' }}
+                  onClick={() => getCamera(currentCamera)} title="Playback" />
               <img src="icons/screenshot.svg" alt="overlay"
                 style={{ width: "20px", height: "20px", cursor: "pointer", }}
                 onClick={handleClick} title="Screenshot" />
+             
+          
             </div>
           </div>
         </div>
@@ -346,10 +406,6 @@ const Stream = ({ streamUrl, screenshot, currentCamera, getCamera }) => {
 };
 
 export default memo(Stream);
-
-
-
-
 
 
 

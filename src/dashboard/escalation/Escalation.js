@@ -20,8 +20,37 @@ const Escalation = ({ closeEscalation, currentEvent, index, updateEvent, writeTo
   const [emaildata, setEmailData] = useState(null);
   const [completeEmailPreview, setCompleteEmailPreview] = useState(null);
   const [notes, setNotes] = useState('');
+  const [isEditingPreview, setIsEditingPreview] = useState(false);
+  const [draftEmail, setDraftEmail] = useState(null);
 
   const session = getStorage('session');
+
+  const startEditPreview = () => {
+    setDraftEmail(emailToDraft(emaildata));
+    setIsEditingPreview(true);
+  };
+
+  const cancelEditPreview = () => {
+    setIsEditingPreview(false);
+    setDraftEmail(null);
+  };
+
+  const saveEditPreview = () => {
+    setEmailData(draftToEmail(draftEmail));
+    setIsEditingPreview(false);
+    setDraftEmail(null);
+  };
+
+  const updateDraftField = (key, value) => {
+    setDraftEmail((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const updateDraftEmailField = (key, value) => {
+    setDraftEmail((prev) => ({
+      ...prev,
+      emailFields: { ...(prev?.emailFields ?? {}), [key]: value },
+    }));
+  };
 
   const validateLevelTwoInput = () => {
     if (selectedAlertType === '') {
@@ -351,6 +380,19 @@ const Escalation = ({ closeEscalation, currentEvent, index, updateEvent, writeTo
               <Fragment>
                 <div className="flex-group">
                   <p className="section-title">PREVIEW</p>
+                  {!isEditingPreview ? (
+                    <button type="button" className="edit-preview-btn" title="Edit" onClick={startEditPreview}>
+                      <svg className="edit-pencil-icon" viewBox="0 0 24 24" fill="none" stroke="#ed3237" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 20h9" />
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+                      </svg>
+                    </button>
+                  ) : (
+                    <div className="edit-preview-actions">
+                      <button type="button" className="edit-save-btn" onClick={saveEditPreview}>Save</button>
+                      <button type="button" className="edit-cancel-btn" onClick={cancelEditPreview}>Cancel</button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="preview-card">
@@ -377,7 +419,14 @@ const Escalation = ({ closeEscalation, currentEvent, index, updateEvent, writeTo
                     </tr>
                     <tr>
                       <td><strong>Body</strong></td>
-                      <td>{emaildata?.emailBody}</td>
+                      <td>{isEditingPreview ? (
+                        <textarea
+                          className="edit-input edit-textarea"
+                          rows={4}
+                          value={draftEmail?.emailBody ?? ''}
+                          onChange={(e) => updateDraftField('emailBody', e.target.value)}
+                        />
+                      ) : emaildata?.emailBody}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -415,24 +464,51 @@ const Escalation = ({ closeEscalation, currentEvent, index, updateEvent, writeTo
 
                     <tr>
                       <td><strong>Location</strong></td>
-                      <td>{emaildata?.emailFields?.LOCATION}</td>
+                      <td>{isEditingPreview ? (
+                        <input
+                          className="edit-input"
+                          value={draftEmail?.emailFields?.LOCATION ?? ''}
+                          onChange={(e) => updateDraftEmailField('LOCATION', e.target.value)}
+                        />
+                      ) : emaildata?.emailFields?.LOCATION}</td>
                     </tr>
                     <tr>
                       <td><strong>Date</strong></td>
-                      <td>{emaildata?.emailFields?.DATE}</td>
+                      <td>{isEditingPreview ? (
+                        <input
+                          className="edit-input"
+                          value={draftEmail?.emailFields?.DATE ?? ''}
+                          onChange={(e) => updateDraftEmailField('DATE', e.target.value)}
+                        />
+                      ) : emaildata?.emailFields?.DATE}</td>
 
                     </tr>
                     <tr>
                       <td><strong>Time</strong></td>
-                      <td>{emaildata?.emailFields?.TIME}</td>
+                      <td>{isEditingPreview ? (
+                        <input
+                          className="edit-input"
+                          value={draftEmail?.emailFields?.TIME ?? ''}
+                          onChange={(e) => updateDraftEmailField('TIME', e.target.value)}
+                        />
+                      ) : emaildata?.emailFields?.TIME}</td>
 
                     </tr>
                   </tbody>
                 </table>
 
-                <p className="alert-note">
-                  {emaildata?.emailFooter}
-                </p>
+                {isEditingPreview ? (
+                  <textarea
+                    className="edit-input edit-textarea alert-note"
+                    rows={2}
+                    value={draftEmail?.emailFooter ?? ''}
+                    onChange={(e) => updateDraftField('emailFooter', e.target.value)}
+                  />
+                ) : (
+                  <p className="alert-note">
+                    {emaildata?.emailFooter}
+                  </p>
+                )}
               </Fragment>
           }
         </div>}
@@ -451,6 +527,26 @@ const Escalation = ({ closeEscalation, currentEvent, index, updateEvent, writeTo
 export default memo(Escalation);
 
 const toList = (value) => Array.isArray(value) ? value.filter(Boolean).join(', ') : value || '-';
+
+const splitEmails = (value) => (value ?? '')
+  .split(',')
+  .map((item) => item.trim())
+  .filter(Boolean);
+
+const emailToDraft = (data) => ({
+  ...data,
+  recipientEmails: (data?.recipientEmails ?? []).join(', '),
+  Cc: (data?.Cc ?? []).join(', '),
+  BCC: (data?.BCC ?? []).join(', '),
+  emailFields: { ...(data?.emailFields ?? {}) },
+});
+
+const draftToEmail = (draft) => ({
+  ...draft,
+  recipientEmails: splitEmails(draft?.recipientEmails),
+  Cc: splitEmails(draft?.Cc),
+  BCC: splitEmails(draft?.BCC),
+});
 
 const hasEmails = (value) => Array.isArray(value)
   ? value.some((item) => item && item.trim())
