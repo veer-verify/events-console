@@ -290,7 +290,6 @@ const Escalation = ({ closeEscalation, currentEvent, index, updateEvent, writeTo
   return (
     <Fragment>
 
-      <div className="close-btn" onClick={closeEscalation}>x</div>
       {/* Left Panel */}
       <div className="alert-input">
         <p className="section-title">SUSPICIOUS INPUT</p>
@@ -375,26 +374,28 @@ const Escalation = ({ closeEscalation, currentEvent, index, updateEvent, writeTo
       {/* Right Panel */}
       {session?.userLevel === 2 &&
         <div className="alert-preview">
+          <div className="flex-group">
+            <p className="section-title">PREVIEW</p>
+            <div className="preview-toolbar-actions">
+              {emaildata !== 'load' && emaildata && (!isEditingPreview ? (
+                <button type="button" className="edit-preview-btn" title="Edit" onClick={startEditPreview}>
+                  <svg className="edit-pencil-icon" viewBox="0 0 24 24" fill="none" stroke="#ed3237" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 20h9" />
+                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
+                  </svg>
+                </button>
+              ) : (
+                <div className="edit-preview-actions">
+                  <button type="button" className="edit-save-btn" onClick={saveEditPreview}>Save</button>
+                  <button type="button" className="edit-cancel-btn" onClick={cancelEditPreview}>Cancel</button>
+                </div>
+              ))}
+              <div className="close-btn" onClick={closeEscalation}>x</div>
+            </div>
+          </div>
           {
             emaildata === 'load' ? <p>Loading...</p> : !emaildata ? <ErrorInfo message={'no data!'} /> :
               <Fragment>
-                <div className="flex-group">
-                  <p className="section-title">PREVIEW</p>
-                  {!isEditingPreview ? (
-                    <button type="button" className="edit-preview-btn" title="Edit" onClick={startEditPreview}>
-                      <svg className="edit-pencil-icon" viewBox="0 0 24 24" fill="none" stroke="#ed3237" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 20h9" />
-                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
-                      </svg>
-                    </button>
-                  ) : (
-                    <div className="edit-preview-actions">
-                      <button type="button" className="edit-save-btn" onClick={saveEditPreview}>Save</button>
-                      <button type="button" className="edit-cancel-btn" onClick={cancelEditPreview}>Cancel</button>
-                    </div>
-                  )}
-                </div>
-
                 <div className="preview-card">
                   <div className="alert-header">
                     <span>

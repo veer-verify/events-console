@@ -26,6 +26,57 @@
   color: white;
 }
 
+.alert-preview .close-btn {
+  position: relative;
+  top: auto;
+  right: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid rgba(237, 50, 55, 0.22);
+  border-radius: 8px;
+  background: #ffffff;
+  color: transparent;
+  cursor: pointer;
+  font-size: 0;
+  line-height: 1;
+  padding: 0;
+  text-align: center;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
+}
+
+.alert-preview .close-btn::before,
+.alert-preview .close-btn::after {
+  content: "";
+  position: absolute;
+  width: 11px;
+  height: 2px;
+  border-radius: 999px;
+  background: #ed3237;
+}
+
+.alert-preview .close-btn::before {
+  transform: rotate(45deg);
+}
+
+.alert-preview .close-btn::after {
+  transform: rotate(-45deg);
+}
+
+.alert-preview .close-btn:hover {
+  border-color: rgba(237, 50, 55, 0.46);
+  background: #fff4f4;
+}
+
+.alert-preview .close-btn:focus-visible {
+  outline: 2px solid rgba(237, 50, 55, 0.35);
+  outline-offset: 2px;
+}
+
 .alert-input {
   padding: 10px;
   width: 40%;
@@ -281,6 +332,13 @@ td:first-child {
   margin-bottom: 12px;
 }
 
+.preview-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
 .alert-preview .section-title {
   margin: 0 !important;
   color: #111827;
@@ -297,8 +355,8 @@ td:first-child {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
   border: 1px solid rgba(237, 50, 55, 0.22);
   border-radius: 8px;
   background: #ffffff;
@@ -320,8 +378,8 @@ td:first-child {
 }
 
 .edit-pencil-icon {
-  width: 16px;
-  height: 16px;
+  width: 13px;
+  height: 13px;
   stroke: #ed3237;
   fill: none;
 }
@@ -329,16 +387,17 @@ td:first-child {
 .edit-preview-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .edit-save-btn,
 .edit-cancel-btn {
-  min-width: 68px;
-  padding: 8px 14px;
-  font-size: 12px;
+  min-width: 46px;
+  height: 26px;
+  padding: 0 8px;
+  font-size: 10px;
   font-weight: 800;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   transition:
     background 0.2s,
