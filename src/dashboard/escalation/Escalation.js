@@ -24,6 +24,7 @@ const Escalation = ({ closeEscalation, currentEvent, index, updateEvent, writeTo
   const [draftEmail, setDraftEmail] = useState(null);
 
   const session = getStorage('session');
+  const selectionRadioName = `selection-${currentEvent?.eventId ?? index}`;
 
   const startEditPreview = () => {
     setDraftEmail(emailToDraft(emaildata));
@@ -299,11 +300,11 @@ const Escalation = ({ closeEscalation, currentEvent, index, updateEvent, writeTo
             {/* Person / Vehicle radio buttons */}
             <div className="radio-group">
               <label>
-                <input type="radio" name="selection" checked={selection === "person"} onChange={() => { setSelection("person"); clearFields() }} />
+                <input type="radio" name={selectionRadioName} checked={selection === "person"} onChange={() => { setSelection("person"); clearFields() }} />
                 Person
               </label>
               <label>
-                <input type="radio" name="selection" checked={selection === "vehicle"} onChange={() => { setSelection("vehicle"); clearFields() }} />
+                <input type="radio" name={selectionRadioName} checked={selection === "vehicle"} onChange={() => { setSelection("vehicle"); clearFields() }} />
                 Vehicle
               </label>
             </div>
