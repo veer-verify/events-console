@@ -239,6 +239,11 @@ export const sendResolutionEmail = async (payload) => {
   return api.post(url, formData).then((res) => res).catch((err) => console.log(err));
 }
 
+export const writeDuplicatedEvent = async (payload) => {
+  const url = `http://192.168.0.110:8000/getMonitoringInfo_1_0`;
+  return api.post(url, payload);
+}
+
 export const getMonitoringInfo = async (payload) => {
   const url = `${environment.guard_monitoring_url}/getMonitoringInfo_1_0`;
   const user = getStorage('session');

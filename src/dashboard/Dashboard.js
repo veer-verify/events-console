@@ -37,6 +37,7 @@ const Dashboard = () => {
   const [eventData, setEventData] = useState([]);
   const [config, setConfig] = useState(false);
   const [count, setCount] = useState(MAX_VISIBLE_EVENTS);
+  const redisQueuedEventKeysRef = useRef(new Set());
   const logout = useLogout();
 
 
@@ -99,7 +100,6 @@ const Dashboard = () => {
         audioStatus: 'N',
         timer: Number(timerData?.value) ?? 60,
       };
-      writetoRedisQueueData(event);
       setEventData(prev => replaceCompletedEvent(prev, item, event, item.index, count));
       dispatch(setLoader(false));
     } else {
@@ -170,7 +170,6 @@ const Dashboard = () => {
         timer: Number(timerData?.value) ?? 60,
       };
 
-      writetoRedisQueueData(event);
       setEventData(prev => replaceCompletedEvent(prev, item, event, item.index, count));
       dispatch(setLoader(false));
     } else {
@@ -209,7 +208,6 @@ const Dashboard = () => {
           timer: Number(timerData?.value) ?? 60,
         };
 
-        writetoRedisQueueData(event);
         const monitoringInfo = await getMonitoringInfo(event);
         const merged = { ...event, monitoringInfo };
         setEventData(prev => addEventWithinLimit(prev, merged, count));
@@ -227,6 +225,18 @@ const Dashboard = () => {
       clearTimeout(timerId);
     };
   }, [eventData.length, dispatch, actionStore.isLogoutClicked, count, actionStore.isConfigOpened]);
+
+  useEffect(() => {
+    eventData.slice(0, count).forEach((event) => {
+      if (!event || event.__pending) return;
+
+      const eventKey = getEventIdentityKey(event);
+      if (!eventKey || redisQueuedEventKeysRef.current.has(eventKey)) return;
+
+      redisQueuedEventKeysRef.current.add(eventKey);
+      writetoRedisQueueData(event);
+    });
+  }, [eventData, count]);
 
 
   useEffect(() => {
@@ -342,7 +352,6 @@ const Dashboard = () => {
           timer: Number(timerData?.value) ?? 60,
         };
 
-        writetoRedisQueueData(event);
         setEventData(prev => replaceCompletedEvent(prev, item, event, index, count));
         dispatch(setLoader(false));
       } else {
