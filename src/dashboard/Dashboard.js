@@ -1,5 +1,5 @@
 import './Dashboard.css';
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import Header from '../header/Header';
 import Tile from './tile/Tile';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux';
@@ -8,7 +8,7 @@ import { setLoader } from '../utilities/slices/loaderSlice';
 import { useLogout } from '../utilities/hooks/logout';
 import Swal from "sweetalert2";
 import { getSession, getStorage, getTimeByTimezone, setStorage } from '../utilities/services/StorageService';
-import { aliveUser, consumeConsoleEvents, getActionTagCategories, getMonitoringInfo, getVmsEventsQueueData, updateEventFullDetails, write2VmsDispatchQueue, writetoRedisQueueData } from '../utilities/services/ApiService';
+import { aliveUser, consumeConsoleEvents, getActionTagCategories, getMonitoringInfo, getVmsEventsQueueData, updateEventFullDetails, write2VmsDispatchQueue, writeDuplicatedEvent, writetoRedisQueueData } from '../utilities/services/ApiService';
 
 const MAX_VISIBLE_EVENTS = 2;
 
@@ -37,8 +37,20 @@ const Dashboard = () => {
   const [eventData, setEventData] = useState([]);
   const [config, setConfig] = useState(false);
   const [count, setCount] = useState(MAX_VISIBLE_EVENTS);
+  const eventDataRef = useRef([]);
   const redisQueuedEventKeysRef = useRef(new Set());
   const logout = useLogout();
+
+  const writeDuplicateEvent = useCallback((event) => {
+    writeDuplicatedEvent({
+      eventInfo: event,
+      createdBy: session?.UserId,
+    });
+  }, [session?.UserId]);
+
+  useEffect(() => {
+    eventDataRef.current = eventData;
+  }, [eventData]);
 
 
   /**
@@ -100,6 +112,9 @@ const Dashboard = () => {
         audioStatus: 'N',
         timer: Number(timerData?.value) ?? 60,
       };
+      if (hasDuplicateEventTime(eventDataRef.current, event, item.index)) {
+        writeDuplicateEvent(first);
+      }
       setEventData(prev => replaceCompletedEvent(prev, item, event, item.index, count));
       dispatch(setLoader(false));
     } else {
@@ -170,6 +185,9 @@ const Dashboard = () => {
         timer: Number(timerData?.value) ?? 60,
       };
 
+      if (hasDuplicateEventTime(eventDataRef.current, event, item.index)) {
+        writeDuplicateEvent(first);
+      }
       setEventData(prev => replaceCompletedEvent(prev, item, event, item.index, count));
       dispatch(setLoader(false));
     } else {
@@ -210,6 +228,9 @@ const Dashboard = () => {
 
         const monitoringInfo = await getMonitoringInfo(event);
         const merged = { ...event, monitoringInfo };
+        if (hasDuplicateEventTime(eventDataRef.current, merged)) {
+          writeDuplicateEvent(rawEvent);
+        }
         setEventData(prev => addEventWithinLimit(prev, merged, count));
       }
 
@@ -224,7 +245,7 @@ const Dashboard = () => {
       isMounted = false;
       clearTimeout(timerId);
     };
-  }, [eventData.length, dispatch, actionStore.isLogoutClicked, count, actionStore.isConfigOpened]);
+  }, [eventData.length, dispatch, actionStore.isLogoutClicked, count, actionStore.isConfigOpened, timerData?.value, writeDuplicateEvent]);
 
   useEffect(() => {
     eventData.slice(0, count).forEach((event) => {
@@ -352,6 +373,9 @@ const Dashboard = () => {
           timer: Number(timerData?.value) ?? 60,
         };
 
+        if (hasDuplicateEventTime(eventDataRef.current, event, index)) {
+          writeDuplicateEvent(first);
+        }
         setEventData(prev => replaceCompletedEvent(prev, item, event, index, count));
         dispatch(setLoader(false));
       } else {
@@ -381,7 +405,7 @@ const Dashboard = () => {
     return () => {
       clearInterval(interval);
     };
-  }, [actionStore.isLogoutClicked, actionStore.isConfigOpened, count, dispatch, eventData, logout, session?.UserId, session?.queueName, session?.userLevel, metadata, timerData?.value]);
+  }, [actionStore.isLogoutClicked, actionStore.isConfigOpened, count, dispatch, eventData, logout, session?.UserId, session?.queueName, session?.userLevel, metadata, timerData?.value, writeDuplicateEvent]);
 
   useEffect(() => {
     setEventData(prev => prev.length > count ? prev.slice(0, count) : prev);

@@ -240,7 +240,7 @@ export const sendResolutionEmail = async (payload) => {
 }
 
 export const writeDuplicatedEvent = async (payload) => {
-  const url = `http://192.168.0.110:8000/getMonitoringInfo_1_0`;
+  const url = `${environment.event_process_url}/writeDuplicatedEvent_1_0/`;
   return api.post(url, payload);
 }
 
