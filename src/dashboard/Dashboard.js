@@ -457,6 +457,11 @@ const getEventTimeKey = (event) => {
   return eventTime === undefined || eventTime === null ? '' : String(eventTime).trim();
 };
 
+const getCameraIdKey = (event) => {
+  const cameraId = event?.cameraId;
+  return cameraId === undefined || cameraId === null ? '' : String(cameraId).trim();
+};
+
 const getEventIdentityKey = (event) => {
   if (!event) return '';
   if (event.__eventKey) return event.__eventKey;
@@ -464,10 +469,12 @@ const getEventIdentityKey = (event) => {
 
   const eventTime = getEventTimeKey(event);
   if (!eventTime) return '';
+  const cameraId = getCameraIdKey(event);
+  if (!cameraId) return '';
 
   return [
     event.siteId ?? '',
-    event.cameraId ?? '',
+    cameraId,
     eventTime,
     event.eventType ?? '',
     event.objectName ?? '',
@@ -536,8 +543,10 @@ const getTileKey = (event, index) => getEventIdentityKey(event) || `slot-${index
 const hasDuplicateEventTime = (events, event, ignoreIndex = -1) => {
   const eventTime = getEventTimeKey(event);
   if (!eventTime) return false;
+  const cameraId = getCameraIdKey(event);
+  if (!cameraId) return false;
 
-  return events.some((item, index) => index !== ignoreIndex && getEventTimeKey(item) === eventTime);
+  return events.some((item, index) => index !== ignoreIndex && getEventTimeKey(item) === eventTime && getCameraIdKey(item) === cameraId);
 };
 
 const Configure = ({ handleCount, closeConfig }) => {
