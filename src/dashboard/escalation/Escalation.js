@@ -46,13 +46,6 @@ const Escalation = ({ closeEscalation, currentEvent, index, updateEvent, writeTo
     setDraftEmail((prev) => ({ ...prev, [key]: value }));
   };
 
-  const updateDraftEmailField = (key, value) => {
-    setDraftEmail((prev) => ({
-      ...prev,
-      emailFields: { ...(prev?.emailFields ?? {}), [key]: value },
-    }));
-  };
-
   const validateLevelTwoInput = () => {
     if (selectedAlertType === '') {
       toast.warn('Select an alert type to continue.');
@@ -466,34 +459,16 @@ const Escalation = ({ closeEscalation, currentEvent, index, updateEvent, writeTo
 
                     <tr>
                       <td><strong>Location</strong></td>
-                      <td>{isEditingPreview ? (
-                        <input
-                          className="edit-input"
-                          value={draftEmail?.emailFields?.LOCATION ?? ''}
-                          onChange={(e) => updateDraftEmailField('LOCATION', e.target.value)}
-                        />
-                      ) : emaildata?.emailFields?.LOCATION}</td>
+                      <td>{emaildata?.emailFields?.LOCATION}</td>
                     </tr>
                     <tr>
                       <td><strong>Date</strong></td>
-                      <td>{isEditingPreview ? (
-                        <input
-                          className="edit-input"
-                          value={draftEmail?.emailFields?.DATE ?? ''}
-                          onChange={(e) => updateDraftEmailField('DATE', e.target.value)}
-                        />
-                      ) : emaildata?.emailFields?.DATE}</td>
+                      <td>{emaildata?.emailFields?.DATE}</td>
 
                     </tr>
                     <tr>
                       <td><strong>Time</strong></td>
-                      <td>{isEditingPreview ? (
-                        <input
-                          className="edit-input"
-                          value={draftEmail?.emailFields?.TIME ?? ''}
-                          onChange={(e) => updateDraftEmailField('TIME', e.target.value)}
-                        />
-                      ) : emaildata?.emailFields?.TIME}</td>
+                      <td>{emaildata?.emailFields?.TIME}</td>
 
                     </tr>
                   </tbody>
